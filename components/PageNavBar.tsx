@@ -12,10 +12,13 @@ export const PageNavBar = (): JSX.Element => (
           <StyledTextLink href="/tag/tutorials">TUTORIALS</StyledTextLink>
         </span>
         <span className="mr-4">
-          <StyledTextLink href="/tag/game-dev">GAME DEV</StyledTextLink>
+          <StyledTextLink href="/tag/gamedev">GAME DEV</StyledTextLink>
         </span>
         <span className="mr-4">
-          <StyledTextLink href="/tag/game-dev">ELECTRONICS</StyledTextLink>
+          <StyledTextLink href="/tag/electronics">ELECTRONICS</StyledTextLink>
+        </span>
+        <span className="mr-4">
+          <StyledTextLink href="/tag/random">RANDOM</StyledTextLink>
         </span>
       </span>
       <StyledTextLink href="/">willhart.io</StyledTextLink>

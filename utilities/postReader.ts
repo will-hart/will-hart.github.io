@@ -27,6 +27,20 @@ export const getMostRecentPosts = async (
   return Promise.all(pageData.slice(0, numberToRetrieve).map(postReader))
 }
 
+/**
+ * An ultra inefficient way to get a set of categories from all posts.
+ * Used to statically generate category pages for all the posts
+ */
+export const getAllCategories = async (): Promise<string[]> => {
+  const posts = await Promise.all(pageData.map(postReader))
+  const tags = posts.reduce((t, post) => {
+    ;(post.tags || []).forEach((tag) => t.add(tag))
+    return t
+  }, new Set<string>())
+
+  return Array.from(tags)
+}
+
 export const postReader = (slug: string): Promise<BlogPostData> => {
   const fileContent = fs
     .readFileSync(`./static/${slug.replace(/-/g, "_")}.md`)
