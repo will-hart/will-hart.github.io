@@ -8,17 +8,23 @@ interface PostListProps {
 }
 
 const PostListItem = ({ post }: { post: BlogPostData }): JSX.Element => (
-  <div className="flex flex-col w-1/4 m-4 box-border bg-gray-700">
+  <div className="flex flex-col w-full lg:w-1/3 xl:w-1/4 m-4 box-border bg-gray-700">
     <div className="flex flex-col p-4">
-      <h2 className="text-lg font-bold h-16">{post.title}</h2>
-      <p className="text-md text-gray-400 h-24 my-2">{post.summary}</p>
+      <Link href={`/${post.slug}`}>
+        <a className="text-lg font-bold text-white">
+          <h2 className="text-lg font-bold lg:h-16">{post.title}</h2>
+        </a>
+      </Link>
+      <p className="text-md text-gray-400 lg:h-24 my-2">{post.summary}</p>
     </div>
 
-    <Link href={post.slug}>
-      <div className="bg-yellow-300 hover:bg-yellow-200 cursor-pointer text-darkbg p-2 flex justify-between">
-        <a className="text-darkbg">Read More</a>
+    <Link href={`/${post.slug}`}>
+      <div className="hero hover:bg-yellow-300 border-t-2 border-yellow-300 cursor-pointer text-yellow-300 hover:text-darkbg p-2 flex justify-between transition-colors duration-500">
+        <a className="text-current no-underline hover:no-underline">
+          Read More
+        </a>
 
-        <span>→</span>
+        <span>ᐅ</span>
       </div>
     </Link>
   </div>

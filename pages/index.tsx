@@ -15,9 +15,9 @@ const Home = ({ recentPosts }: HomeProps): JSX.Element => {
   return (
     <HomeLayout>
       <BlogHead title="Home" />
-      <div className="bg-gray-700 h-64 mb-12 flex items-center justify-center p-12 border-b-2 border-yellow-300">
+      <div className="hero bg-gray-700 h-64 mb-12 flex items-center justify-center p-12 border-b-2 border-yellow-300">
         <ContentContainer>
-          <h1 className="text-yellow-500 text-4xl my-8 text-center">
+          <h1 className="text-yellow-500 text-4xl m-0 mb-8 text-center">
             Hi, I&apos;m Will
           </h1>
           <p className="text-yellow-300 text-xl text-center">

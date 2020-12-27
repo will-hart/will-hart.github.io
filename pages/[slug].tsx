@@ -23,7 +23,7 @@ const BlogPostPage = (postData: BlogPostData): JSX.Element => {
   return (
     <HomeLayout>
       <BlogHead title={title} postData={postData} />
-      <div className="bg-gray-700 m-0 mb-16 p-8 border-b-2 border-yellow-300">
+      <div className="hero bg-gray-700 m-0 mb-16 p-8 border-b-2 border-yellow-300">
         <ContentContainer>
           <h1 className="text-4xl mx-0 text-yellow-300 mt-4 mb-12">{title}</h1>
           {subtitle && <h2 className="text-lg mb-4">{subtitle}</h2>}
@@ -32,8 +32,8 @@ const BlogPostPage = (postData: BlogPostData): JSX.Element => {
               by {authorName}, {publishedDateString.toUpperCase()}
             </span>
             {tags && <TagList tags={tags} />}
-            <span className="mt-4">
-              <StyledTextLink href="/">← return home</StyledTextLink>
+            <span className="mt-6">
+              <StyledTextLink href="/">ᐊ RETURN HOME</StyledTextLink>
             </span>
           </div>
         </ContentContainer>

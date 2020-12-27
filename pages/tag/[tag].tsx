@@ -18,7 +18,11 @@ const TagPage = ({
   taggedPosts: BlogPostData[]
 }): JSX.Element => (
   <HomeLayout>
-    <BlogHead title={`${tag} post list`} />
+    <BlogHead title={`Posts tagged "${tag}"`} />
+
+    <div className="hero bg-gray-700 m-0 mb-16 p-8 border-b-2 border-yellow-300">
+      <h1>Posts tagged &quot;{tag}&quot;</h1>
+    </div>
 
     <PostList posts={taggedPosts} />
   </HomeLayout>
