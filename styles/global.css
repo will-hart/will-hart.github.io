@@ -5,7 +5,7 @@
 @import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@600&family=Raleway:wght@300&display=swap");
 
 body {
-  @apply bg-gray-900 text-white;
+  @apply bg-darkbg text-white;
   font-family: Raleway, Roboto, sans-serif;
 }
 
@@ -18,13 +18,11 @@ a:hover {
 }
 
 .styled-link {
-  opacity: 0.35;
-  transition: opacity 0.35s ease-in-out;
   @apply text-xs;
 }
 
 .styled-link:hover {
-  opacity: 1;
+  @apply underline;
 }
 
 article {

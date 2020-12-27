@@ -8,6 +8,7 @@ import { TagList } from "../components/TagList"
 import { HomeLayout } from "../components/HomeLayout"
 import { StyledTextLink } from "../components/StyledTextLink"
 import { BlogPostData, postReader } from "../utilities/postReader"
+import { ContentContainer } from "../components/ContentContainer"
 
 const BlogPostPage = ({
   authorName,
@@ -19,23 +20,22 @@ const BlogPostPage = ({
 }: BlogPostData): JSX.Element => (
   <HomeLayout>
     <BlogHead title={title} />
+    <div className="bg-gray-700 m-0 mb-16 p-8 border-b-2 border-yellow-300">
+      <ContentContainer>
+        <h1 className="text-4xl mx-0 text-yellow-300 mt-4 mb-12">{title}</h1>
+        {subtitle && <h2 className="text-lg mb-4">{subtitle}</h2>}
+        <div className="flex flex-col justify-between">
+          <span>
+            by {authorName}, {publishedDateString.toUpperCase()}
+          </span>
+          {tags && <TagList tags={tags} />}
+          <StyledTextLink href="/">← return home</StyledTextLink>
+        </div>
+      </ContentContainer>
+    </div>
+
     <article>
-      <h1 className="text-4xl mb-4 text-yellow-500">{title}</h1>
-      {subtitle && <h2 className="text-lg mb-4">{subtitle}</h2>}
-      <div className="flex justify-between">
-        <span>
-          by {authorName}, {publishedDateString.toUpperCase()}
-        </span>
-        {tags && <TagList tags={tags} />}
-      </div>
-
-      <hr className="mb-8 mt-2" />
       <Markdown markdown={markdown} />
-
-      <div className="mt-6">
-        <StyledTextLink href="/">← return home</StyledTextLink>
-      </div>
-      <hr className="mb-8 mt-2" />
     </article>
   </HomeLayout>
 )
