@@ -98,7 +98,7 @@ part both Unity and pure ECS systems offer - if the Entity has a
 
 The Unity version might look like this:
 
-```c#
+```cs
 public class HealthComponent : MonoBehaviour
 {
     public float Health;
@@ -128,7 +128,7 @@ and Shield logic, and the logic is spread out over two classes.
 
 The "pure" ECS implementation on the other hand may look like this:
 
-```c#
+```cs
 // The System
 public HealthSystem : AbstractEcsSystem
 {

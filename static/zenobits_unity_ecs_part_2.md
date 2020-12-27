@@ -65,7 +65,7 @@ When all our logic is in standalone systems, our game itself (i.e. not just the
 entities) becomes composable. For instance we can build up our game from
 systems:
 
-```c#
+```cs
 Ecs.AddSystem(DamageSystem);
 Ecs.AddSystem(HealthRegenerationSystem);
 Ecs.AddSystem(MovementSystem);
@@ -85,7 +85,7 @@ instances of a component type, or a subset of components.
 If we wanted all Components of a given type currently in the game with Unity, we
 would need to do something like this:
 
-```c#
+```cs
 var healthComps = Object.FindObjectsOfType(
     typeof(HealthComponent)) as HealthComponent[];
 ```
@@ -95,7 +95,7 @@ quickly becomes performance prohibitive.
 
 In our ECS, we can do:
 
-```c#
+```cs
 var healthComps = _ecsEngine.Get<HealthComp>();
 ```
 
@@ -113,7 +113,7 @@ underlying ECS data changes. In our example, we can use this to track all
 Entities with a `HealthComp` but not a `ShieldComp`, and be guaranteed that this
 is up to date:
 
-```c#
+```cs
 // field declaration
 private Matcher _noShieldEntities = new Matcher()
         .AllOf(ComponentTypes.HealthComponent)

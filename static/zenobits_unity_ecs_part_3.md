@@ -46,7 +46,7 @@ wavy assumption #2) which stores weapon data.
 Typically our attacker would then have a bunch of colliders to test against, and
 there would be some logic:
 
-```c#
+```cs
 // in our ranged attacker MonoBehaviour
 private void Update()
   {
@@ -74,7 +74,7 @@ sequence diagram) then it calls the public `TakeDamage` method of any collided
 is an attached Shield Component. If there is, then it runs the shield's logic
 and reduce health by any remaining damage. It might look something like this:
 
-```c#
+```cs
 public void TakeDamage(float damage)
 {
     var damageTaken = shield == null
@@ -123,7 +123,7 @@ Our systems run one at a time, in the order in which they are added to the ECS
 when we bootstrap it. Each runs an Update loop, which for the `RangedSystem` may
 look like the following (see note 3):
 
-```c#
+```cs
 public void Update()
 {
     foreach (var enemy in \_enemyMatcher.GetMatches())
@@ -140,7 +140,7 @@ note 4) but the system itself couldn't be easier to understand.
 The `DamageSystem` then runs, calculating how much damage goes to health and how
 much to shields. It might look like this:
 
-```c#
+```cs
 public void Update()
 {
     foreach (var enemy in Ecs.GetAll<HealthComponent>())
@@ -170,7 +170,7 @@ damage between shields and health and update them accordingly.
 Finally we have our `DeathSystem` which removes entities when they die. It
 probably looks something like this:
 
-```c#
+```cs
 public void Update()
 {
     foreach (var health in Ecs.GetAll<HealthComponent>())

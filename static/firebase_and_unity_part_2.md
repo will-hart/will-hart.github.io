@@ -44,7 +44,7 @@ The next step is to create a C# script for handling the firebase interaction. I
 named it `FirebaseClickHandler`, and started off with the following empty class
 definition:
 
-```c#
+```cs
 namespace FirebaseTest
 {
 #region Dependencies
@@ -84,7 +84,7 @@ screenshot above.
 The next thing we want to do is connect to the database and get the current
 count. We can connect in the editor by writing the following in Awake:
 
-```c#
+```cs
 private void Awake()
 {
   FirebaseApp.DefaultInstance.SetEditorDatabaseUrl(
@@ -101,7 +101,7 @@ be used as a notification when the linked data changes, or as a way to read or
 write data on that path. Add a private field at the top of our class (below
 `_count`) to store the database reference:
 
-```c#
+```cs
 private DatabaseReference _counterRef;
 ```
 
@@ -109,7 +109,7 @@ At the same time, why not change the default value of `_count` to -1, so that
 we can see when our data is loaded from the database more easily. We can then
 replace the `Awake` method with this:
 
-```c#
+```cs
 private void Awake()
 {
   FirebaseApp.DefaultInstance.SetEditorDatabaseUrl(
@@ -134,7 +134,7 @@ database!
 Let's implement the method now, so that we can display our value in the text. In
 the body of the `OnCountUpdated` method, put the following:
 
-```c#
+```cs
 if (e.DatabaseError != null)
 {
   Debug.LogError(e.DatabaseError.Message);
@@ -173,7 +173,7 @@ To write a value to the database, we use a similar approach to reading - i.e.
 call a method on the `DatabaseReference` we created before. Add the following
 public method to our `FirebaseClickHandler` class:
 
-```c#
+```cs
 public void IncrementClickCounter()
 {
   _counterRef.SetValueAsync(_count + 1);
@@ -189,7 +189,7 @@ firebase console side by side. Run the game and click the button. Now as we are
 subscribing an event in `Awake`, we probably need to make sure that it gets
 unsubscribed `OnDestroy`:
 
-```c#
+```cs
 private void OnDestroy()
 {
   _counterRef.ValueChanged -= OnCountUpdated;
@@ -216,7 +216,7 @@ A transaction in firebase runs from a `Reference` and receives the current data
 value as `MutableData`. It "returns" the new data that should be set in the
 database. Lets replace our `IncrementClickCounter` method with the following:
 
-```c#
+```cs
 public void IncrementClickCounter()
 {
   _counterRef.RunTransaction(data => {
@@ -248,7 +248,7 @@ I also had to modify the connection script in `Awake`, to set the database path
 explicitly. There may be a better way to load in config, but this worked for me
 as a quick hack:
 
-```C#
+```cs
 #if UNITY_EDITOR
   FirebaseApp.DefaultInstance.SetEditorDatabaseUrl(
     "https://wh-unity-test.firebaseio.com/");

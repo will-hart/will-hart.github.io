@@ -48,7 +48,7 @@ the other game object, and it can also die if it is attacked. A simple
 implementation, where we have a reference to the other game object `enemy` looks
 like:
 
-```c#
+```cs
 public class Attack : MonoBehaviour
 {
   private void Update()
@@ -66,7 +66,7 @@ they are at the top of the list).
 To fix this, we could add a second MonoBehaviour, a `Death` component which
 separately removes dead enemies. Our implementation now looks like:
 
-```c#
+```cs
 public class Attack : MonoBehaviour
 {
   private void Update()
@@ -120,7 +120,7 @@ work out which GameObject to Update first?
 Lets do a little digging. If I open up Unity and Visual Studio, I can make a
 simple script to find out what Unity does under the hood:
 
-```c#
+```cs
 public class TestA : MonoBehaviour
 {
     private static int InstanceCount = 0;

@@ -66,7 +66,7 @@ and added the control inside the default `Grid`
 
 I added a simple `index.html` file to the project under `www/index.html`. I set the build type to `EmbeddedResource`. I hooked up a `Window.Loaded` event which looked like the following:
 
-```C#
+```cs
 // e.g.
 // using Microsoft.Toolkit.Win32.UI.Controls.Interop.WinRT;
 // using System.Linq;
@@ -121,7 +121,7 @@ VSCode. I added the following before the last closing tag:
 
 I then added a new `Program.cs` file, and added the following code:
 
-```c#
+```cs
 public static class Program
 {
 [STAThread]
