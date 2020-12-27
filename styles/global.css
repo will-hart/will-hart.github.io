@@ -70,8 +70,9 @@ article > ol {
   @apply list-decimal;
 }
 
-article > pre {
-  @apply mb-6;
+article pre + p,
+article p + pre {
+  @apply mt-6;
 }
 
 article > p > code,
