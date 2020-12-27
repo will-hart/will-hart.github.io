@@ -1,5 +1,5 @@
 import * as React from "react"
-import { GetStaticProps, GetStaticPaths } from "next"
+import { GetStaticProps } from "next"
 
 import { BlogHead } from "../components/BlogHead"
 import { ContentContainer } from "../components/ContentContainer"
@@ -33,12 +33,6 @@ const Home = ({ recentPosts }: HomeProps): JSX.Element => {
     </HomeLayout>
   )
 }
-
-export const getStaticPaths: GetStaticPaths = async () =>
-  Promise.resolve({
-    paths: [{ params: {} }],
-    fallback: false,
-  })
 
 export const getStaticProps: GetStaticProps = async () => {
   const recentPosts = await getMostRecentPosts()
