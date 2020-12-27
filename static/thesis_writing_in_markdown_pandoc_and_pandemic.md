@@ -2,6 +2,7 @@
 title: Thesis writing in Markdown - pandemic and pandoc
 tags:
   - tutorials
+  - phd
 authorName: Will Hart
 publishedDateString: 16 May 2019
 ---

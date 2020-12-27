@@ -80,3 +80,11 @@ article li > code {
   @apply p-1;
   background: #2f2f2f;
 }
+
+article > blockquote {
+  @apply border-l-4 border-yellow-500 my-6 p-4 bg-yellow-800;
+}
+
+article img {
+  @apply my-6 mx-auto;
+}

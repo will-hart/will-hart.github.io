@@ -1,28 +1,18 @@
 import * as React from "react"
 import { GetStaticProps, GetStaticPaths } from "next"
 
-import * as fs from "fs"
-import matter from "gray-matter"
-
 import { pageData } from "../static/posts"
 import { Markdown } from "../components/Markdown"
 import { BlogHead } from "../components/BlogHead"
 import { TagList } from "../components/TagList"
 import { HomeLayout } from "../components/HomeLayout"
 import { StyledTextLink } from "../components/StyledTextLink"
-
-interface BlogPostData {
-  slug: string
-  title: string
-  markdown: string
-  authorName: string
-  publishedDateString: string
-  tags?: string[]
-}
+import { BlogPostData, postReader } from "../utilities/postReader"
 
 const BlogPostPage = ({
   authorName,
   publishedDateString,
+  subtitle,
   tags,
   title,
   markdown,
@@ -31,6 +21,7 @@ const BlogPostPage = ({
     <BlogHead title={title} />
     <article>
       <h1 className="text-4xl mb-4 text-yellow-500">{title}</h1>
+      {subtitle && <h2 className="text-lg mb-4">{subtitle}</h2>}
       <div className="flex justify-between">
         <span>
           by {authorName}, {publishedDateString.toUpperCase()}
@@ -57,21 +48,8 @@ export const getStaticPaths: GetStaticPaths = async () =>
 
 export const getStaticProps: GetStaticProps = async (context) => {
   const slug = context.params.slug.toString()
-  const fileContent = fs
-    .readFileSync(`./static/${slug.replace(/-/g, "_")}.md`)
-    .toString()
-  const matterParsed = matter(fileContent)
-
-  return Promise.resolve({
-    props: {
-      slug,
-      title: matterParsed.data.title as string,
-      markdown: matterParsed.content,
-      authorName: matterParsed.data.authorName as string,
-      publishedDateString: matterParsed.data.publishedDateString as string,
-      tags: matterParsed.data.tags as string[],
-    },
-  })
+  const post = await postReader(slug)
+  return { props: { ...post } }
 }
 
 export default BlogPostPage
