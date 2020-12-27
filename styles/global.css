@@ -75,6 +75,11 @@ article p + pre {
   @apply mt-6;
 }
 
+li {
+  text-indent: -18px;
+  margin-left: 25px;
+}
+
 article > p > code,
 article li > code {
   @apply p-1;
@@ -82,7 +87,7 @@ article li > code {
 }
 
 article > blockquote {
-  @apply border-l-4 border-yellow-500 my-6 p-4 bg-yellow-800;
+  @apply border-l-4 border-yellow-500 my-6 p-4 bg-yellow-800 bg-opacity-50;
 }
 
 article img {
