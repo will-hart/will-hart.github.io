@@ -1,6 +1,7 @@
 ---
 title: Creating a REPL for hacking on a firestore backend
 subtitle: Using a node REPL to simplify playing around with a firestore backend.
+summary: How to build a custom REPL for a firestore project.
 tags:
   - tutorials
 authorName: Will Hart

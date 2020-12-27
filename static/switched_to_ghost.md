@@ -1,5 +1,6 @@
 ---
 title: Switched to Ghost
+summary: A quick note about switching this blog to Ghost
 tags:
   - random
 authorName: Will Hart

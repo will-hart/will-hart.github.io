@@ -1,5 +1,6 @@
 ---
 title: Thesis writing in Markdown - pandemic and pandoc
+summary: A description of the build system I'm using to build my PhD thesis in markdown and LaTeX
 tags:
   - tutorials
   - phd

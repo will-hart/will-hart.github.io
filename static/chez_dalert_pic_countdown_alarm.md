@@ -1,5 +1,6 @@
 ---
 title: "Chez D'Alert: PIC Countdown Alarm"
+summary: A summary of a project I build for my Dad's birthday.
 tags:
   - project
   - electronics

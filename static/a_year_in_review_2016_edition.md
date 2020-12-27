@@ -1,5 +1,6 @@
 ---
 title: A year in review (2016 game dev edition)
+summary: A quick look back at my coding efforts for 2016
 tags:
   - gamedev
 authorName: Will Hart

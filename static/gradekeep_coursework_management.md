@@ -1,6 +1,7 @@
 ---
 title: Gradekeep Coursework Management
 subtitle: A simple PHP web app for managing university grades
+summary: A project I build to keep track of grades and assessments during my Engineering degree
 tags:
   - code
   - projects

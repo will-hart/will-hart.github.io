@@ -1,5 +1,6 @@
 ---
 title: SMD Prototype PCB
+summary: Describes a custom SMD prototype PCB I designed to jump start projects using SMD electronics
 tags:
   - electronics
   - project

@@ -1,5 +1,6 @@
 ---
 title: Reducing online abuse through sentiment analysis
+summary: A look at how to use Sentiment Analysis to detect "star wars tweets", in the context of addressing abusive behaviour on social media platforms
 tags:
   - code
   - projects

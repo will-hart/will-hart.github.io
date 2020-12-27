@@ -1,5 +1,6 @@
 ---
 title: demarcate.js Markdown Editor
+summary: Introducing the demarcate.js markdown editor!
 tags:
   - code
   - projects

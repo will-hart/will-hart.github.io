@@ -1,5 +1,6 @@
 ---
 title: Coal powered cars?
+summary: A back of the envelope investigation into the emissions savings from converting to electric cars in the UK
 tags:
   - random
 authorName: Will Hart

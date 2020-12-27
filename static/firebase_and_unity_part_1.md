@@ -1,5 +1,6 @@
 ---
 title: Connecting Players with Firebase and Unity [Part 1]
+summary: Part 1 of a tutorial on hacking firebase support into Unity (for desktop builds)
 tags:
   - code
   - gamedev

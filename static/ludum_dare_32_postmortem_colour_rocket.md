@@ -1,5 +1,6 @@
 ---
 title: Ludum Dare 32 Postmortem - Colour Rocket
+summary: A post mortem of the game I build for Ludum Dare 32 - Colour Rocket
 tags:
   - gamedev
 authorName: Will Hart

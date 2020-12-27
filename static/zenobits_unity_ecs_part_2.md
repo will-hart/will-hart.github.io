@@ -1,5 +1,6 @@
 ---
 title: Zenobit's Unity ECS (part 2)
+summary: Part 2 of a look into a custom ECS for Unity
 tags:
   - code
   - gamedev

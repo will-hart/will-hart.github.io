@@ -1,5 +1,6 @@
 ---
 title: PIC16F628A Serial Communication
+summary: A tutorial on getting serial communication working using a PIC16F628A microcontroller
 tags:
   - tutorials
   - electronics

@@ -1,5 +1,6 @@
 ---
 title: Live Electric Vehicle Telemetry Software
+summary: A quick tutorial on using software PWM on an Arduino
 tags:
   - electronics
   - project

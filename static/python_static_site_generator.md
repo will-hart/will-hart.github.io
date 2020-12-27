@@ -1,5 +1,6 @@
 ---
 title: Python static site generator
+summary: The source code for my Python static site generator
 tags:
   - code
   - random

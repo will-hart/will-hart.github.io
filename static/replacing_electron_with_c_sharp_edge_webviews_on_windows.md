@@ -1,5 +1,6 @@
 ---
 title: Replacing Electron with C# WebView (Windows Only)
+summary: A brief look at the WebView libraries coming to C# WPF
 tags:
   - tutorials
   - phd

@@ -1,6 +1,7 @@
 ---
 title: "First impressions: converting a React/Firebase project to GraphQL"
 subtitle: "I've recently moved a firebase project to GraphQL, here I talk about the my first impressions of migrating to GraphQL."
+summary: A first impressions post on porting a firebase project to GraphQL
 tags:
   - code
 authorName: Will Hart

@@ -1,5 +1,6 @@
 ---
 title: PIC16F628A TMR0 Interrupts
+summary: A quick tutorial on how to use interrupts on a PIC16F628A microcontroller
 tags:
   - tutorials
   - electronics

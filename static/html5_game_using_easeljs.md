@@ -1,5 +1,6 @@
 ---
 title: HTML5 Game using easel.js
+summary: A description of a Connect 4 clone I build using EaselJS
 tags:
   - code
   - projects

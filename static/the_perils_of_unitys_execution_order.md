@@ -1,5 +1,6 @@
 ---
 title: The Perils of Unity's execution order
+summary: A deep and confusing dive into Unity's execution order
 tags:
   - code
   - gamedev

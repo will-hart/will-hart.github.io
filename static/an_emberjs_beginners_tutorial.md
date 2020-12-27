@@ -1,6 +1,7 @@
 ---
 title: An Ember.js beginners tutorial
 subtitle: Note this is very out of date!
+summary: An out of date beginners tutorial for Ember JS
 tags:
   - tutorials
   - code

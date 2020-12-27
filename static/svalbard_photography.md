@@ -1,5 +1,6 @@
 ---
 title: Svalbard Photography
+summary: A youtube video showing some of the photos from our Circumnavigation of Svalbard in the Arctic Circle.
 tags:
   - project
 authorName: Will Hart

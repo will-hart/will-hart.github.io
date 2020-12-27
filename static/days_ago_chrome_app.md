@@ -1,5 +1,6 @@
 ---
 title: Days Ago, a Chrome App
+summary: An experimental Chrome App for entering more natural reminders
 tags:
   - code
   - projects

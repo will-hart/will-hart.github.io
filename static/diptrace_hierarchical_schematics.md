@@ -1,5 +1,6 @@
 ---
 title: Diptrace Hierarchical Schematics
+summary: A youtube tutorial on using hierarchical schematics in Diptrace
 tags:
   - electronics
   - tutorials

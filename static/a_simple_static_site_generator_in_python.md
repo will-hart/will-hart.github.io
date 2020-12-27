@@ -1,5 +1,6 @@
 ---
 title: A simple static site generator in Python
+summary: A description of a simple static site generator I built in Python
 tags:
   - code
   - projects

@@ -1,5 +1,6 @@
 ---
 title: Live Electric Vehicle Telemetry Software
+summary: A brief discussion of the telemetry software I'm building for my University's electric Formula Student car
 tags:
   - electronics
   - project

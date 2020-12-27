@@ -1,5 +1,6 @@
 ---
 title: demarcate.js 2 redesign
+summary: A quick review of the upcoming features in demarcate.js version 2
 tags:
   - code
   - projects

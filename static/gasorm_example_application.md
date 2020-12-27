@@ -1,5 +1,6 @@
 ---
 title: GasORM Example Application
+summary: Describing some work I did creating a tutorial for the GasORM library
 tags:
   - code
   - projects

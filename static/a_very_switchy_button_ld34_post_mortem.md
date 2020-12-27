@@ -1,5 +1,6 @@
 ---
 title: A very switchy button, LD34 Post-Mortem
+summary: A look at my Ludum Dare 34 entry, a game to scratch that switch switching itch.
 tags:
   - gamedev
 authorName: Will Hart

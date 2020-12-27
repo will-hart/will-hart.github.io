@@ -1,5 +1,6 @@
 ---
 title: Editing Markdown with Ember.js
+summary: A quick tutorial on building a custom EmberJS text editor using demarcate.js
 tags:
   - code
   - tutorials

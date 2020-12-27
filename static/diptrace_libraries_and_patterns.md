@@ -1,5 +1,6 @@
 ---
 title: Diptrace Libraries and Patterns
+summary: A youtube tutorial on using libraries and patterns in Diptrace
 tags:
   - electronics
 authorName: Will Hart

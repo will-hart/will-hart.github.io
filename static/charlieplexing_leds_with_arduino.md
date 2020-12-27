@@ -1,5 +1,6 @@
 ---
 title: Charlieplexing LEDs with Arduino
+summary: A tutorial on how to use the charlieplexing technique to illuminate a bunch of LEDs from a limited number of microcontroller pins
 tags:
   - tutorials
   - electronics

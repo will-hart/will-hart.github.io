@@ -1,6 +1,7 @@
 ---
 title: C# 5.0 In A Nutshell - Review
 subtitle: A review of a book by Joseph Albahari & Ben Albahari, O'Reilly Media
+summary: A review of a C# book from O'Reilly Media.
 tags:
   - random
 authorName: Will Hart

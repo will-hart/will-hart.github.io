@@ -1,5 +1,6 @@
 ---
 title: Making game assets using OpenSCAD
+summary: Using a surprising tool to build game assets, based on some work I did building samples for experiments at the Australian Synchrotron
 tags:
   - tutorials
   - code

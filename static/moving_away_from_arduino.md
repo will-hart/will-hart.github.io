@@ -1,5 +1,6 @@
 ---
 title: Moving away from Arduino
+summary: A quick checklist of things to know when considering moving from Arduino to a lower level microcontroller
 tags:
   - electronics
 authorName: Will Hart
