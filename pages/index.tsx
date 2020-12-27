@@ -1,11 +1,12 @@
 import * as React from "react"
-import { BlogHeader } from "../components/BlogHeader"
+import { BlogHead } from "../components/BlogHead"
+import { HomeLayout } from "../components/HomeLayout"
 
 const Home = (): JSX.Element => {
   return (
-    <div>
-      <BlogHeader />
-    </div>
+    <HomeLayout>
+      <BlogHead />
+    </HomeLayout>
   )
 }
 

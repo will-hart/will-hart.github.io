@@ -6,3 +6,5 @@ dist
 coverage
 .next
 .eslintrc.js
+tailwind.config.js
+postcss.config.js
