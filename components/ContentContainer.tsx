@@ -4,6 +4,4 @@ export const ContentContainer = ({
   children,
 }: {
   children: JSX.Element | JSX.Element[]
-}): JSX.Element => (
-  <div className="max-w-screen-lg mx-auto my-0">{children}</div>
-)
+}): JSX.Element => <div className="container mx-auto my-0">{children}</div>

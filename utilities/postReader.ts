@@ -6,6 +6,7 @@ import { pageData } from "../static/posts"
 export interface BlogPostData {
   slug: string
   title: string
+  summary?: string
   subtitle?: string
   markdown: string
   authorName: string
@@ -18,6 +19,12 @@ export const getPostsMatchingTag = async (
 ): Promise<BlogPostData[]> => {
   const posts = await Promise.all(pageData.map(postReader))
   return posts.filter((p) => p.tags && p.tags.includes(tag))
+}
+
+export const getMostRecentPosts = async (
+  numberToRetrieve = 9
+): Promise<BlogPostData[]> => {
+  return Promise.all(pageData.slice(0, numberToRetrieve).map(postReader))
 }
 
 export const postReader = (slug: string): Promise<BlogPostData> => {
@@ -40,6 +47,13 @@ export const postReader = (slug: string): Promise<BlogPostData> => {
     | undefined
   if (subtitle) {
     result.subtitle = subtitle
+  }
+
+  const summary: string | undefined = matterParsed.data.summary as
+    | string
+    | undefined
+  if (summary) {
+    result.summary = summary
   }
 
   return Promise.resolve(result)
