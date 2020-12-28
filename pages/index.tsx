@@ -25,7 +25,7 @@ const Home = ({ recentPosts }: HomeProps): JSX.Element => {
             Hi, I&apos;m Will
           </h1>
           <p className="text-yellow-300 text-xl text-center">
-            I&apos;m a product manager at a Med Tech company in Melbourne.
+            I&apos;m a Product Manager at a Med Tech company in Melbourne.
           </p>
           <p className="text-yellow-300 text-xl text-center">
             I sometimes post my coding adventures here.
