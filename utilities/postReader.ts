@@ -14,6 +14,8 @@ export interface BlogPostData {
   tags?: string[]
 }
 
+export type BlogPostSummary = Pick<BlogPostData, "slug" | "title" | "summary">
+
 export const getPostsMatchingTag = async (
   tag: string
 ): Promise<BlogPostData[]> => {
@@ -25,6 +27,11 @@ export const getMostRecentPosts = async (
   numberToRetrieve = 9
 ): Promise<BlogPostData[]> => {
   return Promise.all(pageData.slice(0, numberToRetrieve).map(postReader))
+}
+
+export const getSummaryFields = (post: BlogPostData): BlogPostSummary => {
+  const { slug, title, summary } = post
+  return { slug, title, summary }
 }
 
 /**

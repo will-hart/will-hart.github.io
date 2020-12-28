@@ -1,13 +1,13 @@
 import Link from "next/link"
 import * as React from "react"
 
-import { BlogPostData } from "../utilities/postReader"
+import { BlogPostSummary } from "../utilities/postReader"
 
 interface PostListProps {
-  posts: BlogPostData[]
+  posts: BlogPostSummary[]
 }
 
-const PostListItem = ({ post }: { post: BlogPostData }): JSX.Element => (
+const PostListItem = ({ post }: { post: BlogPostSummary }): JSX.Element => (
   <div className="flex flex-col w-full lg:w-1/3 xl:w-1/4 m-4 box-border bg-gray-700">
     <div className="flex flex-col p-4">
       <Link href={`/${post.slug}`}>

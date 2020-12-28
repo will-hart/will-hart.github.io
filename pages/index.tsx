@@ -4,11 +4,15 @@ import { GetStaticProps } from "next"
 import { BlogHead } from "../components/BlogHead"
 import { ContentContainer } from "../components/ContentContainer"
 import { HomeLayout } from "../components/HomeLayout"
-import { BlogPostData, getMostRecentPosts } from "../utilities/postReader"
+import {
+  BlogPostSummary,
+  getMostRecentPosts,
+  getSummaryFields,
+} from "../utilities/postReader"
 import { PostList } from "../components/PostList"
 
 interface HomeProps {
-  recentPosts: BlogPostData[]
+  recentPosts: BlogPostSummary[]
 }
 
 const Home = ({ recentPosts }: HomeProps): JSX.Element => {
@@ -36,7 +40,7 @@ const Home = ({ recentPosts }: HomeProps): JSX.Element => {
 
 export const getStaticProps: GetStaticProps = async () => {
   const recentPosts = await getMostRecentPosts()
-  return { props: { recentPosts } }
+  return { props: { recentPosts: recentPosts.map(getSummaryFields) } }
 }
 
 export default Home

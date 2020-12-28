@@ -2,9 +2,10 @@ import * as React from "react"
 
 import { GetStaticProps, GetStaticPaths } from "next"
 import {
-  BlogPostData,
+  BlogPostSummary,
   getAllCategories,
   getPostsMatchingTag,
+  getSummaryFields,
 } from "../../utilities/postReader"
 import { HomeLayout } from "../../components/HomeLayout"
 import { BlogHead } from "../../components/BlogHead"
@@ -15,7 +16,7 @@ const TagPage = ({
   taggedPosts,
 }: {
   tag: string
-  taggedPosts: BlogPostData[]
+  taggedPosts: BlogPostSummary[]
 }): JSX.Element => (
   <HomeLayout>
     <BlogHead title={`Posts tagged "${tag}"`} />
@@ -40,7 +41,12 @@ export const getStaticPaths: GetStaticPaths = async () => {
 export const getStaticProps: GetStaticProps = async (context) => {
   const tag = context.params.tag.toString()
   const taggedPosts = await getPostsMatchingTag(tag)
-  return { props: { tag, taggedPosts } }
+  return {
+    props: {
+      tag,
+      taggedPosts: taggedPosts.map(getSummaryFields),
+    },
+  }
 }
 
 export default TagPage
