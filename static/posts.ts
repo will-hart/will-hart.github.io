@@ -1,4 +1,5 @@
 export const pageData: string[] = [
+  "20201228-recreating-the-blog-in-nextjs",
   "thesis-writing-in-markdown-pandoc-and-pandemic",
   "replacing-electron-with-c-sharp-edge-webviews-on-windows",
   "creating-a-repl-for-hacking-on-a-firestore-backend",
