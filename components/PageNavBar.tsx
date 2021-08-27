@@ -4,6 +4,8 @@ import { StyledTextLink } from "./StyledTextLink"
 export const PageNavBar = (): JSX.Element => (
   <div className="sticky top-0 p-3 bg-gray-800 z-10 shadow-lg">
     <div className="flex justify-between items-center">
+      <StyledTextLink href="/">willhart.io</StyledTextLink>
+
       <span>
         <span className="mr-4">
           <StyledTextLink href="/tag/projects">PROJECTS</StyledTextLink>
@@ -21,7 +23,6 @@ export const PageNavBar = (): JSX.Element => (
           <StyledTextLink href="/tag/random">RANDOM</StyledTextLink>
         </span>
       </span>
-      <StyledTextLink href="/">willhart.io</StyledTextLink>
     </div>
   </div>
 )
