@@ -1,5 +1,6 @@
 export const pageData: string[] = [
-  "20210828_tauri_create_react_app_tutorial_part2",
+  "20210828_tauri_create_react_app_tutorial_part3",
+  "20210827_tauri_create_react_app_tutorial_part2",
   "20210826_tauri_create_react_app_tutorial_part1",
   "20201228-recreating-the-blog-in-nextjs",
   "thesis-writing-in-markdown-pandoc-and-pandemic",

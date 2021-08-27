@@ -119,4 +119,4 @@ If the rust function returns an `Err(some_string)` then this is passed through t
 invoke(...).then(result => ...).catch(console.error)
 ```
 
-> We now have commands invoked from the web side executing rust code and handling the result. The code for this tutorial can be found [here on github](https://github.com/will-hart/tauri-cra-tutorial/tree/f373bf1dbe9a21101e1a2b1cd6b8d8969e94e0b4). Part 1 of the tutorial [can be found here](/20210826_tauri_create_react_app_tutorial_part1) and part 3 of the tutorial [can be found here](/20210830_tauri_create_react_app_tutorial_part3).
+> We now have commands invoked from the web side executing rust code and handling the result. The code for this tutorial can be found [here on github](https://github.com/will-hart/tauri-cra-tutorial/tree/f373bf1dbe9a21101e1a2b1cd6b8d8969e94e0b4). Part 1 of the tutorial [can be found here](/20210826_tauri_create_react_app_tutorial_part1) and part 3 of the tutorial [can be found here](/20210828_tauri_create_react_app_tutorial_part3).
