@@ -154,4 +154,20 @@ We also need to update the way our state is created in the `main()` function. Ch
 
 At this point we can also remove a bunch of unused imports in the `main.rs` file. If we run the app we can see that the counters behave as we'd expect, each incrementing separately and the counters using the same ID updating at the same time.
 
-> We extended our command here to support counters with different IDs. The code for this tutorial can be found [here on github](https://github.com/will-hart/tauri-cra-tutorial/tree/0f664071e266d45c153efeabf43c09d588c5c907). Part 3 of the tutorial [can be found here](/20210828_tauri_create_react_app_tutorial_part3).
+## Building the app
+
+Now that we are done developing the app, lets build it and see how large the binary is and how much memory it uses. To build the app,
+
+```bash
+yarn tauri build
+```
+
+The build can take a while as the CRA is built and the rust parts are compiled in release mode. Once it is built we can look in `src-tauri/target/release`. In the `bundle` folder there is an `msi` installer we can use, but there should be a `counter-app.exe` directly in the `release` folder. Mine is about 7MB.
+
+![The binary size of the built Tauri app](images/tauri-step2-binary.png)
+
+If I run the application I can check the memory footprint. (After first clicking the increment buttons a bunch of times to make sure everything is working!). Its a fairly slim application, but with basically no CPU and about 50MB of RAM its perfectly acceptible out of the box.
+
+![The resource usage of the built Tauri app](images/tauri-step2-resources.png)
+
+> That's it, our counter tutorial app is complete! In this part we extended our command here to support counters with different IDs. The code for this tutorial can be found [here on github](https://github.com/will-hart/tauri-cra-tutorial/tree/0f664071e266d45c153efeabf43c09d588c5c907). Part 3 of the tutorial [can be found here](/20210828_tauri_create_react_app_tutorial_part3).
