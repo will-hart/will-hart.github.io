@@ -7,7 +7,7 @@ tags:
   - projects
   - tutorials
 authorName: Will Hart
-publishedDateString: 26 Aug 2021
+publishedDateString: 28 Aug 2021
 ---
 
 ## Recap
@@ -199,4 +199,4 @@ return (
 
 Now when the app reloads there should be two counters. Clicking either increment button automatically updates both counters! As the `args` is the same for these two `useInvoke` hooks, they use the same data. In the next part of this series we'll take a look at how we can use separate counters.
 
-> We've now built a generic hook that can invoke the command and manage the update logic for us. The code for this tutorial can be found [here on github](https://github.com/will-hart/tauri-cra-tutorial/tree/3dc42b87f00907e4245bd5c47d9d65a7eacc0316). Part 2 of the tutorial [can be found here](/20210827_tauri_create_react_app_tutorial_part2) and part 4 of the tutorial [can be found here](/20210829_tauri_create_react_app_tutorial_part3).
+> We've now built a generic hook that can invoke the command and manage the update logic for us. The code for this tutorial can be found [here on github](https://github.com/will-hart/tauri-cra-tutorial/tree/3dc42b87f00907e4245bd5c47d9d65a7eacc0316). Part 2 of the tutorial [can be found here](/20210827_tauri_create_react_app_tutorial_part2) and part 4 of the tutorial [can be found here](/20210829_tauri_create_react_app_tutorial_part4).
