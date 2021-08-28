@@ -3,8 +3,6 @@ title: Tauri and Create React App Part 2 - Commands
 summary: Part 2 of a tutorial for setting up Tauri (an electron alternative) and Create React App. Here we run through setting up and invoking a command written in rust.
 tags:
   - code
-  - random
-  - projects
   - tutorials
 authorName: Will Hart
 publishedDateString: 27 Aug 2021

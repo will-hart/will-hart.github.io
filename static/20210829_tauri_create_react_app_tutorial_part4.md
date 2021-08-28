@@ -3,8 +3,6 @@ title: Tauri and Create React App Part 4 - Extending commands
 summary: Part 4 of a tutorial for setting up Tauri (an electron alternative) and Create React App. Here we extend our hook and command to support multiple counters.
 tags:
   - code
-  - random
-  - projects
   - tutorials
 authorName: Will Hart
 publishedDateString: 30 Aug 2021

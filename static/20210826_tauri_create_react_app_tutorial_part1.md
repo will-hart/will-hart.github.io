@@ -3,8 +3,6 @@ title: Tauri and Create React App Part 1 - Setup
 summary: Part 1 of a tutorial for setting up Tauri (an electron alternative) and Create React App. Here we set up tauri and CRA ready for dev.
 tags:
   - code
-  - random
-  - projects
   - tutorials
 authorName: Will Hart
 publishedDateString: 26 Aug 2021

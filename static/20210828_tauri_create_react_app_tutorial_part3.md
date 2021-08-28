@@ -3,8 +3,6 @@ title: Tauri and Create React App Part 3 - Commands as hooks
 summary: Part 3 of a tutorial for setting up Tauri (an electron alternative) and Create React App. Here we create a hook for invoking "get/set" commands using the `useSWR` package.
 tags:
   - code
-  - random
-  - projects
   - tutorials
 authorName: Will Hart
 publishedDateString: 28 Aug 2021
