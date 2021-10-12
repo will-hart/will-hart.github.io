@@ -153,7 +153,7 @@ drop the package in:
 You might get a warning about having the wrong SDK version. Just follow the
 instructions on screen to configure the project correctly for firebase.
 
-![The SDK version may need to be updated](images/firebase_and_unity1/sdk_prompt.png)
+![The SDK version may need to be updated](/images/firebase_and_unity1/sdk_prompt.png)
 
 ### Ready to rock
 

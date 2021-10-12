@@ -1,5 +1,6 @@
 import * as fs from "fs"
 import matter from "gray-matter"
+import { ITEMS_PER_PAGE } from "../components/constants"
 
 import { pageData } from "../static/posts"
 
@@ -24,9 +25,12 @@ export const getPostsMatchingTag = async (
 }
 
 export const getMostRecentPosts = async (
-  numberToRetrieve = 9
+  numberToRetrieve = ITEMS_PER_PAGE,
+  offset = 0
 ): Promise<BlogPostData[]> => {
-  return Promise.all(pageData.slice(0, numberToRetrieve).map(postReader))
+  return Promise.all(
+    pageData.slice(offset, offset + numberToRetrieve).map(postReader)
+  )
 }
 
 export const getSummaryFields = (post: BlogPostData): BlogPostSummary => {

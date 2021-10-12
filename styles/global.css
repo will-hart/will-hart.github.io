@@ -17,10 +17,6 @@ a:hover {
   @apply underline;
 }
 
-.styled-link {
-  @apply text-xs;
-}
-
 .styled-link:hover {
   @apply underline;
 }

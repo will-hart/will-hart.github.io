@@ -25,9 +25,9 @@ This project is going to demonstrate a small sample App built on a tauri and Rea
 This tutorial will be broken into a few parts:
 
 1) this part, getting set up with [tauri](https://tauri.studio/) and [create-react-app](https://create-react-app.dev/) (CRA),
-2) setting up a simple command that we can call from the front end [[link](/20210827_tauri_create_react_app_tutorial_part2)]
-3) wrapping the command in `useSWR` to make a generic "invoke" hook, [[link](/20210828_tauri_create_react_app_tutorial_part3)]
-4) extending our hook to support multiple counters, [[link](/20210829_tauri_create_react_app_tutorial_part4)]
+2) setting up a simple command that we can call from the front end [[link](/post/20210827_tauri_create_react_app_tutorial_part2)]
+3) wrapping the command in `useSWR` to make a generic "invoke" hook, [[link](/post/20210828_tauri_create_react_app_tutorial_part3)]
+4) extending our hook to support multiple counters, [[link](/post/20210829_tauri_create_react_app_tutorial_part4)]
 
 ## Getting ready for tauri
 
@@ -141,8 +141,8 @@ yarn dev
 
 It should look something like this:
 
-![The basic Tauri app window](images/tauri-step1.png)
+![The basic Tauri app window](/images/tauri-step1.png)
 
 Both the web app and the Tauri app reload when changes are made. You can verify this by editing our `App.tsx` from `<button>Increment</button> 0` to `<button>Increment</button> 1`. After saving the Tauri app should automatically update.
 
-> The code at this point can be accessed [on github](https://github.com/will-hart/tauri-cra-tutorial/tree/283a4196665c9c014046206fc832c7efb7e31357). Part 2 of the series [can be found here](/20210827_tauri_create_react_app_tutorial_part2)
+> The code at this point can be accessed [on github](https://github.com/will-hart/tauri-cra-tutorial/tree/283a4196665c9c014046206fc832c7efb7e31357). Part 2 of the series [can be found here](/post/20210827_tauri_create_react_app_tutorial_part2)

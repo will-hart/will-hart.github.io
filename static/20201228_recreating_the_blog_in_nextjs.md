@@ -73,4 +73,3 @@ and migrate all the posts by hand :(
 I don't really think it will spur me to write more posts, but at least when I do
 decide to write something it's as easy as writing a Markdown document and
 committing to git.
-

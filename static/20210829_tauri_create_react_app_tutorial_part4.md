@@ -10,13 +10,13 @@ publishedDateString: 29 Aug 2021
 
 ## Recap
 
-In [part 1](/20210826_tauri_create_react_app_tutorial_part1) of this tutorial series we set up a Tauri and create-react-app app and added a basic non-functional counter. In [part 2](/20210828_tauri_create_react_app_tutorial_part2) we created and invoked a command for incrementing our counter. In [part 3](/20210829_tauri_create_react_app_tutorial_part2) we created and invoked a command for incrementing our counter.
+In [part 1](/post/20210826_tauri_create_react_app_tutorial_part1) of this tutorial series we set up a Tauri and create-react-app app and added a basic non-functional counter. In [part 2](/post/20210828_tauri_create_react_app_tutorial_part2) we created and invoked a command for incrementing our counter. In [part 3](/post/20210829_tauri_create_react_app_tutorial_part2) we created and invoked a command for incrementing our counter.
 
 In this part, we will update our command and hooks to support multiple different counters indexed by ID.
 
 ## Basic concept
 
-If you recall from [part 3 of this series](/20210830_tauri_create_react_app_tutorial_part3), the `useSWR` uses the first argument as a `key` to cache queries. The key can be an array, and the key is passed to the `fetcher` function as arguments. We're going to use the key to store a `counterId` variable that we can use to maintain separate counters. We'll also need to update our commands in the rust code to support an ID.
+If you recall from [part 3 of this series](/post/20210830_tauri_create_react_app_tutorial_part3), the `useSWR` uses the first argument as a `key` to cache queries. The key can be an array, and the key is passed to the `fetcher` function as arguments. We're going to use the key to store a `counterId` variable that we can use to maintain separate counters. We'll also need to update our commands in the rust code to support an ID.
 
 ## Update our hook to support counter Ids
 
@@ -164,10 +164,10 @@ yarn tauri build
 
 The build can take a while as the CRA is built and the rust parts are compiled in release mode. Once it is built we can look in `src-tauri/target/release`. In the `bundle` folder there is an `msi` installer we can use, but there should be a `counter-app.exe` directly in the `release` folder. Mine is about 7MB.
 
-![The binary size of the built Tauri app](images/tauri-step2-binary.png)
+![The binary size of the built Tauri app](/images/tauri-step2-binary.png)
 
 If I run the application I can check the memory footprint. (After first clicking the increment buttons a bunch of times to make sure everything is working!). Its a fairly slim application, but with basically no CPU and about 50MB of RAM its perfectly acceptible out of the box.
 
-![The resource usage of the built Tauri app](images/tauri-step2-resources.png)
+![The resource usage of the built Tauri app](/images/tauri-step2-resources.png)
 
-> That's it, our counter tutorial app is complete! In this part we extended our command here to support counters with different IDs. The code for this tutorial can be found [here on github](https://github.com/will-hart/tauri-cra-tutorial/tree/0f664071e266d45c153efeabf43c09d588c5c907). Part 3 of the tutorial [can be found here](/20210828_tauri_create_react_app_tutorial_part3).
+> That's it, our counter tutorial app is complete! In this part we extended our command here to support counters with different IDs. The code for this tutorial can be found [here on github](https://github.com/will-hart/tauri-cra-tutorial/tree/0f664071e266d45c153efeabf43c09d588c5c907). Part 3 of the tutorial [can be found here](/post/20210828_tauri_create_react_app_tutorial_part3).

@@ -1,14 +1,14 @@
 import * as React from "react"
 import { GetStaticProps, GetStaticPaths } from "next"
 
-import { pageData } from "../static/posts"
-import { Markdown } from "../components/Markdown"
-import { BlogHead } from "../components/BlogHead"
-import { TagList } from "../components/TagList"
-import { HomeLayout } from "../components/HomeLayout"
-import { StyledTextLink } from "../components/StyledTextLink"
-import { BlogPostData, postReader } from "../utilities/postReader"
-import { ContentContainer } from "../components/ContentContainer"
+import { pageData } from "../../static/posts"
+import { Markdown } from "../../components/Markdown"
+import { BlogHead } from "../../components/BlogHead"
+import { TagList } from "../../components/TagList"
+import { HomeLayout } from "../../components/HomeLayout"
+import { StyledTextLink } from "../../components/StyledTextLink"
+import { BlogPostData, postReader } from "../../utilities/postReader"
+import { ContentContainer } from "../../components/ContentContainer"
 
 const BlogPostPage = (postData: BlogPostData): JSX.Element => {
   const {

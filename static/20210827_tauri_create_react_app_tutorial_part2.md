@@ -10,7 +10,7 @@ publishedDateString: 27 Aug 2021
 
 ## Recap
 
-In [part 1](/20210826_tauri_create_react_app_tutorial_part1) of this tutorial series we set up a Tauri and create-react-app app and added a basic non-functional counter. We worked out how to run the app with one command and use the built-in hot reloading to reload the app.
+In [part 1](/post/20210826_tauri_create_react_app_tutorial_part1) of this tutorial series we set up a Tauri and create-react-app app and added a basic non-functional counter. We worked out how to run the app with one command and use the built-in hot reloading to reload the app.
 
 In this part, we will write a basic rust command and invoke it from the client side to update our counter in the app.
 
@@ -117,4 +117,4 @@ If the rust function returns an `Err(some_string)` then this is passed through t
 invoke(...).then(result => ...).catch(console.error)
 ```
 
-> We now have commands invoked from the web side executing rust code and handling the result. The code for this tutorial can be found [here on github](https://github.com/will-hart/tauri-cra-tutorial/tree/f373bf1dbe9a21101e1a2b1cd6b8d8969e94e0b4). Part 1 of the tutorial [can be found here](/20210826_tauri_create_react_app_tutorial_part1) and part 3 of the tutorial [can be found here](/20210828_tauri_create_react_app_tutorial_part3).
+> We now have commands invoked from the web side executing rust code and handling the result. The code for this tutorial can be found [here on github](https://github.com/will-hart/tauri-cra-tutorial/tree/f373bf1dbe9a21101e1a2b1cd6b8d8969e94e0b4). Part 1 of the tutorial [can be found here](/post/20210826_tauri_create_react_app_tutorial_part1) and part 3 of the tutorial [can be found here](/post/20210828_tauri_create_react_app_tutorial_part3).

@@ -10,7 +10,7 @@ publishedDateString: 28 Aug 2021
 
 ## Recap
 
-In [part 1](/20210826_tauri_create_react_app_tutorial_part1) of this tutorial series we set up a Tauri and create-react-app app and added a basic non-functional counter. In [part 2](/20210827_tauri_create_react_app_tutorial_part2) we created and invoked a command for incrementing our counter.
+In [part 1](/post/20210826_tauri_create_react_app_tutorial_part1) of this tutorial series we set up a Tauri and create-react-app app and added a basic non-functional counter. In [part 2](/post/20210827_tauri_create_react_app_tutorial_part2) we created and invoked a command for incrementing our counter.
 
 In this part, we will write a generic hook for invoking and updating hook data. In theory this hook could be reused for both web APIs or invoked commands by changing the underlying `fetcher` used by `swr`.
 
@@ -61,7 +61,7 @@ The `invokeFetcher` has two type parameters, the first `TArgs` defines the argum
 
 ## Using the fetcher in an swr hook
 
-Now we can invoke a command via SWR. In our `App.tsx` from [part 2](/20210828_tauri_create_react_app_tutorial_part2) replace the `useEffect` with:
+Now we can invoke a command via SWR. In our `App.tsx` from [part 2](/post/20210828_tauri_create_react_app_tutorial_part2) replace the `useEffect` with:
 
 ```typescript
 const args = useRef({ delta: 0 })
@@ -197,4 +197,4 @@ return (
 
 Now when the app reloads there should be two counters. Clicking either increment button automatically updates both counters! As the `args` is the same for these two `useInvoke` hooks, they use the same data. In the next part of this series we'll take a look at how we can use separate counters.
 
-> We've now built a generic hook that can invoke the command and manage the update logic for us. The code for this tutorial can be found [here on github](https://github.com/will-hart/tauri-cra-tutorial/tree/3dc42b87f00907e4245bd5c47d9d65a7eacc0316). Part 2 of the tutorial [can be found here](/20210827_tauri_create_react_app_tutorial_part2) and part 4 of the tutorial [can be found here](/20210829_tauri_create_react_app_tutorial_part4).
+> We've now built a generic hook that can invoke the command and manage the update logic for us. The code for this tutorial can be found [here on github](https://github.com/will-hart/tauri-cra-tutorial/tree/3dc42b87f00907e4245bd5c47d9d65a7eacc0316). Part 2 of the tutorial [can be found here](/post/20210827_tauri_create_react_app_tutorial_part2) and part 4 of the tutorial [can be found here](/post/20210829_tauri_create_react_app_tutorial_part4).
