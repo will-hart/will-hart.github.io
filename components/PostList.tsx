@@ -32,7 +32,7 @@ const PostListItem = ({ post }: { post: BlogPostSummary }): JSX.Element => (
 
 export const PostList = ({ posts }: PostListProps): JSX.Element => (
   <div className="flex flex-wrap justify-center">
-    {posts.map((post, idx) => (
+    {(posts || []).map((post, idx) => (
       <PostListItem key={`post_preview_${idx}`} post={post} />
     ))}
   </div>
