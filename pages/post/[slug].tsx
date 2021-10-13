@@ -11,14 +11,8 @@ import { BlogPostData, postReader } from "../../utilities/postReader"
 import { ContentContainer } from "../../components/ContentContainer"
 
 const BlogPostPage = (postData: BlogPostData): JSX.Element => {
-  const {
-    authorName,
-    publishedDateString,
-    subtitle,
-    tags,
-    title,
-    markdown,
-  } = postData
+  const { authorName, publishedDateString, subtitle, tags, title, markdown } =
+    postData
 
   return (
     <HomeLayout>
