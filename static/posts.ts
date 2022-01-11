@@ -1,4 +1,5 @@
 export const pageData: string[] = [
+  "20220111_cmos_analog_clock",
   "20210829_tauri_create_react_app_tutorial_part4",
   "20210828_tauri_create_react_app_tutorial_part3",
   "20210827_tauri_create_react_app_tutorial_part2",
