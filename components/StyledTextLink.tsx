@@ -10,7 +10,7 @@ export const StyledTextLink = ({
   children: string | JSX.Element
   size?: "small" | "large"
 }): JSX.Element => (
-  <Link href={href}>
+  <Link href={href} passHref>
     <a
       className={`${
         (size ?? "small") === "small" ? "text-xs" : "text-lg"
