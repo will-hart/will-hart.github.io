@@ -2,7 +2,7 @@ import * as fs from "fs"
 import matter from "gray-matter"
 import { ITEMS_PER_PAGE } from "../components/constants"
 
-import { pageData } from "../static/posts"
+import { pageData } from "../public/static/posts"
 
 export interface BlogPostData {
   slug: string
@@ -54,7 +54,7 @@ export const getAllCategories = async (): Promise<string[]> => {
 
 export const postReader = (slug: string): Promise<BlogPostData> => {
   const fileContent = fs
-    .readFileSync(`./static/${slug.replace(/-/g, "_")}.md`)
+    .readFileSync(`./public/static/${slug.replace(/-/g, "_")}.md`)
     .toString()
   const matterParsed = matter(fileContent)
 

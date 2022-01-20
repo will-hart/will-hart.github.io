@@ -1,7 +1,7 @@
 import * as React from "react"
 import { GetStaticProps, GetStaticPaths } from "next"
 
-import { pageData } from "../../static/posts"
+import { pageData } from "../../public/static/posts"
 import { Markdown } from "../../components/Markdown"
 import { BlogHead } from "../../components/BlogHead"
 import { TagList } from "../../components/TagList"
