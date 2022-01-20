@@ -22,7 +22,7 @@ a:hover {
 }
 
 article {
-  @apply max-w-screen-md mx-auto mb-12 p-4 md:p-0;
+  @apply max-w-screen-lg mx-auto mb-12 p-4 md:p-0;
 }
 
 article > p,
@@ -84,8 +84,9 @@ article > blockquote {
   @apply border-l-4 border-yellow-500 my-6 p-4 bg-yellow-800 bg-opacity-50;
 }
 
-article img {
-  @apply my-6 mx-auto;
+article img,
+.optimisedImage {
+  @apply my-6 mx-auto !important;
 }
 
 .hero {

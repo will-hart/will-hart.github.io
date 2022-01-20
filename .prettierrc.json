@@ -7,5 +7,5 @@
   "semi": false,
   "useTabs": false,
   "bracketSameLine": false,
-  "endOfLine": "lf"
+  "endOfLine": "auto"
 }
