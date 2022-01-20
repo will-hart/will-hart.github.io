@@ -81,7 +81,7 @@ Once you have created the database, click the "Database" link on the left hand
 menu, here you can see your database contents. It might look something like
 this:
 
-![The initial database contents](/images/firebase_and_unity1/firebase_setup.png)
+![The initial database contents (size: 1098x293px)](/images/firebase_and_unity1/firebase_setup.png)
 
 You can see the firebase URL - `http://wh-unity-test.firebaseio.com/` and the root
 of the database, `wh-unity-test` with a value of `null`.
@@ -130,7 +130,7 @@ This lets us try out our rules before saving them. Have a play and verify that
 the rules prevent access outside of `counter` and reject attempts to write text or
 other data to the `/counter` path.
 
-![The Firebase rules simulator in action](/images/firebase_and_unity1/rule_simulator-1.png)
+![The Firebase rules simulator in action (size: 1186x631px)](/images/firebase_and_unity1/rule_simulator-1.png)
 
 When you are happy, hit `PUBLISH` and our database setup is done. We'll come
 back to the database in a little while.

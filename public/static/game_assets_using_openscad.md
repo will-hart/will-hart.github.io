@@ -17,7 +17,7 @@ about in SolidWorks making them in all sorts of different sizes and then
 maintaining them every time the design specs changed. I decided what I really
 wanted was a procedural CAD program so I could code the outputs.
 
-![A preview of what we are going to make in this tutorial](/images/scad_game_assets/header.png)
+![A preview of what we are going to make in this tutorial (size: 1918x768px)](/images/scad_game_assets/header.png)
 
 After some messing about I found [OpenSCAD](http://www.openscad.org/) which is
 billed as "the Programmer's Solid 3D CAD modeller". Basically you can script 3D
@@ -26,7 +26,7 @@ as well as primitive shapes like `cube`, `cylinder` and `sphere`. The language
 allows basic scripting including variables, `for` and `if` control statements. A
 minimal example is a cube, which you make like this:
 
-![A basic OpenSCAD box](/images/scad_game_assets/a_basic_openscad_cube.png)
+![A basic OpenSCAD box (size: 785x510px)](/images/scad_game_assets/a_basic_openscad_cube.png)
 
 I wondered if I could use this as a really simple way to make game assets,
 particularly building up a lot of basic shapes very quickly. I think the
@@ -122,7 +122,7 @@ scale(wall_scale) {
 
 Which produces:
 
-![The first attempt at a castle wall](/images/scad_game_assets/model_with_crennelation.png)
+![The first attempt at a castle wall (size: 477x440px)](/images/scad_game_assets/model_with_crennelation.png)
 
 ## Reusing our wall
 
@@ -158,7 +158,7 @@ scale(wall_scale) {
 }
 ```
 
-![Repeating wall sections using a module](/images/scad_game_assets/multiple_walls_in_loop.png)
+![Repeating wall sections using a module (size: 504x314px)](/images/scad_game_assets/multiple_walls_in_loop.png)
 
 We might also want to draw walls at different angles, so lets wrap that code in
 a module with a couple of arguments:
@@ -207,7 +207,7 @@ scale(wall_scale) {
 }
 ```
 
-![Repeating wall sections to draw a closed wall](/images/scad_game_assets/enclosed_wall.png)
+![Repeating wall sections to draw a closed wall (size: 641x453px)](/images/scad_game_assets/enclosed_wall.png)
 
 Phew, that was actually "relatively" easy! Of course that's only the basics, and
 we still would need to export to STL, then do UV unwrapping, texturing and so on
@@ -226,7 +226,7 @@ a lot more complicated, but its an interesting experiment!
 Here is something I put together with maybe twenty minutes more effort (you can
 see the code for it below):
 
-![An example castle built using OpenSCAD](/images/scad_game_assets/castle.png)
+![An example castle built using OpenSCAD (size: 521x404px)](/images/scad_game_assets/castle.png)
 
 ## The Code
 

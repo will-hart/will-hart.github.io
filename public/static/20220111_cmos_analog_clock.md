@@ -12,7 +12,7 @@ publishedDateString: 11 Jan 2022
 
 I took inspiration from a number of sources for the analog circuitry, but unfortunately most of those links are lost in the mists of time. The basic principle is to take a 32kHz signal and divide it down to the correct signals using analog ICs, mostly a combination of 74HC4040s and 74HC161s mixed with a series of logic gates (the schematics are included below) and then 74HC238s on the outputs. The circuitry was complicated enough that I breadboarded it:
 
-![The clock circuitry built on a breadboard prior to ordering the PCBs.](/images/cmos_clock/breadboard.png)
+![The clock circuitry built on a breadboard prior to ordering the PCBs. (size: 340x411px)](/images/cmos_clock/breadboard.png)
 
 This would have gone a lot better if I'd had an oscilloscope or decent logic probe for debugging, but I developed a system of LEDs logic probes and used the Arduino to inject signals at arbitrary frequencies and got there in the end.
 
@@ -20,15 +20,15 @@ Once the clock circuitry was set, it was time to design the layout itself. I wan
 
 The digits were small circuit boards mounted on brass standoffs with the cables drilled through the oak. There were twelve, to display 1 hour and 5 minute intervals using LEDs that were mounted on the back of the digit board and shone through slots. Having only a five minute tick may be a detractor for some, but this is as much a piece of wall art as it is a Swiss timepiece and it makes actually building the circuitry somewhat feasible.
 
-![A close up of the clock digit, seen mounted on the oak with brass standoffs and a drilled hole for routing cables through.](/images/cmos_clock/digit.png)
+![A close up of the clock digit, seen mounted on the oak with brass standoffs and a drilled hole for routing cables through. (size: 1386x927px)](/images/cmos_clock/digit.png)
 
 The main board contained all the clock logic, with the ICs mounted in "industrial" rows, with as much many of the traces as possible routed on the back. At the other end to the ICs was a simple eucalpyt design I drew in inkscape and cut out of the solder mask in Kicad.
 
-![A close up of the CMOS logic ICs mounted on the rough finished oak board.](/images/cmos_clock/main_board.png)
+![A close up of the CMOS logic ICs mounted on the rough finished oak board. (size: 790x1036px)](/images/cmos_clock/main_board.png)
 
 Overall I'm pleased with the design of the clock, and I like the contrast between the electronics and the timber.
 
-![An overall view of the clock.](/images/cmos_clock/clock.png)
+![An overall view of the clock. (size: 1600x800px)](/images/cmos_clock/clock.png)
 
 ## What I learned
 
@@ -46,5 +46,5 @@ Below are images of the schematics for the clock circuitry.
 
 > Right click and save as or open in a new tab for *slightly* higher resolution.
 
-![Page 1 of the CMOS clock schematics](/images/cmos_clock/schematic_1.png)
-![Page 2 of the CMOS clock schematics](/images/cmos_clock/schematic_2.png)
+![Page 1 of the CMOS clock schematics (size: 1492x1049px)](/images/cmos_clock/schematic_1.png)
+![Page 2 of the CMOS clock schematics (size: 1506x1054px)](/images/cmos_clock/schematic_2.png)

@@ -14,7 +14,7 @@ application](https://github.com/will-hart/markdown-browser/) for searching and
 rendering these Markdown documents, which are often quite maths heavy. I find it
 very useful when writing things up.
 
-![The markdown browser application used to search MD notes from papers](/images/markdownbrowser.png)
+![The markdown browser application used to search MD notes from papers (size: 1302x632px)](/images/markdownbrowser.png)
 
 I originally thought about using electron, but was turned off by the large
 number of files an installation includes. I don't really have an issue with the

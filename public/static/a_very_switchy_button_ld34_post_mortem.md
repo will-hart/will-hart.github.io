@@ -7,7 +7,7 @@ authorName: Will Hart
 publishedDateString: 20 Dec 2015
 ---
 
-![Screenshot of the game in action](/images/switchy-button-ld34.png)
+![Screenshot of the game in action (size: 798x602px)](/images/switchy-button-ld34.png)
 
 [Play the game here](http://ludumdare.com/compo/ludum-dare-34/?action=preview&uid=50407) | [View the source code here](https://github.com/will-hart/ludum_react_boilerplate/tree/ld34)
 

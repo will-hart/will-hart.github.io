@@ -10,7 +10,7 @@ publishedDateString: 29 Aug 2021
 
 ## Recap
 
-In [part 1](/post/20210826_tauri_create_react_app_tutorial_part1) of this tutorial series we set up a Tauri and create-react-app app and added a basic non-functional counter. In [part 2](/post/20210828_tauri_create_react_app_tutorial_part2) we created and invoked a command for incrementing our counter. In [part 3](/post/20210829_tauri_create_react_app_tutorial_part2) we created and invoked a command for incrementing our counter.
+In [part 1](/post/20210826_tauri_create_react_app_tutorial_part1) of this tutorial series we set up a Tauri and create-react-app app and added a basic non-functional counter. In [part 2](/post/20210827_tauri_create_react_app_tutorial_part2) we created and invoked a command for incrementing our counter. In [part 3](/post/20210828_tauri_create_react_app_tutorial_part3) we created and invoked a command for incrementing our counter.
 
 In this part, we will update our command and hooks to support multiple different counters indexed by ID.
 

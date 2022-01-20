@@ -261,7 +261,7 @@ have emerged.
 > **ANOTHER NOTE FROM AN EVEN OLDER AND WISER WILL** Hey, it turns out I can
 > just wrap my firestore DB with a GraphQL endpoint!
 
-![A sneak preview of the new interface](/images/playbook_ui.png)
+![A sneak preview of the new interface (size: 1300x599px)](/images/playbook_ui.png)
 
 ## Overall verdict
 

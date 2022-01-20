@@ -11,7 +11,7 @@ publishedDateString: 24 Jan 2017
 This is the third and final part of my three part series on the Entity Component
 System we are using at @ZenobitStudios.
 
-![Zenobit ECS header](/images/zenobit_ecs/ecs-background-2.png)
+![Zenobit ECS header (size: 1176x663px)](/images/zenobit_ecs/ecs-background-2.png)
 
 In the [first part](/zenobits-unity-ecs-part-1), I discussed what an ECS is, and
 why we chose this architecture for our games. In the [second
@@ -35,7 +35,7 @@ in "Unity default" game architecture. I'm going to throw up a [sequence
 diagram](https://en.wikipedia.org/wiki/Sequence_diagram) to describe the system,
 and then step through it bit by bit.
 
-![Sequence Diagram for Unity Ranged Combat](/images/zenobit_ecs/unity_example-3.png)
+![Sequence Diagram for Unity Ranged Combat (size: 612x734px)](/images/zenobit_ecs/unity_example-3.png)
 
 You can see there are three participants in this approach - a "Ranged Attacker",
 a `HealthComponent` and a `ShieldComponent`, which are MonoBehaviour derived
@@ -113,7 +113,7 @@ ECS tackled this.
 Once again, I'll throw out the sequence diagram for starters, then work through
 it.
 
-![Sequence Diagram for ECS Ranged Combat](/images/zenobit_ecs/ecs_example-6.png)
+![Sequence Diagram for ECS Ranged Combat (size: 969x513px)](/images/zenobit_ecs/ecs_example-6.png)
 
 Immediately you can see there are a few more moving pieces. Now we have three
 systems alongside our two components. The components have the same data attached

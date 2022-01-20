@@ -8,7 +8,7 @@ authorName: Will Hart
 publishedDateString: 16 Jan 2017
 ---
 
-![Zenobit ECS header](/images/zenobit_ecs/ecs-background-2.png)
+![Zenobit ECS header (size: 1176x663px)](/images/zenobit_ecs/ecs-background-2.png)
 
 > I've recently started a collaboration with Zentropy under the name Zenobit
 > Studios - for now you can find us at @ZenobitStudios on Twitter if you want to

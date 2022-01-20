@@ -47,7 +47,7 @@ tried to make music I don't think the songs are too horrendous.
 
 The artwork was very basic low poly stuff and I quite like the look of the black and white planets before colour is returned to the universe. Its very basic as a few comments have noted, but yeah "programmer art".
 
-![Programmer art at its finest](/images/ld32-colour-rocket.png)
+![Programmer art at its finest (size: 900x500px)](/images/ld32-colour-rocket.png)
 
 ### Controller
 
@@ -67,7 +67,7 @@ more time on them! In no particular order...
 
 My method for slinging asteroids towards the player was to spawn a whole lot at the back of the screen. However this lead to disconcerting "pop in" in the background as asteroids were recycled. As the asteroids were rigid bodies with collisions, it also meant that the target planet effectively carved a tunnel in to the asteroid field that would sometimes let the player travel through the whole level without touching the controls... oops!
 
-![Going through an asteroid tunnel](/images/ld32-colour-rocket-2.png)
+![Going through an asteroid tunnel (size: 900x500px)](/images/ld32-colour-rocket-2.png)
 
 I fixed the pop in issue by running a coroutine to gradually scale asteroids up
 from 0 to 1 as they were spawned in, but the difficulty and asteroid placement

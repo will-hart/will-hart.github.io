@@ -13,7 +13,7 @@ architecture and explained a bit about why we chose to avoid Unity's standard
 architectural approach. We also set up an example, using entities with both a
 `HealthComponent` and an optional `ShieldComponent`.
 
-![Zenobit ECS header](/images/zenobit_ecs/ecs-background-2.png)
+![Zenobit ECS header (size: 1176x663px)](/images/zenobit_ecs/ecs-background-2.png)
 
 In this part I'll go into some more detail, using this example, of some specific
 areas where we thought a pure ECS offered some benefits. Zentropy has provided

@@ -20,7 +20,7 @@ still managed to release five games for Game Jams in 2016!
 
 ### Twirlygig
 
-![A terrible game jam game](/images/2016_in_review/twirlygig.jpg)
+![A terrible game jam game (size: 551x500px)](/images/2016_in_review/twirlygig.jpg)
 
 [Ludum Dare 34 Link](http://ludumdare.com/compo/ludum-dare-35/?action=preview&uid=50407)
 
@@ -34,7 +34,7 @@ worst game I ever made.
 
 ### Clockwork Dragon
 
-![Clockwork Dragon - a game I'm not unproud of](/images/2016_in_review/clockwork-dragon.jpg)
+![Clockwork Dragon - a game I'm not unproud of (size: 731x500px)](/images/2016_in_review/clockwork-dragon.jpg)
 
 [Ludum Dare 35 Link](http://ludumdare.com/compo/ludum-dare-36/?action=preview&uid=50407)
 
@@ -45,7 +45,7 @@ upgrade yourself, and follow along with the story.
 
 ### Missile Commander
 
-![Missile Commander - a game made in about three hours](/images/2016_in_review/missile-commander.png)
+![Missile Commander - a game made in about three hours (size: 596x402px)](/images/2016_in_review/missile-commander.png)
 
 [Game Dev League Artificial Intelligence Jam, itch.io link](https://wilsk.itch.io/missile-commander)
 
@@ -57,7 +57,7 @@ earth and hope to get the enemy before they get you.
 
 ### The Eridanus Monument
 
-![Eridanus Monument - my attempt at a more narrative game](/images/2016_in_review/eridanus-monument.png)
+![Eridanus Monument - my attempt at a more narrative game (size: 473x312px)](/images/2016_in_review/eridanus-monument.png)
 
 [Game Dev League Area 51 Jam, itch.io link](https://wilsk.itch.io/eridanus)
 
@@ -80,19 +80,19 @@ worked on.
 
 ### A random low poly landscape
 
-![Low poly scene](/images/2016_in_review/Random-Landscape-2.png)
+![Low poly scene (size: 1337x746px)](/images/2016_in_review/Random-Landscape-2.png)
 
 ### Some random medieval game assets
 
-![Some medieval game assets](/images/2016_in_review/medieval_assets.png)
+![Some medieval game assets (size: 1536x864px)](/images/2016_in_review/medieval_assets.png)
 
 ### Four seasons
 
-![Four seasons](/images/2016_in_review/Seasons-Composite.png)
+![Four seasons (size: 1536x618px)](/images/2016_in_review/Seasons-Composite.png)
 
 ### Camping under the stars
 
-![Camping under the stars](/images/2016_in_review/Scene-4.2-J.png)
+![Camping under the stars (size: 1152x618px)](/images/2016_in_review/Scene-4.2-J.png)
 
 ## 2017?
 
