@@ -36,7 +36,7 @@ const customRenderers = {
   },
 }
 
-export const Markdown = ({ markdown }: { markdown: string }): JSX.Element => (
+const Markdown = ({ markdown }: { markdown: string }): JSX.Element => (
   <ReactMarkdown
     remarkPlugins={[remarkMath]}
     rehypePlugins={[rehypeKatex]}
@@ -45,3 +45,5 @@ export const Markdown = ({ markdown }: { markdown: string }): JSX.Element => (
     {markdown}
   </ReactMarkdown>
 )
+
+export default Markdown

@@ -1,14 +1,16 @@
 import * as React from "react"
 import { GetStaticProps, GetStaticPaths } from "next"
+import dynamic from "next/dynamic"
 
 import { pageData } from "../../public/static/posts"
-import { Markdown } from "../../components/Markdown"
-import { BlogHead } from "../../components/BlogHead"
-import { TagList } from "../../components/TagList"
-import { HomeLayout } from "../../components/HomeLayout"
-import { StyledTextLink } from "../../components/StyledTextLink"
 import { BlogPostData, postReader } from "../../utilities/postReader"
 import { ContentContainer } from "../../components/ContentContainer"
+
+const Markdown = dynamic(() => import("../../components/Markdown"))
+const BlogHead = dynamic(() => import("../../components/BlogHead"))
+const TagList = dynamic(() => import("../../components/TagList"))
+const HomeLayout = dynamic(() => import("../../components/HomeLayout"))
+const StyledTextLink = dynamic(() => import("../../components/StyledTextLink"))
 
 const BlogPostPage = (postData: BlogPostData): JSX.Element => {
   const { authorName, publishedDateString, subtitle, tags, title, markdown } =

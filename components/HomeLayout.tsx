@@ -1,7 +1,7 @@
 import * as React from "react"
 import { PageNavBar } from "./PageNavBar"
 
-export const HomeLayout = ({
+const HomeLayout = ({
   children,
 }: {
   children: JSX.Element | JSX.Element[]
@@ -11,3 +11,5 @@ export const HomeLayout = ({
     {children}
   </div>
 )
+
+export default HomeLayout

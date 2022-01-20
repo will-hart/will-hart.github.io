@@ -1,5 +1,7 @@
 import * as React from "react"
-import { StyledTextLink } from "./StyledTextLink"
+import dynamic from "next/dynamic"
+
+const StyledTextLink = dynamic(() => import("./StyledTextLink"))
 
 export const PageNavBar = (): JSX.Element => (
   <div className="sticky top-0 p-3 bg-gray-800 z-10 shadow-lg">

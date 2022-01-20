@@ -1,9 +1,8 @@
 import * as React from "react"
 import { GetStaticPaths, GetStaticProps } from "next"
+import dynamic from "next/dynamic"
 
-import { BlogHead } from "../../components/BlogHead"
 import { ContentContainer } from "../../components/ContentContainer"
-import { HomeLayout } from "../../components/HomeLayout"
 import {
   BlogPostSummary,
   getMostRecentPosts,
@@ -12,7 +11,10 @@ import {
 import { PostList } from "../../components/PostList"
 import { ITEMS_PER_PAGE, NUM_PAGES } from "../../components/constants"
 import { useRouter } from "next/dist/client/router"
-import { StyledTextLink } from "../../components/StyledTextLink"
+
+const BlogHead = dynamic(() => import("../../components/BlogHead"))
+const HomeLayout = dynamic(() => import("../../components/HomeLayout"))
+const StyledTextLink = dynamic(() => import("../../components/StyledTextLink"))
 
 interface HomeProps {
   recentPosts: BlogPostSummary[]

@@ -1,7 +1,9 @@
 import * as React from "react"
-import { StyledTextLink } from "./StyledTextLink"
+import dynamic from "next/dynamic"
 
-export const TagList = ({ tags }: { tags: string[] }): JSX.Element => (
+const StyledTextLink = dynamic(() => import("./StyledTextLink"))
+
+const TagList = ({ tags }: { tags: string[] }): JSX.Element => (
   <div>
     <span className="mr-4">See also:</span>
     {tags.map((tag) => (
@@ -13,3 +15,5 @@ export const TagList = ({ tags }: { tags: string[] }): JSX.Element => (
     ))}
   </div>
 )
+
+export default TagList

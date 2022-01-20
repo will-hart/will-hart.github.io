@@ -2,7 +2,7 @@ import Head from "next/head"
 import * as React from "react"
 import { BlogPostData } from "../utilities/postReader"
 
-export const BlogHead = ({
+const BlogHead = ({
   title,
   postData: data,
 }: {
@@ -21,3 +21,5 @@ export const BlogHead = ({
     )}
   </Head>
 )
+
+export default BlogHead

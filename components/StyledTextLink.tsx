@@ -1,7 +1,7 @@
 import * as React from "react"
 import Link from "next/link"
 
-export const StyledTextLink = ({
+const StyledTextLink = ({
   href,
   children,
   size,
@@ -20,3 +20,5 @@ export const StyledTextLink = ({
     </a>
   </Link>
 )
+
+export default StyledTextLink

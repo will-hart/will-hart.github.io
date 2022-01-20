@@ -1,15 +1,17 @@
 import * as React from "react"
-
 import { GetStaticProps, GetStaticPaths } from "next"
+import dynamic from "next/dynamic"
+
 import {
   BlogPostSummary,
   getAllCategories,
   getPostsMatchingTag,
   getSummaryFields,
 } from "../../utilities/postReader"
-import { HomeLayout } from "../../components/HomeLayout"
-import { BlogHead } from "../../components/BlogHead"
 import { PostList } from "../../components/PostList"
+
+const HomeLayout = dynamic(() => import("../../components/HomeLayout"))
+const BlogHead = dynamic(() => import("../../components/BlogHead"))
 
 const TagPage = ({
   tag,
