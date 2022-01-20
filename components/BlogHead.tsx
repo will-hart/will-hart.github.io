@@ -25,6 +25,16 @@ const BlogHead = ({
         content="Hi, I'm Will! willhart.io is my blog, where I post about random coding adventures."
       />
     )}
+
+    {/* 
+        This is cloudflare analytics. It doesn't track users or use cookies and is privacy focused.
+        I'm actually just curious if anybody is even looking at this little website! 
+    */}
+    <script
+      defer
+      src="https://static.cloudflareinsights.com/beacon.min.js"
+      data-cf-beacon='{"token": "310f93cab66a42c5a328f246cc053025"}'
+    ></script>
   </Head>
 )
 
