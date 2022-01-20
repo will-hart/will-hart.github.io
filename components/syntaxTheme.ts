@@ -43,7 +43,7 @@ export default {
     overflow: "auto",
     position: "relative",
     margin: "0.5em 0",
-    padding: "1.25em 1em",
+    padding: "1em 1em 0",
   },
   'code[class*="language-"]::-moz-selection': {
     background: "#363636",

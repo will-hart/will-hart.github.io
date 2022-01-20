@@ -1,40 +1,47 @@
 import * as React from "react"
 import ReactMarkdown from "react-markdown"
-import Tex from "@matejmazur/react-katex"
-import math from "remark-math"
+import remarkMath from "remark-math"
+import rehypeKatex from "rehype-katex"
 
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter"
+import { CodeProps } from "react-markdown/lib/ast-to-react"
 import syntaxTheme from "./syntaxTheme"
 
 import "katex/dist/katex.min.css"
 
-const renderers = {
-  // eslint-disable-next-line react/display-name
-  inlineMath: ({ value }: { value: string }): JSX.Element => (
-    <Tex math={value} />
-  ),
-  // eslint-disable-next-line react/display-name
-  math: ({ value }: { value: string }): JSX.Element => (
-    <Tex block math={value} />
-  ),
-  // eslint-disable-next-line react/display-name
-  code: ({
-    language,
-    value,
-  }: {
-    language: string
-    value: string
-  }): JSX.Element => {
-    return (
-      <SyntaxHighlighter style={syntaxTheme} language={language}>
-        {value}
+const customRenderers = {
+  code: function Code({
+    inline,
+    className,
+    children,
+    ...props
+  }: CodeProps): JSX.Element {
+    delete props["node"]
+
+    const match = /language-(\w+)/.exec(className || "")
+    return !inline && match ? (
+      <SyntaxHighlighter
+        style={syntaxTheme}
+        language={match[1]}
+        PreTag="div"
+        {...props}
+      >
+        {children}
       </SyntaxHighlighter>
+    ) : (
+      <code className={className} {...props}>
+        {children}
+      </code>
     )
   },
 }
 
 export const Markdown = ({ markdown }: { markdown: string }): JSX.Element => (
-  <ReactMarkdown plugins={[math]} renderers={renderers}>
+  <ReactMarkdown
+    remarkPlugins={[remarkMath]}
+    rehypePlugins={[rehypeKatex]}
+    components={customRenderers}
+  >
     {markdown}
   </ReactMarkdown>
 )
