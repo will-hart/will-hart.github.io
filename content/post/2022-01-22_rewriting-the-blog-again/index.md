@@ -14,7 +14,7 @@ Over time I've evolved from [a custom static site generator](@/post/2014-03-18_a
 
 I posted about my [CMOS analog clock](@/post/2022-01-11_cmos_analog_clock.md) the other day and on a whim I ran a [lighthouse](https://developers.google.com/web/tools/lighthouse) report on the site. I was surprised to see this in "mobile" mode:
 
-![The Lighthouse report for the NextJS blog in "mobile" mode](/images/zola_blog/nextjs_lighthouse.png)
+![The Lighthouse report for the NextJS blog in "mobile" mode](nextjs_lighthouse.png)
 
 The "time to interactive" in particular was a bit of a surprise. On desktop its about 1s, but here its approximately a thousand years. One of the strengths of NextJS is how easy it makes it to do server side rendering (SSR) and server side generation (SSG). I'd spent quite a lot of time messing about with SSG and built it into a custom markdown to SSG pipeline in NextJS. Lighthouse seemed to suggest that bundle size was the big issue. I ran the profiler quickly and I'm definitely not an expert, but with simulating a "Fast 3G" connection and "4x CPU slowdown" the best I could tell was it spent about 3 seconds loading the bundle and another 2 seconds rendering.
 
@@ -22,7 +22,7 @@ I tried a few different things to reduce bundle size, including [replacing some 
 
 These seemed to make a bit of difference in some respects, in particular I think Next's image optimisation was making a huge difference. Overall time to interactive was still about 4-5 seconds probably due to a decent sized JS bundle and the time spent spinning up the javascript.
 
-![The Lighthouse report in "mobile" mode after trying a few different tweaks to bundle size](/images/zola_blog/nextjs_lighthouse_after_optimisation.png)
+![The Lighthouse report in "mobile" mode after trying a few different tweaks to bundle size](nextjs_lighthouse_after_optimisation.png)
 
 ## Looking at Zola
 
@@ -30,7 +30,7 @@ I decided to run a quick proof-of-concept to compare to a pure static site gener
 
 To get started without setting up an entire pipeline, I copied the minified CSS from the NextJS production site and quickly converted a few markdown articles to the Zola format (mostly just changing the front matter to `TOML`). The lighthouse report for Zola was green across the board.
 
-![The first lighthouse report for](/images/zola_blog/zola_lighthouse.png)
+![The first lighthouse report for](zola_lighthouse.png)
 
 The Zola page definitely renders a lot faster, which is a combination of smaller bundle size and not having to spin up the NextJS javascript on the client side. However looking at total downloads things get a bit more interesting. The table below shows the total download size (in MB) for two posts, one very image heavy and one text/code heavy.
 
