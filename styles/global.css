@@ -66,7 +66,7 @@ article > ol {
 
 article pre + p,
 article p + pre {
-  @apply mt-6 p-3;
+  @apply mt-6 p-3 overflow-x-auto;
 }
 
 li {

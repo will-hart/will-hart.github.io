@@ -8,11 +8,11 @@ tag = ["code", "random"]
 
 I seem to have a habit of rewriting this blog every time I get bored, but this time I swear I didn't do it on purpose! On the plus side, rewriting the blog is a good way to try out new things and different deployment strategies. On the negative side, it often takes over a weekend and I don't get much else done!
 
-Over time I've evolved from [a custom static site generator](@/post/2014-03-18_a_simple_static_site_generator_in_python.md), to a [self-hosted ghost instance](@/post/2015-04-27_switched_to_ghost.md), then most recently to [next.js](@/post/2020-12-28_recreating_the_blog_in_nextjs.md).
+Over time I've evolved from [a custom static site generator](@/post/2014-03-18_a_simple_static_site_generator_in_python/index.md), to a [self-hosted ghost instance](@/post/2015-04-27_switched_to_ghost/index.md), then most recently to [next.js](@/post/2020-12-28_recreating_the_blog_in_nextjs/index.md).
 
 ## It started with lighthouse
 
-I posted about my [CMOS analog clock](@/post/2022-01-11_cmos_analog_clock.md) the other day and on a whim I ran a [lighthouse](https://developers.google.com/web/tools/lighthouse) report on the site. I was surprised to see this in "mobile" mode:
+I posted about my [CMOS analog clock](@/post/2022-01-11_cmos_analog_clock/index.md) the other day and on a whim I ran a [lighthouse](https://developers.google.com/web/tools/lighthouse) report on the site. I was surprised to see this in "mobile" mode:
 
 ![The Lighthouse report for the NextJS blog in "mobile" mode](nextjs_lighthouse.png)
 

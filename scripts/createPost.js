@@ -2,7 +2,7 @@
    Should be called as `yarn new`
  */
 
-const { readFile, writeFile } = require("fs/promises");
+const { readFile, writeFile, mkdir } = require("fs/promises");
 const readline = require("readline").createInterface({
   input: process.stdin,
   output: process.stdout,
@@ -33,14 +33,18 @@ const createPost = ({ title, description }) => {
   // determine the output path, should be relative to the repo root
   const slug = budgetSlugify(title);
   const dateString = new Date().toISOString().slice(0, 10);
-  const filePath = `./content/post/${dateString}_${slug}.md`;
+  const dirPath = `./content/post/${dateString}_${slug}`;
+  const filePath = `${dirPath}/index.md`;
+
   console.log("Creating a new post at ", filePath);
 
   // read in the template
-  return readFile("./scripts/post_template.md", "utf-8").then((raw) => {
-    const populated = raw.replace("$1", title).replace("$2", description);
-    return writeFile(filePath, populated);
-  });
+  return mkdir(dirPath).then(() =>
+    readFile("./scripts/post_template.md", "utf-8").then((raw) => {
+      const populated = raw.replace("$1", title).replace("$2", description);
+      return writeFile(filePath, populated);
+    })
+  );
 };
 
 const data = {

@@ -1,6 +1,9 @@
 {% import "macros.html" as macros %} {% extends "base.html" %} {% block content
 %}
-<h1 class="title">{{ section.title }}</h1>
-{{macros::paginator(paginator=paginator)}} {% for post in paginator.pages
-%}{{macros::render_post_card(post=post)}}{% endfor %}
-{{macros::paginator(paginator=paginator)}} {% endblock content %}
+<article>
+  <h1 class="px-4">{{ section.title }}</h1>
+  {{macros::paginator(paginator=paginator)}} {% for post in paginator.pages
+  %}{{macros::render_post_card(post=post)}}{% endfor %}
+  {{macros::paginator(paginator=paginator)}}
+</article>
+{% endblock content %}
