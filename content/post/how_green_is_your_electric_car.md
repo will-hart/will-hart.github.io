@@ -7,6 +7,9 @@ aliases = ["/how_green_is_your_electric_car", "/post/how_green_is_your_electric_
 
 [taxonomies]
 tag = ["random"]
+
+[extra]
+use_maths = true
 +++
 
 ![How green is your electric car?](https://images.unsplash.com/photo-1458007683879-47560d7e33c3?ixlib=rb-0.3.5&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=1080&fit=max&ixid=eyJhcHBfaWQiOjExNzczfQ&s=2f0feee29d02fd90ef634c47a0426671)

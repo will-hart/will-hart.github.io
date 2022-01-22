@@ -11,6 +11,9 @@
     {% endblock %}
 
     <link rel="stylesheet" href="{{ get_url(path='global.css', cachebust=true) }}" />
+
+    {%if page.extra.use_maths |
+      default(value=false) %}{%include "enable_maths.html" %}{%endif%}
   </head>
 
   <body>

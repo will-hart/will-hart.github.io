@@ -33,12 +33,12 @@
 </div>
 {% endmacro render_post %} {% macro paginator(paginator) %}
 
-<nav class="pagination">
+<nav class="mb-4 text-center">
   {% if paginator.previous %}
-  <a class="previous" href="{{ paginator.previous }}">‹ Previous</a>
+  <a href="{{ paginator.previous }}">ᐊ Previous</a>
   {% endif %} {%if paginator.next and paginator.previous %} | {%endif%}{% if
   paginator.next %}
-  <a class="next" href="{{ paginator.next }}">Next ›</a>
+  <a href="{{ paginator.next }}">Next ᐅ</a>
   {% endif %}
 </nav>
 {%endmacro paginator%}

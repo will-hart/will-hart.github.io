@@ -7,6 +7,9 @@ aliases = ["/reducing_online_abuse_through_sentiment_analysis", "/post/reducing_
 
 [taxonomies]
 tag = ["code", "projects", "tutorials"]
+
+[extra]
+use_maths = true
 +++
 
 ## Cleaning up Twitter
