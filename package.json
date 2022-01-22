@@ -15,7 +15,7 @@
     "tailwindcss": "^3.0.15"
   },
   "scripts": {
-    "build": "parcel build styles/global.css --dist-dir static",
+    "build": "parcel build styles/global.css --dist-dir static --no-source-maps",
     "watch": "parcel watch styles/global.css --dist-dir static --no-source-maps",
     "new": "node ./scripts/createPost.js"
   }
