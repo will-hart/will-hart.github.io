@@ -10,8 +10,7 @@
     <meta name="description" content="The home page of Will Hart, scattered with a few random thoughts about code, electronics and other things.">
     {% endblock %}
 
-    <link rel="preload" href="/style.css" as="style" />
-    <link rel="stylesheet" href="/style.css" />
+    <link rel="stylesheet" href="{{ get_url(path='global.css', cachebust=true) }}" />
   </head>
 
   <body>
