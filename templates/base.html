@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
   <head>
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
@@ -7,43 +8,57 @@
     <title>{% block title %}willhart.io{% endblock %}</title>
 
     {% block meta_description %}
-    <meta name="description" content="The home page of Will Hart, scattered with a few random thoughts about code, electronics and other things.">
+    <meta name="description"
+          content="The home page of Will Hart, scattered with a few random thoughts about code, electronics and other things.">
     {% endblock %}
 
     <link rel="stylesheet" href="{{ get_url(path='global.css', cachebust=true) }}" />
 
     {%if page.extra.use_maths |
-      default(value=false) %}{%include "enable_maths.html" %}{%endif%}
+  default(value=false) %}{%include "enable_maths.html" %}{%endif%}
 
-    <!-- Cloudflare Web Analytics --><script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "310f93cab66a42c5a328f246cc053025"}'></script><!-- End Cloudflare Web Analytics -->
+    <!-- Cloudflare Web Analytics -->
+    <script defer src='https://static.cloudflareinsights.com/beacon.min.js'
+            data-cf-beacon='{"token": "310f93cab66a42c5a328f246cc053025"}'></script>
+    <!-- End Cloudflare Web Analytics -->
   </head>
 
   <body>
     <div class="sticky top-0 p-3 bg-gray-800 z-10 shadow-lg">
-    <div class="flex justify-between items-center">
-      <a class="text-xs styled-link" href="/">willhart.io</a
-        ><span
-        ><span class="mr-4"
-        ><a class="text-xs styled-link" href="/post">ALL POSTS</a></span
-      > <span class="mr-4"
-      >|</span> <span class="mr-4"
-      ><a class="text-xs styled-link" href="/tag/projects">PROJECTS</a></span
-    ><span class="mr-4"
-          ><a class="text-xs styled-link" href="/tag/tutorials"
-            >TUTORIALS</a
-          ></span
-        ><span class="mr-4"
-          ><a class="text-xs styled-link" href="/tag/gamedev">GAME DEV</a></span
-        ><span class="mr-4"
-          ><a class="text-xs styled-link" href="/tag/electronics"
-            >ELECTRONICS</a
-          ></span
-        ><span class="mr-4"
-          ><a class="text-xs styled-link" href="/tag/random">RANDOM</a></span
-        ></span
-      >
+      <div class="flex justify-between items-center">
+        <a class="text-xs styled-link" href="/">willhart.io</a>
+        <span class="block sm:hidden">
+          <span class="mr-4">
+            <a class="text-xs styled-link" href="/post">ALL POSTS</a>
+          </span>
+          <span class="mr-4">
+            <a class="text-xs styled-link" href="/tag">ALL TAGS</a>
+          </span>
+        </span>
+        <span class="hidden sm:block">
+          <span class="mr-4">
+            <a class="text-xs styled-link" href="/post">ALL POSTS</a>
+          </span>
+          <span class="mr-4">|</span>
+          <span class="mr-4">
+            <a class="text-xs styled-link" href="/tag/projects">PROJECTS</a>
+          </span>
+          <span class="mr-4">
+            <a class="text-xs styled-link" href="/tag/tutorials">TUTORIALS</a>
+          </span>
+          <span class="mr-4">
+            <a class="text-xs styled-link" href="/tag/gamedev">GAME DEV</a>
+          </span>
+          <span class="mr-4">
+            <a class="text-xs styled-link" href="/tag/electronics">ELECTRONICS</a>
+          </span>
+          <span class="mr-4">
+            <a class="text-xs styled-link" href="/tag/random">RANDOM</a>
+          </span>
+        </span>
+      </div>
     </div>
-  </div>
     {% block content %} {% endblock %}</div>
   </body>
+
 </html>

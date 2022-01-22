@@ -1,10 +1,27 @@
-{%import "macros.html" as macros %} {% extends "base.html" %} {% block content
-%} {% if paginator %} {% set pages = paginator.pages %} {% else %} {% set pages
-= term.pages %} {% endif %}
-<article>
+{%import "macros.html" as macros %}
+{% extends "base.html" %}
+
+{% block content %}
+{% if paginator %}
+{% set pages = paginator.pages %}
+{% else %}
+{% set pages = term.pages %}
+{% endif %}
+
+<article class="container">
   <h1 class="px-4">Posts tagged as "{{term.name}}"</h1>
-  {{macros::paginator(paginator=paginator)}} {% for page in pages %}
-  {{macros::render_post_card(post=page)}} {% endfor
-  %}{{macros::paginator(paginator=paginator)}}
+
+  <div class="px-4 flex flex-row justify-between">
+    <a href="\tag">See all tags</a>
+    {{macros::paginator(paginator=paginator)}}
+  </div>
+
+  {% for page in pages %}
+  {{macros::render_post_card(post=page)}}
+  {% endfor %}
+
+  <div class="flex justify-center">
+    {{macros::paginator(paginator=paginator)}}
+  </div>
 </article>
 {% endblock content %}

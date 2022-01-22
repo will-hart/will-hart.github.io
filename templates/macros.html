@@ -1,47 +1,47 @@
 {% macro render_post_card(post) %}
 <div class="flex flex-col w-6/8 m-4 mb-8 box-border bg-gray-700">
   <div class="flex flex-col p-4">
-    <a
-      class="text-lg font-bold text-white"
-      title="View post: {{post.title}}"
-      href="{{ post.permalink | safe }}"
-      ><h2 class="text-lg font-bold">
+    <a class="text-lg font-bold text-white" title="View post: {{post.title}}" href="{{ post.permalink | safe }}">
+      <h2 class="text-lg font-bold">
         {{post.title}}
 
         <span>
           {% for tag in post.taxonomies.tag %}
-          <a
-            class="text-xs ml-4"
-            href="{{ get_taxonomy_url(kind='tag', name=tag) }}"
-          >
+          <a class="text-xs ml-4" href="{{ get_taxonomy_url(kind='tag', name=tag) }}">
             {{tag}}
           </a>
           {% endfor %}
         </span>
-      </h2></a
-    >
+      </h2>
+    </a>
     <p class="text-md text-gray-400 my-2">{{post.description}}</p>
   </div>
-  <a
-    href="{{ post.permalink | safe }}"
-    title="View post: {{post.title}}"
-    class="hero hover:bg-yellow-300 border-t-2 border-yellow-300 text-yellow-300 hover:text-darkbg p-2 flex justify-between transition-colors duration-500"
-  >
-    <span class="text-current no-underline hover:no-underline">Read More</span
-    ><span>ᐅ</span>
+  <a href="{{ post.permalink | safe }}" title="View post: {{post.title}}"
+     class="hero hover:bg-yellow-300 border-t-2 border-yellow-300 text-yellow-300 hover:text-darkbg p-2 flex justify-between transition-colors duration-500">
+    <span class="text-current no-underline hover:no-underline">Read More</span><span>ᐅ</span>
   </a>
 </div>
-{% endmacro render_post %} {% macro paginator(paginator) %}
+{% endmacro render_post %}
 
-<nav class="mb-4 text-center">
+{% macro paginator(paginator) %}
+<nav>
   {% if paginator.previous %}
   <a href="{{ paginator.previous }}">ᐊ Previous</a>
-  {% endif %} {%if paginator.next and paginator.previous %} | {%endif%}{% if
-  paginator.next %}
+  {% else %}
+  ᐊ Previous
+  {% endif %}
+
+  |
+
+  {% if  paginator.next %}
   <a href="{{ paginator.next }}">Next ᐅ</a>
+  {% else %}
+  Next ᐅ
   {% endif %}
 </nav>
-{%endmacro paginator%} {% macro big_thumbnail_link(image_src, url, caption) %}
+{%endmacro paginator%}
+
+{% macro big_thumbnail_link(image_src, url, caption) %}
 {# This doesn't work on deployment, (netlify just borks it and vercel has an old
 version of zola). Run this to generate thumbnail images {% set image =
 resize_image(path=image_src, width=256, height=256) %} #}
