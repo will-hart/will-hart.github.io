@@ -6,9 +6,10 @@ This is the source (using [Zola](https://getzola.com)) for my blog at [willhart.
 
 ### Adding a post
 
-Create a new markdown file in `content/post` and follow the `TOML` front matter pattern in other posts.
-
-If the document requires maths formatting via KaTeX, add the following to the TOML at the top of the document:
+1. Create a new markdown file in `content/post`
+2. The naming format should be `YYYY-MM-DD_post_title.md`,
+3. follow the `TOML` front matter pattern in other posts.
+4. If the document requires maths formatting via KaTeX, add the following to the TOML at the top of the document:
 
 ```toml
 [extra]
