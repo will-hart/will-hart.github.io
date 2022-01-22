@@ -41,4 +41,9 @@
   <a href="{{ paginator.next }}">Next ᐅ</a>
   {% endif %}
 </nav>
-{%endmacro paginator%}
+{%endmacro paginator%} {% macro big_thumbnail_link(image_src, url) %} {% set
+image = resize_image(path=image_src, width=256, height=256) %}
+<a class="mx-2" href="{{url}}">
+  <img src="{{ image.url }}" />
+</a>
+{% endmacro %}
