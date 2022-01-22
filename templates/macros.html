@@ -41,11 +41,16 @@
   <a href="{{ paginator.next }}">Next ᐅ</a>
   {% endif %}
 </nav>
-{%endmacro paginator%} {% macro big_thumbnail_link(image_src, url) %} {# This
-doesn't work on deployment, (netlify just borks it and vercel has an old version
-of zola). Run this to generate thumbnail images {% set image =
+{%endmacro paginator%} {% macro big_thumbnail_link(image_src, url, caption) %}
+{# This doesn't work on deployment, (netlify just borks it and vercel has an old
+version of zola). Run this to generate thumbnail images {% set image =
 resize_image(path=image_src, width=256, height=256) %} #}
-<a class="mx-2" href="{{url}}">
-  <img width="256" height="256" src="{{ image_src }}" />
+<a class="mx-2 mb-6" href="{{url}}">
+  <figure class="flex flex-col">
+    <img src="{{ image_src }}" style="margin: 0 !important" />
+    <figcaption class="thumbnail_caption">
+      <p>{{caption}}</p>
+    </figcaption>
+  </figure>
 </a>
 {% endmacro %}
