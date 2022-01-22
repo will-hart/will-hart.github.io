@@ -32,10 +32,15 @@ To get started without setting up an entire pipeline, I copied the minified CSS 
 
 ![The first lighthouse report for](/images/zola_blog/zola_lighthouse.png)
 
-> This is probably an unfair comparison, at this point I'm running zola locally, as the Vercel pipeline I use for deployment can't use different frameworks on different branches. I'll update this if things change significantly when I deploy.
+The Zola page definitely renders a lot faster, which is a combination of smaller bundle size and not having to spin up the NextJS javascript on the client side. However looking at total downloads things get a bit more interesting. The table below shows the total download size (in MB) for two posts, one very image heavy and one text/code heavy.
 
-Looking at the bundle size, Zola is sending about 15kB of CSS (in dev mode) and a 7kB page, while the Next site was sending around 500kB of data. As zola isn't using any sort of optimised or progressive images, this benefit rapidly evaporates for image heavy posts where Next's image component really shines, however zola does have some support for [optimising images](https://www.getzola.org/documentation/content/image-processing/) which might be useful. Another benefit was that Zola made it a bit easier to optionally include dependencies, for instance using `TOML` parameters I was able to configure which posts included `KaTeX`, which resulted in about a 70% reduction in bundle size.
+|                | NextJS Unoptimised | NextJS Optimised | Zola     |
+|----------------|--------------------|------------------|----------|
+| CMOS Clock     | 4.6 MB             | 2.1 MB           | 4.1 MB   |
+| NextJS rewrite | 1 MB               | 1 MB             | 0.006 MB |
+
+Zola absolutely smashes NextJS on text heavy pages, but gets beaten on image-heavy pages thanks to Next's image optimisation. Zola does have some support for [optimising images](https://www.getzola.org/documentation/content/image-processing/) which might be useful in closing the gap.
 
 ## Did it make a difference?
 
-Overall I think the Zola website will load much faster, but without some serious image optimisation it might not have much benefit for more image-heavy posts. NextJS is a fantastic framework, but in this case where I don't really need interactivity and I just want to serve HTML blog pages, then I'll be migrating to Zola.
+Overall I think the Zola website will load and become interactive much faster, but without some serious image optimisation it might not have much benefit for more image-heavy posts. NextJS is a fantastic framework, but in this case where I don't really need interactivity and I just want to serve HTML blog pages, then I'll be migrating to Zola.
