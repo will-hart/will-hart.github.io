@@ -1,6 +1,6 @@
 # willhart.io Website
 
-This is the source (using [Zola](https://getzola.com)) for my blog at [willhart.io](https://willhart.io).
+This is the source (using [Zola](https://www.getzola.org/)) for my blog at [willhart.io](https://willhart.io).
 
 ## Development
 
