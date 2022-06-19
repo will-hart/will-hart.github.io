@@ -23,6 +23,9 @@ solution. Sue me.
 > a fan of. I'll skip the intros - if you want to know more follow the links
 > above.
 
+> The code for this article is available [on
+> github](https://github.com/will-hart/tauri-plus-bevy)
+
 ## Creating a tauri app
 
 I've already blogged about building a simple tauri app,  [part 1 can be found
