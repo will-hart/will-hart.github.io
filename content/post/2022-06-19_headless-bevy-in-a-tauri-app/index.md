@@ -27,8 +27,9 @@ solution. Sue me.
 
 I've already blogged about building a simple tauri app,  [part 1 can be found
 here](/post/20210826_tauri_create_react_app_tutorial_part1), but since then
-things have improved even further. After making sure my environment is [setup
-for tauri](https://tauri.app/v1/guides/getting-started/prerequisites), I run
+things have improved even further and we can get up and running with basically
+one command. After making sure my environment is [setup for
+tauri](https://tauri.app/v1/guides/getting-started/prerequisites), we can run
 
 ```bash
 yarn create tauri-app
@@ -40,21 +41,21 @@ After following the prompts, and selecting the following options:
 2. Select `Y` to adding `@tauri-apps/api`
 3. Selecting `react-ts` as the library
 
-I wait for all the dependencies to install. Now if I run `yarn tauri dev` and
-wait a bit (it takes a while the first time while the tauri/rust code compiles),
-I see a basic tauri app up and running. Easy!
+we need to wait a bit for all the dependencies to install. Now if we run `yarn
+tauri dev` and wait a bit (it takes a while the first time while the tauri/rust
+code compiles), we can see a basic tauri app up and running. Easy!
 
 ![The initial app after running `yarn create tauri-app`.](initial_setup.png)
 
 ## Setting up bevy
 
-In this case I'm going to use the `react` front end to render the bevy app, so I
-want to run bevy in `headless` mode. Bevy has great examples, and I'm going to
-borrow heavily from the [headless
+In this case we're going to use the `react` front end to render the bevy app, so
+we want to run bevy in `headless` mode. Bevy has great examples, and we're going
+to borrow heavily from the [headless
 example](https://github.com/bevyengine/bevy/blob/latest/examples/app/headless.rs)
 in the bevy repo.
 
-Firstly I add the bevy dependency to the tauri project, skipping default
+Firstly we add the bevy dependency to the tauri project, skipping default
 features to remove windowing and rendering. In `src-tauri/cargo.toml` add a few
 dependencies:
 
@@ -63,7 +64,7 @@ bevy = { version = "0.7", default-features = false }
 crossbeam-channel = "0.5"
 ```
 
-Then in `src-tarui/main.rs` I want to initialise the bevy app:
+Then in `src-tarui/main.rs` we want to initialise the bevy app:
 
 ```rust
 // required imports:
@@ -81,11 +82,11 @@ App::new()
 > **NOTE** I find that the `src-tauri/main.rs` line has an error about missing
 > `distDir` which goes away if I build the front end app using `yarn build`.
 
-You'll note that I've made a few changes from the example - I've set it to run
+You'll note that we've made a few changes from the example - we've set it to run
 at 15fps, and removed the "counter" system from the example (we'll get back to
 it though).
 
-Now if I run `yarn tauri dev` there is a problem - nothing happens! This is
+Now if we run `yarn tauri dev` there is a problem - nothing happens! This is
 because the bevy `run()` function is "blocking", and never exits, but as we dont
 have a windowing or rendering library nothing is changed. Remove the `run()`
 call at the end of the bevy App::new() line, tauri automatically recompiles the
