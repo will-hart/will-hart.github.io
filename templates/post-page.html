@@ -1,9 +1,7 @@
 {% extends "base.html" %} {% block title%}{{page.title}} | willhart.io{%
-endblock %} {% block meta_description %}<meta
-  name="description"
-  content="{{page.description}}. Posted on
-willhart.io"
-/>
+endblock %} {% block meta_description %}
+<meta name="description" content="{{page.description}}. Posted on
+willhart.io" />
 {% endblock %} {% block content %}
 <div class="hero bg-gray-700 m-0 mb-16 p-8 border-b-2 border-yellow-300">
   <div class="container mx-auto my-0">
@@ -11,22 +9,16 @@ willhart.io"
     <div class="flex flex-col justify-between">
       <span>Posted by Will Hart on {{page.date}}</span>
       <div>
-        <span class="mr-4">See also:</span
-        ><span class="mr-2"
-          ><a class="text-xs styled-link" href="/tag/random">RANDOM</a></span
-        ><span class="mr-2"
-          ><a class="text-xs styled-link" href="/tag/projects"
-            >PROJECTS</a
-          ></span
-        >
+        <span class="mr-4">See also:</span><span class="mr-2"><a class="text-xs styled-link"
+             href="/tag/random">RANDOM</a></span><span class="mr-2"><a class="text-xs styled-link"
+             href="/tag/projects">PROJECTS</a></span>
       </div>
-      <span class="mt-6"
-        ><a class="text-xs styled-link" href="/post"
-          >ᐊ BACK TO ALL POSTS</a
-        ></span
-      >
+      <span class="mt-6"><a class="text-xs styled-link" href="/post">ᐊ BACK TO ALL POSTS</a></span>
     </div>
   </div>
 </div>
 <article>{{ page.content | safe }}</article>
+<script src="https://utteranc.es/client.js" repo="will-hart/willhart.io" issue-term="title" label="post-comment"
+        theme="github-dark" crossorigin="anonymous" async>
+        </script>
 {% endblock content %}

@@ -16,6 +16,12 @@ This is the source (using [Zola](https://www.getzola.org/)) for my blog at [will
 use_maths = true
 ```
 
+You can also
+
+```bash
+node scripts/createPost.js
+```
+
 ### Updating styles
 
 > When making changes to styles, edit `styles/global.css` and follow the steps below
