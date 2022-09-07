@@ -23,10 +23,10 @@ solution. Sue me.
 > a fan of. I'll skip the intros - if you want to know more follow the links
 > above.
 
+## Creating a tauri app
+
 > The code for this article is available [on
 > github](https://github.com/will-hart/tauri-plus-bevy)
-
-## Creating a tauri app
 
 I've already blogged about building a simple tauri app,  [part 1 can be found
 here](/post/20210826_tauri_create_react_app_tutorial_part1), but since then
@@ -48,7 +48,7 @@ we need to wait a bit for all the dependencies to install. Now if we run `yarn
 tauri dev` and wait a bit (it takes a while the first time while the tauri/rust
 code compiles), we can see a basic tauri app up and running. Easy!
 
-![The initial app after running `yarn create tauri-app`.](initial_setup.png)
+![The initial app after running `yarn create tauri-app`. (size: 802x632px)](initial_setup.png)
 
 ## Setting up bevy
 
@@ -296,7 +296,7 @@ tauri::Builder::default()
 If we now run the app we should see everything working as expected - the counter
 updates based on the bevy state!
 
-![The app pulling counter updates from the bevy backend.](counter_working.png)
+![The app pulling counter updates from the bevy backend. (size: 802x632px)](counter_working.png)
 
 ## Pushing updates from bevy to tauri to react
 
