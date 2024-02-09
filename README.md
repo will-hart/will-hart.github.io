@@ -46,4 +46,4 @@ This approach was inspired by [This blog post](https://www.maybevain.com/writing
 
 ## Deployment
 
-Deployment is automatic
+Deployment is automatic on a push to github.
