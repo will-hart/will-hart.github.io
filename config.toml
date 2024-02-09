@@ -1,6 +1,10 @@
 # The URL the site will be built for
 base_url = "https://willhart.io"
 
+title = "William Hart | willhart.io"
+description = "My little internet home page, full of uninteresting musings and thinking out louds."
+author = "William Hart"
+
 # Whether to automatically compile all Sass files in the sass directory
 compile_sass = false
 
@@ -8,8 +12,18 @@ compile_sass = false
 build_search_index = false
 
 taxonomies = [
-  { name = "tag", feed = true, paginate_by = 8 }
+  { name = "tag", feed = true, paginate_by = 10 }
 ]
+
+generate_feed = true
+default_language = "en"
+
+minify_html = false
+render_emoji = true
+
+external_links_no_follow = true
+external_links_no_referrer = true
+smart_punctuation = true
 
 [markdown]
 # Whether to do syntax highlighting
