@@ -2,11 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@600&family=Raleway:wght@300&display=swap");
-
 body {
   @apply bg-darkbg text-white;
-  font-family: Raleway, Roboto, sans-serif;
+  font-family: Inter, Roboto, Open Sans, sans-serif;
 }
 
 a {
@@ -21,7 +19,7 @@ a:hover {
   @apply underline;
 }
 
-article {
+article, section {
   @apply max-w-screen-lg mx-auto mb-12 p-4 md:p-0;
 }
 
@@ -36,7 +34,10 @@ article > h2,
 article > h3,
 article > h4 {
   @apply text-2xl text-white font-bold mt-6 mb-4;
-  font-family: Montserrat, sans-serif;
+}
+
+section > h2 {
+  @apply text-3xl text-center text-yellow-300 my-8;
 }
 
 article > h3 {

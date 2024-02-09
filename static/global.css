@@ -194,57 +194,7 @@ img, video {
   display: none;
 }
 
-*, :before, :after {
-  --tw-border-spacing-x: 0;
-  --tw-border-spacing-y: 0;
-  --tw-translate-x: 0;
-  --tw-translate-y: 0;
-  --tw-rotate: 0;
-  --tw-skew-x: 0;
-  --tw-skew-y: 0;
-  --tw-scale-x: 1;
-  --tw-scale-y: 1;
-  --tw-pan-x: ;
-  --tw-pan-y: ;
-  --tw-pinch-zoom: ;
-  --tw-scroll-snap-strictness: proximity;
-  --tw-gradient-from-position: ;
-  --tw-gradient-via-position: ;
-  --tw-gradient-to-position: ;
-  --tw-ordinal: ;
-  --tw-slashed-zero: ;
-  --tw-numeric-figure: ;
-  --tw-numeric-spacing: ;
-  --tw-numeric-fraction: ;
-  --tw-ring-inset: ;
-  --tw-ring-offset-width: 0px;
-  --tw-ring-offset-color: #fff;
-  --tw-ring-color: #3b82f680;
-  --tw-ring-offset-shadow: 0 0 #0000;
-  --tw-ring-shadow: 0 0 #0000;
-  --tw-shadow: 0 0 #0000;
-  --tw-shadow-colored: 0 0 #0000;
-  --tw-blur: ;
-  --tw-brightness: ;
-  --tw-contrast: ;
-  --tw-grayscale: ;
-  --tw-hue-rotate: ;
-  --tw-invert: ;
-  --tw-saturate: ;
-  --tw-sepia: ;
-  --tw-drop-shadow: ;
-  --tw-backdrop-blur: ;
-  --tw-backdrop-brightness: ;
-  --tw-backdrop-contrast: ;
-  --tw-backdrop-grayscale: ;
-  --tw-backdrop-hue-rotate: ;
-  --tw-backdrop-invert: ;
-  --tw-backdrop-opacity: ;
-  --tw-backdrop-saturate: ;
-  --tw-backdrop-sepia: ;
-}
-
-::backdrop {
+*, :before, :after, ::backdrop {
   --tw-border-spacing-x: 0;
   --tw-border-spacing-y: 0;
   --tw-translate-x: 0;
@@ -298,31 +248,31 @@ img, video {
   width: 100%;
 }
 
-@media (min-width: 640px) {
+@media (width >= 640px) {
   .container {
     max-width: 640px;
   }
 }
 
-@media (min-width: 768px) {
+@media (width >= 768px) {
   .container {
     max-width: 768px;
   }
 }
 
-@media (min-width: 1024px) {
+@media (width >= 1024px) {
   .container {
     max-width: 1024px;
   }
 }
 
-@media (min-width: 1280px) {
+@media (width >= 1280px) {
   .container {
     max-width: 1280px;
   }
 }
 
-@media (min-width: 1536px) {
+@media (width >= 1536px) {
   .container {
     max-width: 1536px;
   }
@@ -381,14 +331,9 @@ img, video {
   margin-bottom: .5rem;
 }
 
-.my-6 {
-  margin-top: 1.5rem;
-  margin-bottom: 1.5rem;
-}
-
-.my-8 {
-  margin-top: 2rem;
-  margin-bottom: 2rem;
+.my-4 {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
 }
 
 .mb-12 {
@@ -431,18 +376,6 @@ img, video {
   margin-top: 1.5rem;
 }
 
-.mb-4 {
-  margin-bottom: 1rem;
-}
-
-.mt-8 {
-  margin-top: 2rem;
-}
-
-.mb-2 {
-  margin-bottom: .5rem;
-}
-
 .box-border {
   box-sizing: border-box;
 }
@@ -457,6 +390,10 @@ img, video {
 
 .hidden {
   display: none;
+}
+
+.h-72 {
+  height: 18rem;
 }
 
 .max-w-4xl {
@@ -489,10 +426,6 @@ img, video {
 
 .justify-between {
   justify-content: space-between;
-}
-
-.border-2 {
-  border-width: 2px;
 }
 
 .border-b-2 {
@@ -547,6 +480,11 @@ img, video {
   text-align: center;
 }
 
+.text-3xl {
+  font-size: 1.875rem;
+  line-height: 2.25rem;
+}
+
 .text-4xl {
   font-size: 2.25rem;
   line-height: 2.5rem;
@@ -590,11 +528,6 @@ img, video {
   color: rgb(253 224 71 / var(--tw-text-opacity));
 }
 
-.\!text-white {
-  --tw-text-opacity: 1 !important;
-  color: rgb(255 255 255 / var(--tw-text-opacity)) !important;
-}
-
 .no-underline {
   text-decoration-line: none;
 }
@@ -620,7 +553,7 @@ body {
   background-color: rgb(25 27 31 / var(--tw-bg-opacity));
   --tw-text-opacity: 1;
   color: rgb(255 255 255 / var(--tw-text-opacity));
-  font-family: Raleway, Roboto, sans-serif;
+  font-family: Inter, Roboto, Open Sans, sans-serif;
 }
 
 a {
@@ -634,7 +567,7 @@ a:hover, .styled-link:hover {
   text-decoration-line: underline;
 }
 
-article {
+article, section {
   max-width: 1024px;
   margin-bottom: 3rem;
   margin-left: auto;
@@ -642,8 +575,8 @@ article {
   padding: 1rem;
 }
 
-@media (min-width: 768px) {
-  article {
+@media (width >= 768px) {
+  article, section {
     padding: 0;
   }
 }
@@ -660,10 +593,19 @@ h1, article > h2, article > h3, article > h4 {
   color: rgb(255 255 255 / var(--tw-text-opacity));
   margin-top: 1.5rem;
   margin-bottom: 1rem;
-  font-family: Montserrat, sans-serif;
   font-size: 1.5rem;
   font-weight: 700;
   line-height: 2rem;
+}
+
+section > h2 {
+  text-align: center;
+  --tw-text-opacity: 1;
+  color: rgb(253 224 71 / var(--tw-text-opacity));
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+  font-size: 1.875rem;
+  line-height: 2.25rem;
 }
 
 article > h3 {
@@ -762,7 +704,7 @@ article > table {
   text-decoration-line: none;
 }
 
-@media (min-width: 640px) {
+@media (width >= 640px) {
   .sm\:block {
     display: block;
   }

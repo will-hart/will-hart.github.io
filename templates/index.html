@@ -1,7 +1,7 @@
 {% import "macros.html" as macros %} {% extends "base.html" %} 
 {% block content %}
 <div
-  class="hero bg-gray-700 h-128 mb-12 flex items-center justify-center p-12 border-b-2 border-yellow-300"
+  class="hero bg-gray-700 h-72 mb-12 flex items-center justify-center p-12 border-b-2 border-yellow-300"
 >
   <div class="container mx-auto my-0">
     <h1 class="text-yellow-300 text-4xl m-0 mb-8 text-center">Hi, I'm Will</h1>
@@ -11,8 +11,11 @@
     <p class="text-yellow-300 text-xl text-center">
       I pseudo-randomly post my coding/electronics/random adventures here.
     </p>
+  </div>
+</div>
 
-    <h2 class="text-yellow-300 text-xl m-0 my-8 text-center">Latest Posts</h2>
+<section class="container">
+    <h2 class="text-3xl text-center text-yellow-300">Latest Adventures</h2>
 
     {% set post_section = get_section(path="post/_index.md") %}
     {% for post in post_section.pages | slice(end=4) %}
@@ -21,17 +24,14 @@
 
     <div class="flex justify-center items-center">
       <a
-        class="text-xl text-center hover:no-underline border-2 border-yellow-300 hover:bg-gray-900 mt-8 mb-2 p-4 text-yellow-300"
+        class="text-xl text-center hover:no-underline hover:bg-gray-900 mt-4 mb-8 p-4 text-yellow-300"
         href="/post"
         title="See all past posts"
-        >See a list of past posts here <span class="ml-2">ᐅ</span></a
+        >See all past posts here <span class="ml-2">ᐅ</span></a
       >
-    </div>
   </div>
-</div>
 
-<article class="container">
-  <h1 class="text-center mb-8">Some things I enjoyed making</h1>
+  <h2>Some things I enjoyed making</h1>
 
   <div
     class="flex flex-row flex-wrap justify-center items-start max-w-4xl m-auto"
@@ -51,5 +51,5 @@
     {{macros::big_thumbnail_link(image_src="/thumbnails/chezdalert.jpg",
     url="/post/chez-dalert-pic-countdown-alarm/", caption="Woodworking timer")}}
   </div>
-</article>
+</section>
 {% endblock content %}
