@@ -331,11 +331,6 @@ img, video {
   margin-bottom: .5rem;
 }
 
-.my-4 {
-  margin-top: 1rem;
-  margin-bottom: 1rem;
-}
-
 .mb-12 {
   margin-bottom: 3rem;
 }
@@ -374,6 +369,10 @@ img, video {
 
 .mt-6 {
   margin-top: 1.5rem;
+}
+
+.mt-2 {
+  margin-top: .5rem;
 }
 
 .box-border {
@@ -698,6 +697,16 @@ article > table {
 .hover\:text-darkbg:hover {
   --tw-text-opacity: 1;
   color: rgb(25 27 31 / var(--tw-text-opacity));
+}
+
+.hover\:text-yellow-500:hover {
+  --tw-text-opacity: 1;
+  color: rgb(234 179 8 / var(--tw-text-opacity));
+}
+
+.hover\:text-yellow-200:hover {
+  --tw-text-opacity: 1;
+  color: rgb(254 240 138 / var(--tw-text-opacity));
 }
 
 .hover\:no-underline:hover {
