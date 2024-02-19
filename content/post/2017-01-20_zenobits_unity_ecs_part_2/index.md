@@ -8,7 +8,7 @@ aliases = ["/zenobits_unity_ecs_part_2", "/post/zenobits_unity_ecs_part_2"]
 tag = ["code", "gamedev"]
 +++
 
-In the [first part](/zenobits-unit-ecs-part-1), we introduced the ECS
+In the [first part](/post/zenobits-unit-ecs-part-1), we introduced the ECS
 architecture and explained a bit about why we chose to avoid Unity's standard
 architectural approach. We also set up an example, using entities with both a
 `HealthComponent` and an optional `ShieldComponent`.
@@ -246,7 +246,7 @@ In our case, and despite these compromises, we felt that our custom ECS offered
 a cleaner, more reusable architecture that we could apply to multiple different
 game styles. Hopefully I've given you a bit of an insight into our reasoning.
 
-In the [third and final instalment](/zenobits-unity-ecs-part-3) of this series,
+In the [third and final instalment](/post/zenobits-unity-ecs-part-3) of this series,
 I'm going to give an example of how we implemented a particular feature in our
 ECS for our current game project so you can see how this would work "irl".
 

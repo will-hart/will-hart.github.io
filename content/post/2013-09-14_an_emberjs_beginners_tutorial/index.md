@@ -10,7 +10,7 @@ tag = ["code", "tutorials"]
 
 > **Warning** This is a pretty long tutorial! If you just want to see the
 > finished product you can browse the source code or have a look at a live demo
-
+>
 > **Warning 2** - this tutorial was written for Ember 1.0, and is therefore well
 > out of date.
 

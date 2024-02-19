@@ -134,19 +134,16 @@ If our tweet contains the words "Chocolate tastes great", then the mathematical
 formulation would become:
 
 $$P(bad|chocolate,tastes,great)=\frac{P(bad)\times P(chocolate|bad)\times P(tastes|bad)\times P(great|bad)}{P(chocolate,tastes,great)}$$
- 
 
 Where $P(chocolate)$ is the probability the tweet contains the word "chocolate".
 The probability the tweet is good would be given by:
 
 $$P(good|chocolate,tastes,great)=\frac{P(good)\times P(chocolate|good)\times P(tastes|good)\times P(great|good)}{P(chocolate,tastes,great)}$$
 
-​	 
 To work out if the tweet is good or bad, we can just compare which of these
 probability is greater, e.g.
 
 $$P(good|chocolate,tastes,great) > P(bad|chocolate,tastes,great)$$
-
 
 As the denominator of the fraction is the same on both probabilities, we only
 need to compare the top lines of the fraction.
@@ -238,10 +235,9 @@ correctly group our tweets.
 The training set should be as large as possible but also as close to "reality"
 as possible. For instance, a review of the equations above show that the final
 classification is also dependent on the probability that a tweet is good or bad
-- $P(y)$. This means that we should ensure the dataset is representative of
-real life data - if we increase the proportion of bad tweets in our training
-dataset then we increase the likelihood the algorithm will classify a tweet as
-bad.
+- $P(y)$. This means that we should ensure the dataset is representative of real
+life data - if we increase the proportion of bad tweets in our training dataset
+then we increase the likelihood the algorithm will classify a tweet as bad.
 
 ### Gathering the data
 
@@ -413,7 +409,6 @@ probability having a length of 12 bytes including punctuation, the simple matrix
 generated from our training set above gives us a file size of around 20kB:
 
 $$1\text{ byte}\times 12\text{ characters}\times 2\text{ rows}\times 773\text{ columns} = 18,552\text{ bytes}$$
-
 
 To perform this operation client side, we would therefore need to download at
 least 20kB of probability matrix. Given the emphasis placed on minimising

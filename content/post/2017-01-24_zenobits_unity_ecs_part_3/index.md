@@ -13,7 +13,7 @@ System we are using at @ZenobitStudios.
 
 ![Zenobit ECS header (size: 1176x663px)](ecs-background-2.png)
 
-In the [first part](/zenobits-unity-ecs-part-1), I discussed what an ECS is, and
+In the [first part](/post/zenobits-unity-ecs-part-1), I discussed what an ECS is, and
 why we chose this architecture for our games. In the [second
 part](/zenobits-unity-ecs-part-2), I talked through several areas in which an
 ECS offers some potential advantages over the "standard" Unity architecture. In
@@ -226,6 +226,6 @@ opinions and that's totally fine by me!
    lets the system handle multiple different damage types and effects, but I'm
    trying to keep things manageable here :)
 3. See part 2 of this series for details of the Matcher class
-4. In practice we use Unity's colliders and a briding MonoBehaviour to inject
+4. In practice we use Unity's colliders and a bridging MonoBehaviour to inject
    collision data into the ECS. The bridging class is very simple and can be
    reused for any entity which receives collisions.

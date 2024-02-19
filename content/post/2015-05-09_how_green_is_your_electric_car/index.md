@@ -147,20 +147,20 @@ vehicle batteries.
 
 ## References
 
-[**NOTE 1**] CO2 emissions by sector http://www.theccc.org.uk/charts-data/ukemissions-by-sector/
+[**NOTE 1**] CO2 emissions by sector [http://www.theccc.org.uk/charts-data/ukemissions-by-sector/]
 
-[**NOTE 2**] Transport emissions by type, p23 of https://www.gov.uk/government/uploads/system/uploads/attachment_data/file/228897/7682.pdf
+[**NOTE 2**] Transport emissions by type, p23 of [https://www.gov.uk/government/uploads/system/uploads/attachment_data/file/228897/7682.pdf]
 
 [**Note 3**] $\frac{60\% \times 110MTCO_2e}{600 MTCO_2e} = 11\%$
 
-[**Note 4**] UK sources of electricity, 2010 and 2011, https://www.gov.uk/government/uploads/system/uploads/attachment_data/file/65841/7345-elec-gen-2008-2011-et-article.pdf
+[**Note 4**] UK sources of electricity, 2010 and 2011, [https://www.gov.uk/government/uploads/system/uploads/attachment_data/file/65841/7345-elec-gen-2008-2011-et-article.pdf]
 
-[**Note 5**] Calorific values of some fuels http://en.wikipedia.org/wiki/Heat_of_combustion#Heat_of_combustion_tables
+[**Note 5**] Calorific values of some fuels [http://en.wikipedia.org/wiki/Heat_of_combustion#Heat_of_combustion_tables]
 
-[**Note 6**] See typical power plant losses and efficiency on p24 https://www.iea.org/ciab/papers/power_generation_from_coal.pdf
+[**Note 6**] See typical power plant losses and efficiency on p24 [https://www.iea.org/ciab/papers/power_generation_from_coal.pdf]
 
 [**Note 7**] As 1kmol of $C_8 H_18$ weighs $8\times 12 + 18 \times 1 = 114kg$ and produces 8kmol of $CO_2$  weighing $8\times(12 + 2\times 16) = 352kg$
 
-[**Note 8**] Specific CO2 Emission table, http://www.engineeringtoolbox.com/co2-emission-fuels-d_1085.html
+[**Note 8**] Specific CO2 Emission table, [http://www.engineeringtoolbox.com/co2-emission-fuels-d_1085.html]
 
-[**NOTE 9**] Limitations of transport CO2 emissions calculations http://www.greenlogistics.org/SiteResources/d82cc048-4b92-4c2a-a014-af1eea7d76d0_CO2 Emissions from Freight Transport - An Analysis of UK Data.pdf
+[**NOTE 9**] Limitations of transport CO2 emissions calculations [https://www.abtslogistics.co.uk/green-logistics-resources/d82cc048-4b92-4c2a-a014-af1eea7d76d0_CO2%20Emissions%20from%20Freight%20Transport%20-%20An%20Analysis%20of%20UK%20Data.pdf]

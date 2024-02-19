@@ -153,5 +153,5 @@ crystal?
 To cut to the chase, most micros will need some sort of external timing source
 to function at all, and those that have this timing source built in are
 frequently not very accurate. The best way to find out whether a timing source
-is needed is to read the datasheet, but as an example the PIC16F628A has an
+is needed is to read the data sheet, but as an example the PIC16F628A has an
 internal crystal but the PIC16F877A does not.

@@ -122,11 +122,10 @@ for comparison. Of course some CSS is required so it doesn't look too horrible.
 ## Building an Ember.Component
 
 If you listen to the Ember experts talk - for instance [this video on
-Components](http://www.youtube.com/watch?v=zC7o1YkmkG0)
-- then Ember's Components are the future. Basically they are reusable bits of
-interface which provide a simple interface for binding data and responding to
-events. We can convert our DemarcateEditor view into an Ember.Component quite
-easily.
+Components](http://www.youtube.com/watch?v=zC7o1YkmkG0) - then Ember's
+Components are the future. Basically they are reusable bits of interface which
+provide a simple interface for binding data and responding to events. We can
+convert our DemarcateEditor view into an Ember.Component quite easily.
 
 Firstly, we need to add a template to our `index.html`:
 

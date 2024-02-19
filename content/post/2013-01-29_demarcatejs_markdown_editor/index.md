@@ -17,4 +17,4 @@ can be saved to a database to persist changes.
 
 demarcate.js was designed to become the main editor for `textr`, an online
 publishing service. You can see the source and browse some more demos at the
-github page: https://github.com/will-hart/demarcate.js.
+github page: [https://github.com/will-hart/demarcate.js].

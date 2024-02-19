@@ -19,4 +19,4 @@ can then be coloured according to their due dates, and removed when completed.
 
 Days Ago is currently available in the Apps section if you are on the Chrome
 Developer channel, or it can be installed by visiting
-https://chrome.google.com/webstore/detail/jgpkfclnhphhkocokeikoiabmjeejdlf.
+[https://chrome.google.com/webstore/detail/jgpkfclnhphhkocokeikoiabmjeejdlf].

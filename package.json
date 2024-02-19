@@ -19,6 +19,5 @@
     "build::css": "parcel build styles/global.css --dist-dir static --no-source-maps",
     "watch": "parcel watch styles/global.css --dist-dir static --no-source-maps",
     "new": "node ./scripts/createPost.js"
-  },
-  "engines": { "node": ">=20.0" }
+  }
 }

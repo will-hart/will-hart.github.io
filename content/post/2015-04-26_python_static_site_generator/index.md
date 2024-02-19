@@ -11,7 +11,7 @@ tag = ["code", "random", "projects"]
 ## About
 
 The following code is described in [this blog
-post](/a-simple-static-site-generator-in-python). It is available under the MIT
+post](/post/a-simple-static-site-generator-in-python). It is available under the MIT
 license. You can also see the code [as a
 gist](https://gist.github.com/will-hart/9609188).
 

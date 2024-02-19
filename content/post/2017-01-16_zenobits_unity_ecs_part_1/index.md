@@ -195,6 +195,6 @@ months!
 
 ## In Conclusion
 
-Ok, I think that's enough setup for now! In [Part 2](/zenobits-unity-ecs-part-2)
+Ok, I think that's enough setup for now! In [Part 2](/post/zenobits-unity-ecs-part-2)
 of this series, I'm going to step through some different scenarios where we
 think a "pure" ECS approach provides some benefits.
