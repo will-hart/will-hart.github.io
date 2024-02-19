@@ -11,7 +11,7 @@ tag = ["code", "gamedev"]
 ![Testing Unity's script execution order](execution_order.png)
 
 I came across an interesting problem when I was posting about our [Zenobit
-ECS](https://willhart.io/zenobits-unity-ecs-part-1) a while back. In our ECS I
+ECS](/post/zenobits-unity-ecs-part-1) a while back. In our ECS I
 had noticed that as when we retrieve a list of Components from our ECS engine
 (say a list of "attack" components), they are always in the same order. This
 meant there was the potential for some sort of bias to occur when resolving
@@ -246,7 +246,7 @@ It definitely isn't a terminal problem - we can achieve explicitly set Script
 Execution Order or perhaps do death removal check in `LateUpdate`. These
 solutions both work, and are relatively straightforward to implement, but the
 danger lies in the fact that the default Unity implementation relies on
-_implicit_ and seemingly arbitary execution order.
+_implicit_ and seemingly arbitrary execution order.
 
 There is the potential for a whole raft of insidious, unexpected and difficult
 to debug logic errors to crop up, way beyond the complexity of our contrived

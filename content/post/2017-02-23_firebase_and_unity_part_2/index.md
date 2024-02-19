@@ -10,7 +10,7 @@ tag = ["code", "gamedev"]
 
 ## Recap
 
-In the [previous part](/firebase-and-unity-part-1) we looked at getting a
+In the [previous part](/post/firebase-and-unity-part-1) we looked at getting a
 firebase database set up and importing the package into Unity. In this part we
 are actually going to build out the "game". If you don't recall, in this example
 we are going to have a button and a click counter stored on the server. It isn't

@@ -8,7 +8,7 @@ aliases = ["/20201228_recreating_the_blog_in_nextjs", "/post/20201228_recreating
 tag = ["random", "projects"]
 +++
 
-Well this [isn't the first post of this kind](/switched-to-ghost), but once
+Well this [isn't the first post of this kind](/post/switched-to-ghost), but once
 again its that time of year when I look at the blog and decide its time to
 migrate to a different blog host. The current Ghost blog has been fine but costs
 $5/month to host. Backups and updates are pretty annoying and the whole thing is
@@ -25,10 +25,12 @@ like those supported by NextJS really make life easy. Deployment is just a matte
 
 Spurred by these advantages I decided to open source the blog and make a
 statically generated site using NextJS. The main way this works is by keeping an
-array of post URLs, then loading in markdown files based on these URLs to display. Markdown files use YAML frontmatter to store configuration (author, date, titles, summaries and so on).
+array of post URLs, then loading in markdown files based on these URLs to
+display. Markdown files use YAML frontmatter to store configuration (author,
+date, titles, summaries and so on).
 
 Static generation is enabled in NextJS by specifying the URLs to generate (if
-the URLs contain dymanic segments like slugs or IDs) and also specifying a
+the URLs contain dynamic segments like slugs or IDs) and also specifying a
 function that generates the props on the server. For the blog post pages this
 looks like this:
 

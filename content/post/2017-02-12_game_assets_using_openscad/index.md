@@ -57,13 +57,13 @@ of hard coding:
 scale(wall_scale) cube([wall_length, wall_thickness, wall_height]);
 ```
 
-## Making crennelations
+## Making crenelations
 
-The next thing a castle wall needs is crennelation, something for our archers to
+The next thing a castle wall needs is crenelation, something for our archers to
 hide behind. We need a few variables here...
 
 ```python
-// crennelation properties
+// crenelation properties
 cren_duty_cycle = 0.5;
 cren_period = 0.1;
 cren_height = cren_duty_cycle \* cren_period;
@@ -73,17 +73,17 @@ A diagram may help:
 
 ![The attributes of crenellations](crennelation_dimensions.png)
 
-The _period_ is the length of one "on and off" crennelation, the height is the
-height of a crennelation and the duty cycle is the percentage of on vs off of
-the crenellations, so `0.5` here indicates for each period 50% is crennelation
-and 50% is air. For simplicity we are going to assume that crennelations are
+The _period_ is the length of one "on and off" crenelation, the height is the
+height of a crenelation and the duty cycle is the percentage of on vs off of
+the crenellations, so `0.5` here indicates for each period 50% is crenelation
+and 50% is air. For simplicity we are going to assume that crenelations are
 cubes, so we can define the thickness as:
 
 ```c
 cren_thickness = cren_duty_cycle * cren_period;
 ```
 
-Now we can use a `for`, `translate` and `cube` to draw our crennelations:
+Now we can use a `for`, `translate` and `cube` to draw our crenelations:
 
 ```c
 for (x = [0 : cren_period : wall_length - cren_period]) {
@@ -100,7 +100,7 @@ the wall. To achieve this we use a `translate` statement to wrap our `cube`
 primitive drawing statement. We provide the x, y and z coordinates where we want
 our cube to be drawn.
 
-To join the crennelations to our base wall, we can wrap the whole lot in a `union`
+To join the crenelations to our base wall, we can wrap the whole lot in a `union`
 statement. Our model code now looks like this:
 
 ```c
@@ -109,7 +109,7 @@ scale(wall_scale) {
         // wall base
         cube([wall_length, wall_thickness, wall_height]);
 
-        // crennelations
+        // crenelations
         for (x = [0 : cren_period : wall_length - cren_period]) {
             translate([x, 0, wall_height]) {
                 cube([cren_duty_cycle * cren_period, cren_thickness, cren_height]);
@@ -239,7 +239,7 @@ wall_length = 1;
 wall_thickness = 0.3;
 wall_height = 0.8;
 
-// crennelation properties
+// crenelation properties
 cren_duty_cycle = 0.5;
 cren_period = 0.1;
 cren_height = cren_duty_cycle * cren_period;
@@ -358,7 +358,7 @@ wall_length = 1;
 wall_thickness = 0.3;
 wall_height = 0.8;
 
-// crennelation properties
+// crenelation properties
 cren_duty_cycle = 0.5;
 cren_period = 0.1;
 cren_height = cren_duty_cycle * cren_period;
@@ -393,7 +393,7 @@ module drawWall() {
         // wall base
         cube([wall_length, wall_thickness, wall_height]);
 
-        // crennelations
+        // crenelations
         for (x = [0 : cren_period : wall_length - cren_period]) {
             translate([x, 0, wall_height]) {
                 cube([cren_duty_cycle * cren_period, cren_thickness, cren_height]);

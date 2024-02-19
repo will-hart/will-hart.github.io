@@ -16,7 +16,7 @@ fantastic project for redux / firebase bindings, and quickly built up a
 prototype. I used the app throughout the entire 2017/18 basketball season and
 found it very useful for scouting reports, building up training plans and so on.
 
-![GraphiQL, a handy tool for browsing and iteracting with a GraphQL server](convert-firebase-to-graphql.png)
+![GraphiQL, a handy tool for browsing and interacting with a GraphQL server](convert-firebase-to-graphql.png)
 
 Then development stalled... the constraints of firebase, the weight of redux
 boilerplate and the few idiosyncrasies of the firebase bindings made adding new
@@ -257,7 +257,7 @@ have emerged.
 > **NOTE FROM AN OLDER AND WISER WILL** I think at this stage I'm looking at
 > using an AppSync / Cognito / DynamoDB / Lambda backend, but I may make another
 > post later on if I go down that route.
-
+>
 > **ANOTHER NOTE FROM AN EVEN OLDER AND WISER WILL** Hey, it turns out I can
 > just wrap my firestore DB with a GraphQL endpoint!
 

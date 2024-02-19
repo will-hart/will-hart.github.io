@@ -158,7 +158,7 @@ instructions on screen to configure the project correctly for firebase.
 ### Ready to rock
 
 OK, with that I think we are ready to start building up our application. Stay
-tuned for [part 2](/firebase-and-unity-part-2)!
+tuned for [part 2](/post/firebase-and-unity-part-2)!
 
 ## Notes
 
