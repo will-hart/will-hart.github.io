@@ -411,9 +411,10 @@ within the video analysis software, either as a teaching or a scouting tool.
 
 I think the ultimate UI for tagging videos would be... no UI at all! Could we
 get machine learning algorithms to tag up the video for us? I'm not 100\% on the
-AI hype train, I do think some good old fashioned machine learning tools to
-analyse the video, and extract highlights and tags. It would be even cooler if
-the ML could process the video and turn it into play diagrams.
+AI hype train, but I do think some good old fashioned machine learning tools to
+analyse the video would be useful, especially if they could extract highlights
+and tags automatically. It would be even cooler if the ML could process the
+video and turn it into play diagrams.
 
 I'm clearly not the first to think of this, for instance there are a lot of
 tutorials online for doing this with [football
