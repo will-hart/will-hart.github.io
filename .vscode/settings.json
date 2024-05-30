@@ -3,7 +3,8 @@
     "microcontroller",
     "microcontrollers",
     "Pico",
-    "RTIC"
+    "RTIC",
+    "telestrator"
   ],
   "cSpell.ignoreWords": [
     "switchy"
