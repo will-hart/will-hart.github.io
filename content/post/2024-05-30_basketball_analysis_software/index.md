@@ -1,6 +1,6 @@
 +++
 title = "Building a basketball video analysis software tool"
-description = ""
+description = "Describes my 8 year journey to build some basketball video analysis software in rust and typescript"
 
 [taxonomies]
 tag = ["random", "projects"]
