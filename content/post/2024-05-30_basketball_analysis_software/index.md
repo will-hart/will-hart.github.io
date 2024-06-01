@@ -416,9 +416,15 @@ analyse the video would be useful, especially if they could extract highlights
 and tags automatically. It would be even cooler if the ML could process the
 video and turn it into play diagrams.
 
-I'm clearly not the first to think of this, for instance there are a lot of
-tutorials online for doing this with [football
-(soccer)](https://neptune.ai/blog/dive-into-football-analytics-with-tensorflow-object-detection-api). 
+[I'm](https://www.statsperform.com/opta-tracking/)
+[clearly](https://medium.com/@kalidrafts/exploring-basketball-spacing-through-computer-vision-broadcast-data-cdff8a118c4f)
+[not](https://medium.com/swlh/automating-basketball-highlights-with-object-tracking-b134ce9afec2)
+[the](https://datahacker.rs/005-advanced-computer-vision-basketball-layer-tracking-with-open-cv/)
+[first](https://www.youtube.com/watch?v=yJWAtr3kvPU)
+[to](https://blog.roboflow.com/track-football-players/)
+[think](https://www.youtube.com/watch?v=XHT2c8jT3Bc)
+[of](https://github.com/sketscripter/Computer-vision-basketball-court-mapping-and-player-tracking)
+[this](https://neptune.ai/blog/dive-into-football-analytics-with-tensorflow-object-detection-api).
 
 I think this would be very challenging given the majority of game films in
 amateur leagues probably use off the shelf cameras with poor low-light
