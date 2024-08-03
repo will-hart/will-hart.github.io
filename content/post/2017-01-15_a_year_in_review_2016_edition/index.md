@@ -24,21 +24,21 @@ still managed to release five games for Game Jams in 2016!
 
 ![A terrible game jam game (size: 551x500px)](twirlygig.jpg)
 
-[Ludum Dare 34 Link](http://ludumdare.com/compo/ludum-dare-35/?action=preview&uid=50407)
+[Ludum Dare 35 Link](https://web.archive.org/web/20210127063404/http://ludumdare.com/compo/ludum-dare-35/?action=preview&uid=50407)
 
 This game was an example of what happens when you try to balance family life
 with a weekend game jam! To follow on from the Button Simulator, I decided to
 make another game using ReactJS. The theme of the jam was "shape shifting" and I
 wanted to see if I could use React to simulate physics. Basically the idea is
 there are a whole lot of shapes which swirl down towards the centre, and you
-have to press keys to match the shapes before they hit the centre. Its not the
-worst game I ever made.
+have to press keys to match the shapes before they hit the centre. Its
+not (quite) the worst game I ever made.
 
 ### Clockwork Dragon
 
-![Clockwork Dragon - a game I'm not unproud of (size: 731x500px)](clockwork-dragon.jpg)
+![Clockwork Dragon - a game I was actually proud of (size: 731x500px)](clockwork-dragon.jpg)
 
-[Ludum Dare 35 Link](http://ludumdare.com/compo/ludum-dare-36/?action=preview&uid=50407)
+[Ludum Dare 36 Link](https://wilsk.itch.io/clockwork-dragon)
 
 I'm actually fairly proud of this game - I think its probably one of the best
 games I've released to date. In this voxel adventure, you are a steam powered
