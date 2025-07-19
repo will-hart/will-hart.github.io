@@ -1,5 +1,5 @@
 /* An overly complicated plain JS script to create new posts.
-   Should be called as `yarn new`
+   Should be called as `node scripts/createPost.js`
  */
 
 const { readFile, writeFile, mkdir } = require("fs/promises");

@@ -1,7 +1,5 @@
 {
   "plugins": {
-    "tailwindcss": true,
-    "postcss-import": true,
-    "postcss-url": true
+    "tailwind": true,
   }
 }

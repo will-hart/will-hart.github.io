@@ -1,54 +1,55 @@
 {% import "macros.html" as macros %} {% extends "base.html" %} 
 {% block content %}
-<div
-  class="hero bg-gray-700 h-72 mb-12 flex items-center justify-center p-12 border-b-2 border-yellow-300"
->
-  <div class="container mx-auto my-0">
-    <h1 class="text-yellow-300 text-4xl m-0 mb-8 text-center">Hi, I'm Will</h1>
-    <p class="text-yellow-300 text-xl text-center">
+<div class="container padded">
+  <div class="hero-box bghl padded txtrev">
+    <h1>Hi, I'm Will</h1>
+    <p>
       I work in Med Tech in Melbourne, Australia.
     </p>
-    <p class="text-yellow-300 text-xl text-center">
-      I pseudo-randomly post my coding/electronics/random adventures here.
-    </p>
   </div>
-</div>
 
-<section class="container">
-    <h2 class="text-3xl text-center text-yellow-300">Latest Adventures</h2>
+  <div class="hero-box">
+    <h2>My Recent Posts</h2>
 
     {% set post_section = get_section(path="post/_index.md") %}
     {% for post in post_section.pages | slice(end=4) %}
-      <div class="text-lg my-2 text-center"><a class="text-white" href="{{post.permalink}}">{{post.title}} <span>ᐅ</span></a></div>
+      <div class="mb"><a href="{{post.permalink}}">{{post.title}}</a></div>
     {% endfor %}
 
-    <div class="flex justify-center items-center">
+    <div>
       <a
-        class="text-xl text-center hover:text-yellow-200 mt-4 mb-8 text-yellow-300"
+        class="hlt"
         href="/post"
         title="See all past posts"
-        >See all past posts here <span class="ml-2">ᐅ</span></a
+        >See all past posts here <span>ᐅ</span></a
       >
+    </div>
+  </div>
+</div>
+
+<section class="padded">
+  <div class="container">
+    <h2>Some of my projects</h1>
   </div>
 
-  <h2>Some things I enjoyed making</h1>
-
-  <div
-    class="flex flex-row flex-wrap justify-center items-start max-w-4xl m-auto"
-  >    
-    {{macros::big_thumbnail_link(image_src="/thumbnails/bball_analysis.png",
-  url="/post/basketball-analysis-software/", caption="Basketball Video Analysis")}}
-    {{macros::big_thumbnail_link(image_src="/thumbnails/clock.png",
-    url="/post/cmos-analog-clock/", caption="CMOS clock")}}
-    {{macros::big_thumbnail_link(image_src="/thumbnails/tauri.png",
-    url="/post/tauri-create-react-app-tutorial-part1/", caption="Tauri tutorial
-    series")}} {{macros::big_thumbnail_link(image_src="/thumbnails/bball.png",
-    url="/post/first-impressions-converting-a-firebase-project-to-graphql/",
-    caption="Basketball Playbook")}}
-    {{macros::big_thumbnail_link(image_src="/thumbnails/openscad.png",
-    url="/post/game-assets-using-openscad/", caption="OpenSCAD game assets")}}
-    {{macros::big_thumbnail_link(image_src="/thumbnails/chezdalert.jpg",
-    url="/post/chez-dalert-pic-countdown-alarm/", caption="Woodworking timer")}}
+  <div class="container row">
+    <div class="preview">
+        <figure>
+          <img src="/thumbnails/bball_analysis.png" width="256px" height="256px" />
+          <figcaption>
+            <h3><a href="/post/basketball-analysis-software/">Basketball analysis software</a></h3>
+            <p>
+              A full-stack software application and CLI for reviewing basketball videos and
+              performing stats analysis. Built with NextJS and axum.
+            </p>
+            <p>
+              <a href="/post/basketball-analysis-software/">Read More</a>
+            </p>
+          </figcaption>
+        </figure>
+      </a>
+    </div>
   </div>
 </section>
-{% endblock content %}
+
+{% endblockcontent %}

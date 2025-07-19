@@ -16,8 +16,7 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
-
+    <link href="https://fonts.googleapis.com/css2?family=Sono:wght@200..800&display=swap" rel="stylesheet">
     {%if page.extra.use_maths |
   default(value=false) %}{%include "enable_maths.html" %}{%endif%}
 
@@ -25,40 +24,26 @@
     <script defer src='https://static.cloudflareinsights.com/beacon.min.js'
             data-cf-beacon='{"token": "310f93cab66a42c5a328f246cc053025"}'></script>
     <!-- End Cloudflare Web Analytics -->
+
+    <script>
+    const checkbox = document.getElementById("theme-toggle")
+    checkbox.addEventListener("change", () => {
+      document.body.classList.toggle("dark")
+    })
+    </script>
   </head>
 
   <body>
-    <div class="sticky top-0 p-3 bg-gray-800 z-10 shadow-lg">
-      <div class="flex justify-between items-center">
-        <a class="text-xs styled-link" href="/">willhart.io</a>
-        <span class="block sm:hidden">
-          <span class="mr-4">
-            <a class="text-xs styled-link" href="/post">ALL POSTS</a>
-          </span>
-          <span class="mr-4">
-            <a class="text-xs styled-link" href="/tag">ALL TAGS</a>
-          </span>
-        </span>
-        <span class="hidden sm:block">
-          <span class="mr-4">
-            <a class="text-xs styled-link" href="/post">ALL POSTS</a>
-          </span>
-          <span class="mr-4">|</span>
-          <span class="mr-4">
-            <a class="text-xs styled-link" href="/tag/projects">PROJECTS</a>
-          </span>
-          <span class="mr-4">
-            <a class="text-xs styled-link" href="/tag/tutorials">TUTORIALS</a>
-          </span>
-          <span class="mr-4">
-            <a class="text-xs styled-link" href="/tag/gamedev">GAME DEV</a>
-          </span>
-          <span class="mr-4">
-            <a class="text-xs styled-link" href="/tag/electronics">ELECTRONICS</a>
-          </span>
-          <span class="mr-4">
-            <a class="text-xs styled-link" href="/tag/random">RANDOM</a>
-          </span>
+    <div id="header">
+        <a href="/">willhart.io</a>
+        <span>
+          <a class="header-item" href="/post">POSTS</a>
+          <a class="header-item" href="/tag">TAGS</a>
+          <a class="header-item" href="/tag/projects">PROJECTS</a>
+          <a class="header-item" href="/tag/tutorials">TUTORIALS</a>
+          <a class="header-item" href="/tag/gamedev">GAMEDEV</a>
+          <a class="header-item" href="/tag/electronics">ELECTRONICS</a>
+          <a class="header-item" href="/tag/random">RANDOM</a>
         </span>
       </div>
     </div>
