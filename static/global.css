@@ -23,13 +23,12 @@ body {
 }
 
 hr {
+  height: 0;
   color: inherit;
   border-top-width: 1px;
-  height: 0;
 }
 
 abbr:where([title]) {
-  -webkit-text-decoration: underline dotted;
   text-decoration: underline dotted;
 }
 
@@ -40,7 +39,6 @@ h1, h2, h3, h4, h5, h6 {
 
 a {
   color: inherit;
-  -webkit-text-decoration: inherit;
   text-decoration: inherit;
 }
 
@@ -87,6 +85,7 @@ button, input, optgroup, select, textarea {
   font-size: 100%;
   font-weight: inherit;
   line-height: inherit;
+  letter-spacing: inherit;
   color: inherit;
   margin: 0;
   padding: 0;
@@ -96,7 +95,7 @@ button, select {
   text-transform: none;
 }
 
-button, [type="button"], [type="reset"], [type="submit"] {
+button, input:where([type="button"]), input:where([type="reset"]), input:where([type="submit"]) {
   -webkit-appearance: button;
   background-color: #0000;
   background-image: none;
@@ -242,6 +241,10 @@ img, video {
   --tw-backdrop-opacity: ;
   --tw-backdrop-saturate: ;
   --tw-backdrop-sepia: ;
+  --tw-contain-size: ;
+  --tw-contain-layout: ;
+  --tw-contain-paint: ;
+  --tw-contain-style: ;
 }
 
 .container {
@@ -708,4 +711,3 @@ article > table {
     display: none;
   }
 }
-
