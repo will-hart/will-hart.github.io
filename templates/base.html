@@ -28,11 +28,27 @@
   <script defer src='https://static.cloudflareinsights.com/beacon.min.js'
     data-cf-beacon='{"token": "310f93cab66a42c5a328f246cc053025"}'></script>
   <!-- End Cloudflare Web Analytics -->
+
+  <!-- Light/Dark theme toggling -->
   <script>
+    const storageKey = "websiteTheme";
+
+    // apply theme once we have a DOM
+    document.addEventListener("DOMContentLoaded", () => {
+      applyTheme();
+    })
+
+    // a function that toggles between light and dark theme
     const toggleTheme = () => {
-      document.getElementsByTagName("html")[0].classList.toggle("dark");
-      const btn = document.getElementById("theme-toggle");
-      btn.textContent = btn.textContent === "🔆" ? "🌒" : "🔆";
+      localStorage.setItem(storageKey, localStorage.getItem(storageKey) === "d" ? "l" : "d" );
+      applyTheme();
+    }
+
+    // a function that actually applies the theme
+    const applyTheme = () => {
+      const useDarkTheme = localStorage.getItem(storageKey) === "d";
+      document.getElementsByTagName("html")[0].className = useDarkTheme ? "dark" : "";
+      document.getElementById("theme-toggle").textContent = useDarkTheme ? "🌒" : "🔆";
     }
   </script>
 </head>
@@ -48,10 +64,8 @@
       <a class="header-item" href="/tag">TAGS</a>
       <span class="header-item hide-when-slim">|</span>
       <a class="header-item hide-when-slim" href="/tag/projects">PROJECTS</a>
-      <a class="header-item hide-when-slim" href="/tag/tutorials">TUTORIALS</a>
       <a class="header-item hide-when-slim" href="/tag/gamedev">GAMEDEV</a>
       <a class="header-item hide-when-slim" href="/tag/electronics">ELECTRONICS</a>
-      <a class="header-item hide-when-slim" href="/tag/random">RANDOM</a>
     </span>
   </div>
   </div>
