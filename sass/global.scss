@@ -156,11 +156,15 @@ pre {
 }
 
 #header {
+  @extend .container;
+
   margin: 1rem;
   display: flex;
   justify-content: space-between;
+  align-items: center;
   margin-bottom: 4rem;
   cursor: hand;
+  height: 64px;
 
   & .header-item {
     margin-left: 1rem;
