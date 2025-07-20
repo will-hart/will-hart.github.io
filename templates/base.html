@@ -48,7 +48,7 @@
     const applyTheme = () => {
       const useDarkTheme = localStorage.getItem(storageKey) === "d";
       document.getElementsByTagName("html")[0].className = useDarkTheme ? "dark" : "";
-      document.getElementById("theme-toggle").textContent = useDarkTheme ? "🌒" : "🔆";
+      document.getElementById("theme-toggle").textContent = useDarkTheme ? "🔆" : "🌑";
     }
   </script>
 </head>
@@ -59,7 +59,7 @@
       <div id="logo" >&nbsp;</div>
     </a>
     <span>
-      <button type="button" id="theme-toggle" aria-label="Toggle Theme" onClick="toggleTheme()">🌒</button>
+      <button type="button" id="theme-toggle" aria-label="Toggle Theme" onClick="toggleTheme()">🌑</button>
       <a class="header-item" href="/post">POSTS</a>
       <a class="header-item" href="/tag">TAGS</a>
       <span class="header-item hide-when-slim">|</span>
