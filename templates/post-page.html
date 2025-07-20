@@ -6,7 +6,7 @@
 {% block content %}
 
 <div class="container col mb">
-  <h1>{{page.title}}</h1>
+  <h1 class="mt">{{page.title}}</h1>
   <div class="col txtsm mb">
     <span>Posted by Will Hart on {{page.date}}</span>
     <div>
@@ -18,7 +18,7 @@
   </div>
 </div>
 
-<article class="container col">{{ page.content | safe }}</article>
+<article class="container col mblg">{{ page.content | safe }}</article>
 
 <div class="container">
   <h2>Comments</h2>

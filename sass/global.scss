@@ -106,6 +106,10 @@ pre {
   padding: 1rem;
 }
 
+article p:last-of-type {
+  margin-bottom: 4rem;
+}
+
 /* UTILITY */
 
 .bghl {
@@ -117,15 +121,19 @@ pre {
 }
 
 .mb {
-  margin-bottom: 1em;
+  margin-bottom: 2rem;
+}
+
+.mt {
+  margin-top: 4rem;
 }
 
 .mr {
-  margin-right: 1em;
+  margin-right: 1rem;
 }
 
 .mblg {
-  margin-bottom: 2em;
+  margin-bottom: 4rem;
 }
 
 .hlt {
