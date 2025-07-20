@@ -1,25 +1,18 @@
 {% macro render_post_card(post) %}
-<div class="flex flex-col w-6/8 m-4 mb-8 box-border bg-gray-700">
-  <div class="flex flex-col p-4">
-    <a class="text-lg font-bold text-white" title="View post: {{post.title}}" href="{{ post.permalink | safe }}">
-      <h2 class="text-lg font-bold">
-        {{post.title}}
-
-        <span>
+<div class="mblg">
+  <div>
+      <h3>
+        <a title="View post: {{post.title}}" href="{{ post.permalink | safe }}">
+          {{post.title}}
+        </a>
+        <div class="row">
           {% for tag in post.taxonomies.tag %}
-          <a class="text-xs ml-4" href="{{ get_taxonomy_url(kind='tag', name=tag) }}">
-            {{tag}}
-          </a>
+          <a class="txtsm mr" href="{{ get_taxonomy_url(kind='tag', name=tag) }}">#{{tag}}</a>
           {% endfor %}
-        </span>
-      </h2>
-    </a>
-    <p class="text-md text-gray-400 my-2">{{post.description}}</p>
+        </div>
+      </h3>
+    <p>{{post.description}}</p>
   </div>
-  <a href="{{ post.permalink | safe }}" title="View post: {{post.title}}"
-     class="hero hover:bg-yellow-300 border-t-2 border-yellow-300 text-yellow-300 hover:text-darkbg p-2 flex justify-between transition-colors duration-500">
-    <span class="text-current no-underline hover:no-underline">Read More</span><span>ᐅ</span>
-  </a>
 </div>
 {% endmacro render_post %}
 

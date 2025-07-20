@@ -8,10 +8,10 @@
 {% set pages = term.pages %}
 {% endif %}
 
-<article class="container">
-  <h1 class="px-4">Posts tagged as "{{term.name}}"</h1>
+<article class="container col">
+  <h1>Posts tagged as "{{term.name}}"</h1>
 
-  <div class="px-4 flex flex-row justify-between">
+  <div class="txtsm mb">
     <a href="\tag">See all tags</a>
     {{macros::paginator(paginator=paginator)}}
   </div>
@@ -20,7 +20,7 @@
   {{macros::render_post_card(post=page)}}
   {% endfor %}
 
-  <div class="flex justify-center">
+  <div class="txtsm">
     {{macros::paginator(paginator=paginator)}}
   </div>
 </article>

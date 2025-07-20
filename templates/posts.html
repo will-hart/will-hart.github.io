@@ -1,9 +1,9 @@
 {% import "macros.html" as macros %} {% extends "base.html" %} {% block content
 %}
-<article class="container">
-  <h1 class="px-4">{{ section.title }}</h1>
+<article class="container col">
+  <h1>{{ section.title }}</h1>
 
-  <div class="flex justify-center">
+  <div class="mb">
     {{macros::paginator(paginator=paginator)}}
   </div>
 
@@ -11,7 +11,7 @@
   {{macros::render_post_card(post=post)}}
   {% endfor %}
 
-  <div class="flex justify-center">
+  <div>
     {{macros::paginator(paginator=paginator)}}
   </div>
 </article>

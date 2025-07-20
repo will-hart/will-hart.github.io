@@ -11,7 +11,7 @@ tag = ["code", "electronics"]
 Now that the price of ICs has returned to the realms of affordability, I've been
 playing around with a few programmable input devices powered by STM32. For
 instance I made some sorta [programmable
-pedals](/post/2022-02-08_custom-gaming-foot-pedals)
+pedals](/post/custom-gaming-foot-pedals)
 ([code](https://github.com/will-hart/pedalrs)) which were a lot of fun and more
 recently I've been playing around with a macro-style keyboard called
 [switchy](https://github.com/will-hart/switchy) which has support for 24

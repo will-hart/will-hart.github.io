@@ -1,14 +1,13 @@
 {% extends "base.html" %} {% block content %}
-<article class="container">
+<article class="container col">
   <h1>All post tags</h1>
-  {% for tag in terms %}
 
-  <a href="{{ get_taxonomy_url(kind='tag', name=tag.name) }}" class="mr-4">
-    <span class="icon">
-      <i class="fas fa-tag"></i>
-    </span>
-    <span>{{tag.name}} <sup>{{ tag.pages | length }}</sup></span>
+  {% for tag in terms %}
+  <a href="{{ get_taxonomy_url(kind='tag', name=tag.name) }}">
+    <span>#</span><span>{{tag.name}}</span>
   </a>
+  <p class="txtsm">{{ tag.pages | length }} articles</p>
   {% endfor %}
+
 </article>
 {% endblock content %}

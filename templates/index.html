@@ -1,10 +1,13 @@
-{% import "macros.html" as macros %} {% extends "base.html" %} 
+{% import "macros.html" as macros %} {% extends "base.html" %}
 {% block content %}
-<div class="container padded">
-  <div class="hero-box bghl padded txtrev">
+<div class="hero">
+  <div class="hero-box bghl padded txtrev txtra">
     <h1>Hi, I'm Will</h1>
     <p>
-      I work in Med Tech in Melbourne, Australia.
+      I live in Melbourne, Australia
+    </P>
+    <p>
+      I work in MedTech
     </p>
   </div>
 
@@ -13,40 +16,34 @@
 
     {% set post_section = get_section(path="post/_index.md") %}
     {% for post in post_section.pages | slice(end=4) %}
-      <div class="mb"><a href="{{post.permalink}}">{{post.title}}</a></div>
+    <div class="mb"><a href="{{post.permalink}}">{{post.title}}</a></div>
     {% endfor %}
 
     <div>
-      <a
-        class="hlt"
-        href="/post"
-        title="See all past posts"
-        >See all past posts here <span>ᐅ</span></a
-      >
+      <a class="hlt" href="/post" title="See all past posts">See all past posts here <span>ᐅ</span></a>
     </div>
   </div>
 </div>
 
 <section class="padded">
-  <div class="container">
-    <h2>Some of my projects</h1>
+  <div class="container"><h2>Some of my projects</h2>
   </div>
 
   <div class="container row">
     <div class="preview">
-        <figure>
-          <img src="/thumbnails/bball_analysis.png" width="256px" height="256px" />
-          <figcaption>
-            <h3><a href="/post/basketball-analysis-software/">Basketball analysis software</a></h3>
-            <p>
-              A full-stack software application and CLI for reviewing basketball videos and
-              performing stats analysis. Built with NextJS and axum.
-            </p>
-            <p>
-              <a href="/post/basketball-analysis-software/">Read More</a>
-            </p>
-          </figcaption>
-        </figure>
+      <figure>
+        <img src="/thumbnails/bball_analysis.png" width="256px" height="256px" />
+        <figcaption>
+          <h3><a href="/post/basketball-analysis-software/">Basketball analysis software</a></h3>
+          <p>
+            A full-stack software application and CLI for reviewing basketball videos and
+            performing stats analysis. Built with NextJS and axum.
+          </p>
+          <p>
+            <a href="/post/basketball-analysis-software/">Read More</a>
+          </p>
+        </figcaption>
+      </figure>
       </a>
     </div>
   </div>
