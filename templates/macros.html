@@ -5,13 +5,13 @@
         <a title="View post: {{post.title}}" href="{{ post.permalink | safe }}">
           {{post.title}}
         </a>
-        <div class="row">
-          {% for tag in post.taxonomies.tag %}
-          <a class="txtsm mr" href="{{ get_taxonomy_url(kind='tag', name=tag) }}">#{{tag}}</a>
-          {% endfor %}
-        </div>
       </h3>
-    <p>{{post.description}}</p>
+      <div class="row">
+        {% for tag in post.taxonomies.tag %}
+        <a class="txtsm mr" href="{{ get_taxonomy_url(kind='tag', name=tag) }}">#{{tag}}</a>
+        {% endfor %}
+      </div>
+      <p>{{post.description}}</p>
   </div>
 </div>
 {% endmacro render_post %}

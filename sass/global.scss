@@ -1,9 +1,10 @@
-/* RESET */
+/* RESET + THEME */
 
 html {
   --bg: white;
-  --hl: #8458B3;
-  --hl2: #A0D2EB;
+  --hl: #355C7D;
+  --hl2: #C9DAE9;
+  --acc: #F67280;
   --txt: black;
 
   box-sizing: border-box;
@@ -20,7 +21,7 @@ html {
   color: var(--txt);
 
   & a {
-    color: var(--hl);
+    color: var(--acc);
     font-weight: bold;
   }
 
@@ -31,17 +32,9 @@ html {
 
 html.dark {
   --bg: black;
-  --hl: #A0D2EB;
-  --hl2: #8458B3;
+  --hl: #C9DAE9;
+  --hl2: #355C7D;
   --txt: white;
-
-  background: var(--bg);
-  color: var(--txt);
-
-  & a {
-    color: var(--hl);
-    font-weight: bold;
-  }
 
   #logo {
     content: url("icons/icon_dark_32x32.png");
@@ -92,10 +85,11 @@ figure {
   display: flex;
   flex-direction: row;
   align-items: center;
-}
+  margin: 0;
 
-figure img {
-  margin-right: 2em;
+  & img {
+    margin-right: 2em;
+  }
 }
 
 blockquote {
@@ -121,6 +115,10 @@ pre {
 
 .padded {
   padding: 2rem;
+}
+
+.mbsm {
+  margin-bottom: 0.8rem;
 }
 
 .mb {
@@ -204,6 +202,15 @@ pre {
     display: flex;
     flex-direction: column;
     justify-content: center;
+
+    & a {
+      color: var(--txt);
+      text-decoration: none;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
   }
 
   & .hero-main {
@@ -225,7 +232,7 @@ pre {
   display: flex;
 
   & a {
-    color: var(--hl);
+    color: var(--acc);
     text-decoration: none;
   }
 

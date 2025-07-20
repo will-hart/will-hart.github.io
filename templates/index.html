@@ -12,15 +12,15 @@
   </div>
 
   <div class="hero-box bghl2">
-    <h2>My Recent Posts</h2>
+    <h2>Previously...</h2>
 
     {% set post_section = get_section(path="post/_index.md") %}
     {% for post in post_section.pages | slice(end=4) %}
-    <div class="mb"><a href="{{post.permalink}}">{{post.title}}</a></div>
+    <div class="mbsm"><a href="{{post.permalink}}">{{post.title}}</a></div>
     {% endfor %}
 
     <div>
-      <a class="hlt" href="/post" title="See all past posts">See all past posts here <span>ᐅ</span></a>
+      <a class="hlt" href="/post" title="See all past posts">See more <span>ᐅ</span></a>
     </div>
   </div>
 </div>
@@ -30,7 +30,7 @@
   </div>
 
   <div class="container row">
-    <div class="preview">
+    <div class="mb">
       <figure>
         <img src="/thumbnails/bball_analysis.png" width="256px" height="256px" alt="An image of a basketball shot chart" />
         <figcaption>
@@ -45,7 +45,7 @@
   </div>
 
   <div class="container row">
-    <div class="preview">
+    <div class="mb">
       <figure>
         <img src="/thumbnails/clock.png" width="256px" height="256px" alt="An image of a circuit with analog integrated circuits" />
         <figcaption>
@@ -60,7 +60,7 @@
   </div>
 
   <div class="container row">
-    <div class="preview">
+    <div class="mb">
       <figure>
         <img src="/thumbnails/chezdalert.jpg" width="256px" height="256px" alt="An image of a custom printed circuit board" />
         <figcaption>
@@ -72,10 +72,6 @@
         </figcaption>
       </figure>
     </div>
-  </div>
-
-  <div class="container">
-    <a href="/tag/projects">See more projects here</a>
   </div>
 </section>
 {% endblock content %}
