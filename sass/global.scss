@@ -4,8 +4,10 @@ html {
   --bg: white;
   --hl: #355C7D;
   --hl2: #C9DAE9;
-  --acc: #F67280;
   --txt: black;
+
+  --acc: #F67280;
+  --acc2: #F8B195;
 
   box-sizing: border-box;
   font-size: 20px;
@@ -62,8 +64,14 @@ ul {
   line-height: 1.6;
 }
 
-p+p {
-  margin-bottom: 1rem;
+p {
+  &:has(img) {
+    text-align: center;
+  }
+
+  &+& {
+    margin-bottom: 1rem;
+  }
 }
 
 ol,
@@ -107,6 +115,7 @@ pre {
 
 .bghl {
   background: var(--hl);
+  background: linear-gradient(50deg, var(--acc) 0%, var(--hl) 60%);
 }
 
 .bghl2 {
@@ -202,6 +211,8 @@ pre {
     display: flex;
     flex-direction: column;
     justify-content: center;
+
+
 
     & a {
       color: var(--txt);

@@ -8,7 +8,7 @@ aliases = ["/20220111_cmos_analog_clock", "/post/20220111_cmos_analog_clock"]
 tag = ["random", "projects"]
 +++
 
-*The purpose of this project was to build a large 30cm by 20cm clock using CMOS electronics driven from a 32kHz crystal. The project was a housewarming gift that arrived about four years too late and several IOUs later.*
+> The purpose of this project was to build a large 30cm by 20cm clock using CMOS electronics driven from a 32kHz crystal. The project was a housewarming gift that arrived about four years too late and several IOUs later.
 
 I took inspiration from a number of sources for the analog circuitry, but unfortunately most of those links are lost in the mists of time. The basic principle is to take a 32kHz signal and divide it down to the correct signals using analog ICs, mostly a combination of 74HC4040s and 74HC161s mixed with a series of logic gates (the schematics are included below) and then 74HC238s on the outputs. The circuitry was complicated enough that I breadboarded it:
 
