@@ -1,7 +1,7 @@
 {% import "macros.html" as macros %} {% extends "base.html" %}
 {% block content %}
 <div class="hero">
-  <div class="hero-box bghl padded txtrev txtra">
+  <div class="hero-main bghl padded txtrev txtra">
     <h1>Hi, I'm Will</h1>
     <p>
       I live in Melbourne, Australia
@@ -11,7 +11,7 @@
     </p>
   </div>
 
-  <div class="hero-box">
+  <div class="hero-box bghl2">
     <h2>My Recent Posts</h2>
 
     {% set post_section = get_section(path="post/_index.md") %}

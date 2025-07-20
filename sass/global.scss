@@ -3,6 +3,7 @@
 html {
   --bg: white;
   --hl: #8458B3;
+  --hl2: #A0D2EB;
   --txt: black;
 
   box-sizing: border-box;
@@ -31,6 +32,7 @@ html {
 html.dark {
   --bg: black;
   --hl: #A0D2EB;
+  --hl2: #8458B3;
   --txt: white;
 
   background: var(--bg);
@@ -113,6 +115,10 @@ pre {
   background: var(--hl);
 }
 
+.bghl2 {
+  background: var(--hl2);
+}
+
 .padded {
   padding: 2rem;
 }
@@ -148,6 +154,12 @@ pre {
 
 .txtra {
   text-align: right;
+}
+
+@media(width <=800px) {
+  .txtra {
+    text-align: center;
+  }
 }
 
 /* LAYOUT */
@@ -186,12 +198,23 @@ pre {
   flex-direction: row;
   width: 100%;
 
-  .hero-box {
+  & .hero-box {
     flex: 1;
     padding: 2rem;
     display: flex;
     flex-direction: column;
     justify-content: center;
+  }
+
+  & .hero-main {
+    @extend .hero-box;
+    flex: 2;
+  }
+
+  @media(width <=1100px) {
+    & .hero-main {
+      flex: 1;
+    }
   }
 }
 
