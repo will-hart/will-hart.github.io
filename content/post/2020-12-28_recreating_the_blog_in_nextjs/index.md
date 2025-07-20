@@ -8,7 +8,8 @@ aliases = ["/20201228_recreating_the_blog_in_nextjs", "/post/20201228_recreating
 tag = ["random", "projects"]
 +++
 
-Well this [isn't the first post of this kind](/post/switched-to-ghost), but once
+Well this [isn't the first post of this kind](/post/switched-to-ghost),
+(note from 2025 Will: I'm about three more rewrites in by now!) but once
 again its that time of year when I look at the blog and decide its time to
 migrate to a different blog host. The current Ghost blog has been fine but costs
 $5/month to host. Backups and updates are pretty annoying and the whole thing is
