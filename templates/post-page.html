@@ -20,10 +20,16 @@
 
 <article class="container col mblg">{{ page.content | safe }}</article>
 
-<div class="container">
+<div class="container col">
   <h2>Comments</h2>
-  <script src="https://utteranc.es/client.js" repo="will-hart/willhart.io" issue-term="title" label="post-comment"
-          theme="github-dark" crossorigin="anonymous" async>
+  <script
+    src="https://utteranc.es/client.js"
+    repo="will-hart/willhart.io"
+    issue-term="title"
+    label="post-comment"
+    theme="github-light"
+    crossorigin="anonymous"
+    async>
   </script>
 </div>
 {% endblock content %}
