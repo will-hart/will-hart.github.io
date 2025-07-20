@@ -1,11 +1,11 @@
 +++
-title = "Live Electric Vehicle Telemetry Software"
+title = "Using software PWM on Arduino"
 description = "A quick tutorial on using software PWM on an Arduino"
 
 aliases = ["/software_pwm_on_an_arduino", "/post/software_pwm_on_an_arduino"]
 
 [taxonomies]
-tag = ["project", "electronics"]
+tag = ["tutorials", "electronics"]
 +++
 
 The Arduino Uno has six PWM ports, but not every micro-controller has this many.

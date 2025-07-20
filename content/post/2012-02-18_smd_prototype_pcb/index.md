@@ -5,7 +5,7 @@ description = "Describes a custom SMD prototype PCB I designed to jump start pro
 aliases = ["/smd_prototype_pcb", "/post/smd_prototype_pcb"]
 
 [taxonomies]
-tag = ["project", "electronics"]
+tag = ["projects", "electronics"]
 +++
 
 I frequently come up with ideas for projects. If I really like the idea, I draw

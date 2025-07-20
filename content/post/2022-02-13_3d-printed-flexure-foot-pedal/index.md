@@ -3,7 +3,7 @@ title = "3D printed flexure foot pedal"
 description = "Designing a one-piece 3d printed foot pedal using mechanical flexures"
 
 [taxonomies]
-tag = ["project", "electronics"]
+tag = ["projects", "electronics"]
 
 +++
 

@@ -3,7 +3,7 @@ title = "Custom gaming foot pedals"
 description = "I created a set of custom gaming foot pedals, basically because I had nothing better to do while in Covid isolation!"
 
 [taxonomies]
-tag = ["project", "electronics"]
+tag = ["projects", "electronics"]
 +++
 
 While playing a certain online shooter with some friends, one of our party noted

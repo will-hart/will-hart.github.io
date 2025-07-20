@@ -5,7 +5,7 @@ description = "A summary of a project I build for my Dad's birthday."
 aliases = ["/chez_dalert_pic_countdown_alarm", "/post/chez_dalert_pic_countdown_alarm"]
 
 [taxonomies]
-tag = ["project", "electronics"]
+tag = ["projects", "electronics"]
 +++
 
 For my Dad's 60th birthday, I wanted to make him something a bit special. Dad

@@ -5,7 +5,7 @@ description = "A brief discussion of the telemetry software I'm building for my 
 aliases = ["/live_telemetry_software", "/post/live_telemetry_software"]
 
 [taxonomies]
-tag = ["project", "electronics"]
+tag = ["projects", "electronics"]
 +++
 
 As part of my course we can get involved in the Formula Student race team. At my

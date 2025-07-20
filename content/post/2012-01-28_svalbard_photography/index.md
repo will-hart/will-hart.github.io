@@ -5,7 +5,7 @@ description = "A youtube video showing some of the photos from our Circumnavigat
 aliases = ["/svalbard_photography", "/post/svalbard_photography"]
 
 [taxonomies]
-tag = ["project"]
+tag = ["random"]
 +++
 
 ![The Polar Pioneer, Svalbard 2011](svalbard_header.jpg)
