@@ -76,12 +76,19 @@ p {
 
 ol,
 ul {
-  list-style: disc;
   list-style-position: outside;
 
   & li {
     margin-left: 2rem;
   }
+}
+
+ol {
+  list-style: numeric;
+}
+
+ul {
+  list-style: disc;
 }
 
 img {
