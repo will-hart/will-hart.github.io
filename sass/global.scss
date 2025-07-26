@@ -93,6 +93,11 @@ ul {
   line-height: 1.6;
 }
 
+.section-header {
+  border-bottom: 3px solid var(--acc);
+  margin-bottom: 2rem;
+}
+
 p {
   &:has(img) {
     text-align: center;
@@ -317,7 +322,7 @@ pre {
 }
 
 #footer {
-  border-top: 1px solid var(--txt);
+  border-top: 2px solid var(--acc);
   padding-top: 2rem;
   max-width: 960px;
   margin: 2rem auto;
