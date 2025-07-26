@@ -32,11 +32,21 @@ html {
   font-size: 20px;
   min-width: 400px;
 
-  font-family: "Sono", monospace;
+  font-family: "Sono", ui-monospace,
+    Menlo, Monaco,
+    "Cascadia Mono", "Segoe UI Mono",
+    "Roboto Mono",
+    "Oxygen Mono",
+    "Ubuntu Mono",
+    "Source Code Pro",
+    "Fira Mono",
+    "Droid Sans Mono",
+    "Consolas", "Courier New", monospace;
   font-optical-sizing: auto;
   font-weight: 300;
   font-style: normal;
   font-variation-settings: "MONO" 1;
+  font-size-adjust: 0.476;
 
   background: var(--bg);
   color: var(--txt);
