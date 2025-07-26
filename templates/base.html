@@ -30,7 +30,7 @@
   <!-- End Cloudflare Web Analytics -->
 
   <!-- Light/Dark theme toggling -->
-  <script>
+  <script type="text/javascript">
     const storageKey = "websiteTheme";
 
     // apply theme once we have a DOM
@@ -51,7 +51,14 @@
       document.getElementById("theme-toggle").textContent = useDarkTheme ? "🔆" : "🌑";
     }
   </script>
-</head>
+
+  <script type="speculationrules">
+  {
+    "prerender": [
+      { "where": { "selector_matches": "a" } }
+    ]
+  }
+  </script></head>
 
 <body>
   <nav id="header">
