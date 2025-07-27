@@ -25,6 +25,8 @@ node scripts/createPost.js
 [extra]
 use_maths = true
 ```
+5. If the article is long enough to benefit from a TOC, add `show_toc = true` to
+   the `extra` section in the TOML frontmatter
 
 ## Deployment
 

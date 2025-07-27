@@ -4,6 +4,9 @@ description = "Describes my 8 year journey to build some basketball video analys
 
 [taxonomies]
 tag = ["random", "projects"]
+
+[extra]
+show_toc = true
 +++
 
 > This is a super long article discussing a tool that has been on my mind for at

@@ -4,6 +4,9 @@ description = "Looking at the pros and cons of different approaches for running 
 
 [taxonomies]
 tag = ["code", "electronics"]
+
+[extra]
+show_toc = true
 +++
 
 ## Writing custom input devices in rust

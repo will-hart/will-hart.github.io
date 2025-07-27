@@ -7,7 +7,7 @@
 
 <div class="container col mb mt">
   <h1>{{page.title}}</h1>
-  <div class="col txtsm mb">
+  <div class="col txtsm">
     <span>Posted by Will Hart on {{page.date}}</span>
     <div>
       <span>See also:</span>
@@ -17,6 +17,28 @@
     </div>
   </div>
 </div>
+
+{% if page.extra.show_toc and page.toc %}
+  <div class="container col txtsm mb page-toc">
+    <h2>Table of contents</h2>
+    <ul>
+    {% for h1 in page.toc %}
+        <li>
+            <a href="{{ h1.permalink | safe }}">{{ h1.title }}</a>
+            {% if h1.children %}
+                <ul>
+                    {% for h2 in h1.children %}
+                        <li>
+                            <a href="{{ h2.permalink | safe }}">{{ h2.title }}</a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </li>
+    {% endfor %}
+    </ul>
+  </div>
+{% endif %}
 
 <article class="container col mblg">{{ page.content | safe }}</article>
 

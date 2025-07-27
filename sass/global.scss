@@ -26,6 +26,7 @@
 
 html {
   --bg: white;
+  --bg2: #F3F5F5;
   --hl: #355C7D;
   --hl2: #C9DAE9;
   --txt: black;
@@ -68,6 +69,7 @@ html {
 
 html.dark {
   --bg: black;
+  --bg2: #2b303b;
   --hl: #C9DAE9;
   --hl2: #355C7D;
   --txt: white;
@@ -331,5 +333,11 @@ pre {
   padding-top: 2rem;
   max-width: 960px;
   margin: 2rem auto;
+  font-size: 0.8em;
+}
+
+.page-toc {
+  background: var(--bg2);
+  padding: 1rem;
   font-size: 0.8em;
 }

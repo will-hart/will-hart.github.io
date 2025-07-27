@@ -4,6 +4,9 @@ description = "The Morse Kodeboard is a custom USB-HID keyboard that turns morse
 
 [taxonomies]
 tag = ["projects", "electronics"]
+
+[extra]
+show_toc = true
 +++
 
 Here is another project in a long line of "I don't know why I'm doing this"
