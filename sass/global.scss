@@ -17,6 +17,11 @@
   }
 }
 
+::selection {
+  color: var(--txt);
+  background: var(--acc);
+}
+
 /* RESET + THEME */
 
 html {
