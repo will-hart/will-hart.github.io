@@ -15,15 +15,15 @@ running the Great Ocean Road Marathon. While we were there we visited the
 [Cape Otway Lightstation](https://www.lightstation.com), which was an important
 lighthouse that helped guide ships through the "Shipwreck Coast".
 
-The Lightstation was also a key part of a 400km long telegraph cable that aimed
-to connect Tasmania to the Australian mainland for the first time in the 1850s.
-In one of the buildings we spotted a morse code table, and my kids spent half
-the long drive back decoding a message written in `dits` and `dahs`.
+The Lightstation was also a key part of a 400km long telegraph cable that connected
+Tasmania to the Australian mainland in the 1850s. In one of the buildings we
+spotted a morse code table. My kids spent half the long drive back decoding a
+message written in `dits` and `dahs`.
 
-A few weeks later, I was chatting to a friend about my weakness for clicky, tactile
-interfaces and input devices. In my excitement I got a bit careless in my typing
-and was forced to defend my accuracy. "I'm typing on my Morse Code keyboard",
-I lied in desparation... and then realised I'd found my next project.
+A few weeks later, I was chatting to a friend about my weakness for clicky,
+tactile interfaces and input devices. In my excitement I got a bit careless in
+my typing and was forced to defend my accuracy. "I'm typing on my Morse Code
+keyboard" and then realised I'd found my next project.
 
 The idea was simple - a single button that you tap on long and short pulses. The
 keyboard reads the pulses as morse code and outputs the correct codes through a
@@ -39,7 +39,7 @@ You can find the source code + hardware files at <https://github.com/will-hart/m
 
 As this project was a bit of a meme, I didn't really want to over-engineer it.
 I've already made quite a few USB-HID interfaces using rust firmware, and I have
-a few RaspberryPi Pico's sitting around so the logical choice was to throw together
+a few RaspberryPi Pico's sitting around. So the logical choice was to throw together
 some [embassy](https://embassy.dev/) firmware and use a third-party morse code
 library to decode. By building a simple breadboard circuit I had something up
 and running in a couple of evenings.
@@ -60,7 +60,7 @@ poll.
 
 For example, if I wanted to type `s` (···), then when I polled the decoder in a
 loop, I'd get `e e e` (· · ·). So instead I decided to implement my own decoder,
-which can be found [on the github](https://github.com/will-hart/morse-kodeboard/blob/main/src/decoder.rs).
+which can be found [on the GitHub](https://github.com/will-hart/morse-kodeboard/blob/main/src/decoder.rs).
 
 Its a fairly basic bit of code that has a "dit time" specified, is fed high and
 low edges of a button and converts that into pulse durations and gaps. It then
@@ -80,7 +80,7 @@ if let Some(c) = match self.value_buffer {
 }
 ````
 
-Using this approach made decoding a lot simpler, a task could be set up to watch
+Using this approach made decoding a lot simpler. A task could be set up to watch
 the morse code button, feed the inputs to the decoder and when a character match
 was found, use a channel to feed that character to the task that managed the USB
 HID interface.
@@ -91,7 +91,7 @@ At this point I realised a few fundamental issues with the one button approach.
 For starters, without a space bar it is very hard to write more than one very long
 word. So a space key was a must. Secondly, without a shift key, it was very hard
 to add punctuation, proper sentence structure or beyond basic text. This might
-have been ok in the days when morse code was in regular use, but in this modern
+have been OK in the days when morse code was in regular use, but in this modern
 era I'd love to be able to type *most* things without being shouted at for poor
 punctuation.
 
@@ -131,15 +131,15 @@ Soldering was very straightforward by hand and took maybe 20 minutes, although
 I have to admit to doing a pretty poor job of the connectors[^4] and they're
 straight not right-angled as I'd originally planned.
 
-The resulting frankestein looks like this:
+The resulting Frankenstein looks like this:
 
 ![The Morse Kodeboard PCB](morse_kodeboard_pcb.jpg)
 
 ## Typing performance
 
-Ok, I know what you're really here to see is how fast you can type on a Morse
-Kodeboard. To keep this comparison fair,  I think some benchmarking is in
-order. There are lots of random typing speed tests on the internet, so lets try
+OK, I know what you're really here to see is how fast you can type on a Morse
+Kodeboard. To keep this comparison fair, I think some benchmarking is in
+order. There are lots of random typing speed tests on the internet, so let's try
 to see how fast I can type on the Kodeboard vs a regular keyboard. 
 
 First the control, typing on my Keychron K8:
@@ -155,7 +155,7 @@ And the Kodeboard results are in:
 
 ![Typing test results from Morse Kodeboard - 5 words per minute, 93% accuracy](kodeboard_typing_test.png)
 
-The kodeboard is about 20x slower, but around the same accuracy if you squnit.
+The Kodeboard is about 20x slower, but around the same accuracy if you squint.
 So I guess we call that tie (or should I say a `— ·· ·`)
 
 ## What next?
@@ -163,8 +163,8 @@ So I guess we call that tie (or should I say a `— ·· ·`)
 I'm not sure if there is anything next to be honest! It could do with an enclosure.
 I have a few options here
 
-1. butcher an electronics project box (maybe a laser cut top),
-2. print or laser cut a fully custom enclosure,
+1. Butcher an electronics project box (maybe a laser cut top),
+2. Print or laser cut a fully custom enclosure,
 3. Look at a more traditional morse code key, of which it seems there are a wide
    [variety of types](https://hamuniverse.com/n2eycodekeys.html)
 

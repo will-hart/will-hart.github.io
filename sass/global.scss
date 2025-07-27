@@ -159,6 +159,16 @@ pre {
   overflow-x: scroll;
 }
 
+dt {
+  display: inline-block;
+  font-weight: bold;
+  border-bottom: 2px dashed var(--acc);
+}
+
+strong {
+  font-weight: 700;
+}
+
 /* UTILITY */
 
 .bghl {

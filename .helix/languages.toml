@@ -1,3 +1,7 @@
 [[language]]
 name = "twig"
 file-types = ["html"]
+
+[[language]]
+name = "markdown"
+language-servers = ["marksman", "harper-ls"]

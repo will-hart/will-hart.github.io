@@ -5,7 +5,7 @@ description = "A back of the envelope investigation into the emissions savings f
 aliases = ["/how_green_is_your_electric_car", "/post/how_green_is_your_electric_car"]
 
 [taxonomies]
-tag = ["random"]
+tag = ["random", "essay"]
 
 [extra]
 use_maths = true
