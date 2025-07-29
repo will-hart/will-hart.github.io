@@ -2,6 +2,9 @@
 {% block title%}{{page.title}}{% endblock %}
 {% block meta_description %}
 <meta name="description" content="{{page.description}}. Posted on https://willhart.io" />
+<meta property="og:description" content="{{page.description}}" />
+<meta property="og:title" content="{{page.title}}" />
+<meta property="og:url" content="{{page.permalink | safe}}">
 {% endblock %}
 {% block content %}
 
