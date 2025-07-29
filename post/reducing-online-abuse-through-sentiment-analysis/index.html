@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Reducing online abuse through sentiment analysis | willhart.io</title>
+
+
+  <link rel="icon" type="image/x-icon" href="/icons/icon_light_32x32.png">
+
+  
+<meta name="description" content="A look at how to use Sentiment Analysis to detect &#x27;star wars tweets&#x27;, in the context of addressing abusive behaviour on social media platforms. Posted on https://willhart.io" />
+<meta property="og:description" content="A look at how to use Sentiment Analysis to detect &#x27;star wars tweets&#x27;, in the context of addressing abusive behaviour on social media platforms" />
+<meta property="og:title" content="Reducing online abuse through sentiment analysis" />
+<meta property="og:url" content="https://willhart.io/post/reducing-online-abuse-through-sentiment-analysis/">
+<meta property="og:type" content="article" />
+<meta property="og:locale" content="en_AU" />
+
+
+  <link rel="stylesheet" href="https://willhart.io/global.css?h=f83cd20cd0df26d72c2b" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sono:wght@200..800&display=swap" rel="stylesheet">
+
+  <link
+  rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/katex@0.15.2/dist/katex.min.css"
+  integrity="sha384-MlJdn/WNKDGXveldHDdyRP1R4CTHr3FeuDNfhsLPYrq2t0UBkUdK2jyTnXPEK1NQ"
+  crossorigin="anonymous"
+/>
+
+<!-- The loading of KaTeX is deferred to speed up page rendering -->
+<script
+  defer
+  src="https://cdn.jsdelivr.net/npm/katex@0.15.2/dist/katex.min.js"
+  integrity="sha384-VQ8d8WVFw0yHhCk5E8I86oOhv48xLpnDZx5T9GogA/Y84DcCKWXDmSDfn13bzFZY"
+  crossorigin="anonymous"
+></script>
+
+<!-- To automatically render math in text elements, include the auto-render extension: -->
+<script
+  defer
+  src="https://cdn.jsdelivr.net/npm/katex@0.15.2/dist/contrib/auto-render.min.js"
+  integrity="sha384-+XBljXPPiv+OzfbB3cVmLHf4hdUFHlWNZN5spNQ7rmHTXpd7WvJum6fIACpNNfIR"
+  crossorigin="anonymous"
+  onload="renderMathInElement(document.body, {delimiters: [
+    {left: '$$', right: '$$', display: true},
+    {left: '$', right: '$', display: false},]});"
+></script>
+
+
+  <!-- Cloudflare Web Analytics -->
+  <script defer src='https://static.cloudflareinsights.com/beacon.min.js'
+    data-cf-beacon='{"token": "310f93cab66a42c5a328f246cc053025"}'></script>
+  <!-- End Cloudflare Web Analytics -->
+
+  <!-- Light/Dark theme toggling -->
+  <script type="text/javascript">
+    const storageKey = "websiteTheme";
+
+    // apply theme once we have a DOM
+    document.addEventListener("DOMContentLoaded", () => {
+      applyTheme();
+    })
+
+    // a function that toggles between light and dark theme
+    const toggleTheme = () => {
+      localStorage.setItem(storageKey, localStorage.getItem(storageKey) === "d" ? "l" : "d" );
+      applyTheme();
+    }
+
+    // a function that actually applies the theme
+    const applyTheme = () => {
+      const useDarkTheme = localStorage.getItem(storageKey) === "d";
+      document.getElementsByTagName("html")[0].className = useDarkTheme ? "dark" : "";
+      document.getElementById("theme-toggle").textContent = useDarkTheme ? "🔆" : "🌑";
+    }
+  </script>
+
+  <script type="speculationrules">
+  {
+    "prerender": [
+      { "where": { "selector_matches": "a" } }
+    ]
+  }
+  </script></head>
+
+<body>
+  <nav id="header">
+    <a href="/" aria-label="Website Logo and Link to Home Page">
+      <div id="logo" >&nbsp;</div>
+    </a>
+    <span>
+      <button type="button" id="theme-toggle" aria-label="Toggle Theme" onClick="toggleTheme()">🌑</button>
+      <a class="header-item" href="/post">POSTS</a>
+      <a class="header-item" href="/tag">TAGS</a>
+      <span class="header-item hide-when-slim">|</span>
+      <a class="header-item hide-when-slim" href="/tag/projects">PROJECTS</a>
+      <a class="header-item hide-when-slim" href="/tag/gamedev">GAMEDEV</a>
+      <a class="header-item hide-when-slim" href="/tag/electronics">ELECTRONICS</a>
+    </span>
+  </nav>
+
+  
+
+<div class="container col mb mt">
+  <h1>Reducing online abuse through sentiment analysis</h1>
+  <div class="col txtsm">
+    <span>Posted by Will Hart on 2014-01-27</span>
+    <div>
+      <span>See also:</span>
+      
+      <a class="txtsm mr" href="https://willhart.io/tag/code/">#code</a>
+      
+      <a class="txtsm mr" href="https://willhart.io/tag/projects/">#projects</a>
+      
+      <a class="txtsm mr" href="https://willhart.io/tag/tutorials/">#tutorials</a>
+      
+    </div>
+  </div>
+</div>
+
+
+
+<article class="container col mblg"><h2 id="cleaning-up-twitter">Cleaning up Twitter</h2>
+<p>Recently the issue of on-line abuse has received a lot of play time in the news.
+In the UK several prominent female figures were sent death threats through
+Twitter after they campaigned to have a female (other than the Queen) on a UK
+bank note. Articles such as this one by <a rel="noopener nofollow noreferrer" target="_blank" href="http://www.psmag.com/navigation/health-and-behavior/women-arent-welcome-internet-72170/">Pacific Standard
+Magazine</a>
+present a chilling picture of the state of on-line media and its treatment of
+women, and the lack of a clear policy from law enforcement agencies. As a result
+of the UK episode two people were arrested and jailed, however many more escaped
+without penalty.</p>
+<p>The explosion of on-line media has generated a range of compelling, complex and
+large scale issues that we have only slowly begun to adapt to. For instance, how
+much should Twitter and other social media outlets be required to police what
+goes on using their services? In the past phone companies were not held to
+account for what people said over the phone lines. However tweets and the
+facebook posts are both public and persistent. Does this impose a new burden of
+responsibility for these companies? And if there is, what can they actually do
+about it?</p>
+<p>From wild supposition I would imagine that you can divide the abusers into two
+different groups. The first is those who are doing it for “a bit of a laugh”,
+without considering the impact it has on the victim. The second group are
+potentially conducting this behaviour as as symptom of wider social or mental
+issues. The behaviour of the first group is probably open to influence, through
+making them aware that what they are doing has both social and legal
+consequences. However, the second category of abuser is unlikely to be managed
+through actions undertaken by Twitter.</p>
+<h2 id="what-can-be-done">What can be done?</h2>
+<p>From a technical standpoint, one possible way to “jolt” the first group into
+modifying their behaviour is through a visual cue in the browser. Something that
+alerts the user if the tweet they have typed (and are about to “send”) appears
+to be abusive. For instance, the message could read:</p>
+<blockquote>
+<p>WARNING - the message you have typed appears to be abusive. Your IP address
+has been logged and on-line abuse can be a criminal offence.</p>
+</blockquote>
+<p>Upon seeing a message like this, the casual abuser could hopefully be prevented
+from hitting the “send” button.</p>
+<p>Determining if a tweet is “good” or “bad” falls under a the heading of a
+“classification problem”. In these problems a computer must categorise a data
+point, usually based on a small and finite number of possible states. In the
+case of natural language (i.e. text), this technique is frequently known as
+“sentiment analysis”, and is supposedly used by business such as Amazon to
+detect the tone of reviews written on their site. This involves an algorithm
+which looks over a sentence or slab of text, and tries to work out if the mood
+of the text is positive or negative based on the prevalence of certain words or
+word patterns. In the remainder of this article I’ll attempt to build a
+classifying algorithm for tweets, and see if it could have applicability to
+“cleaning up Twitter”.</p>
+<h2 id="sentiment-analysis">Sentiment analysis</h2>
+<p>The basic approach is often quite simple:</p>
+<ol>
+<li>Count the number of times words appear in the text</li>
+<li>Work out which words are more common in good or bad text and see if these are
+present in our text</li>
+<li>See if there are more good or bad words in our text</li>
+</ol>
+<p>The first part involves some basic string manipulation, and is often referred to
+as “vectorisation” of text. For short sentences like Tweets (with 160
+characters) this would be quite easy to do. One complication may be that the use
+of abbreviations and “text speak” (or whatever the kids are calling it these
+days) would mean that the number of words that would need to be tracked as good
+or bad would grow.</p>
+<p>A number of different rules can be applied to perform steps 2 and 3. The most
+common of these use some sort of probability theory - for instance the
+probability that the word “LeBron” will appear in a tweet if it is about the NBA
+can be calculated. Some sort of formula can then be calculated to determine how
+likely it is that a tweet is good or bad based on this probabilities. This type
+of technique, as we shall see, is usually referred to as some form of <em>Bayesian
+classification</em>.</p>
+<h2 id="classifying-tweets">Classifying tweets</h2>
+<h3 id="approach">Approach</h3>
+<p>To perform this task, I decided to use a <em>Naive Bayes</em> approach, which makes
+some simplifying assumptions and uses <em>Bayes Rule</em> to mathematically formulate
+the problem. In words, we are trying to answer the following question:</p>
+<blockquote>
+<p>What is the probability the tweet is bad given it has the following words in
+it: ….</p>
+</blockquote>
+<p>The word <em>given</em> has a specific role in probability - for instance
+$P(apple|fruit)$ means “the probability we have an apple given we have a fruit”.
+If you don’t remember your high school probability - if we are holding an
+object, the probability it is an apple rather than any of the other objects in
+the universe is, for instance, 0.00001%. However if we are told that what we are
+holding is a fruit, the probability that object we are holding is an apple given
+we are holding a fruit becomes much higher, say 30% if my fruit bowl is anything
+to go by.</p>
+<p>The Naive Bayes approach relies on some simple rules to formulate our word
+problem above. into mathematical symbols. This could look something like the
+following (from the <code>scikit-learn</code> documentation):</p>
+<p>$$P(y|x_1, …, x_n) = \frac{P(y)\Pi_{i=1}^nP(x_i|y)}{P(x_1, …, x_n)}$$
+​</p>
+<p>Where <code>y</code> is the “good”/“bad” classification and <code>x</code> variables are the words in
+the tweet.</p>
+<p>If this is gibberish to you, don’t despair its not really necessary to
+understand the maths in detail. All this is saying is that to work out if the
+tweet is bad - given the presence of a whole bunch of words - we multiply
+together the probability that each of the words is present given the tweet is
+known to be bad - $\Pi_{i=1}^nP(x_i|y)$. For instance, words such as <code>the</code> and
+<code>you</code> may be equally likely to be present in good or bad tweets, whilst other
+words are much more likely to be present in bad tweets alone.</p>
+<h3 id="an-example">An Example</h3>
+<p>If our tweet contains the words “Chocolate tastes great”, then the mathematical
+formulation would become:</p>
+<p>$$P(bad|chocolate,tastes,great)=\frac{P(bad)\times P(chocolate|bad)\times P(tastes|bad)\times P(great|bad)}{P(chocolate,tastes,great)}$$</p>
+<p>Where $P(chocolate)$ is the probability the tweet contains the word “chocolate”.
+The probability the tweet is good would be given by:</p>
+<p>$$P(good|chocolate,tastes,great)=\frac{P(good)\times P(chocolate|good)\times P(tastes|good)\times P(great|good)}{P(chocolate,tastes,great)}$$</p>
+<p>To work out if the tweet is good or bad, we can just compare which of these
+probability is greater, e.g.</p>
+<p>$$P(good|chocolate,tastes,great) &gt; P(bad|chocolate,tastes,great)$$</p>
+<p>As the denominator of the fraction is the same on both probabilities, we only
+need to compare the top lines of the fraction.</p>
+<p>I tend to code in Python given the wide range of libraries available for
+scientific computing. Classification problems are no exception, as Python’s
+<code>scikit-learn</code> includes Naive Bayes functionality based on the mathematical
+formulation above. <code>scikit-learn</code> can be installed by typing into the command
+line:</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">pip</span><span> install scipy
+</span><span style="color:#bf616a;">pip</span><span> install scikit-learn
+</span></code></pre>
+<blockquote>
+<p>On Windows I’ve found it easier to use a Python installation such as WinPython
+for these kinds of tasks as pip sometimes seems to struggle with building
+packages on Windows. On Linux the above should work without a hitch.</p>
+</blockquote>
+<h3 id="building-a-probability-matrix">Building a probability matrix</h3>
+<p>As we can see from the slightly horrible maths expression we used above, a Naive
+Bayes just multiplies together a whole bunch of probabilities. This problem can
+be made much easier for computers if we pre-build our probabilities, a process
+known as <em>training</em> our algorithm. This requires a data set of known results - a
+“training set” - which helps us build a probability matrix. This has the likely
+outcomes (good/bad tweet) as rows and the recorded words as columns. The values
+in the matrix indicate the conditional probabilities - the chance the word is in
+the tweet if it is either good or bad. For instance the following simplified
+matrix could exist to determine if a tweet is related to the Star Wars movies:</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>|---------|-------|------|
+</span><span>| Word    |  Bad  | Good |
+</span><span>|---------|-------|------|
+</span><span>| Wookie  | 0.56  | 0.03 | 
+</span><span>| Star    | 0.75  | 0.19 |
+</span><span>| Wars    | 0.79  | 0.32 |
+</span><span>| Ireland | 0.04  | 0.13 |
+</span><span>|---------|-------|------|
+</span></code></pre>
+<p>Reading across, we can see that the probability the tweet contains the word
+“wookie” given it is bad (i.e. related to Star Wars) is 0.56 or 56%. This matrix
+is quite small, and in a real life situation would likely contain thousands of
+columns. Storing and traversing this efficiently is quite a complex task!</p>
+<h3 id="what-does-a-training-data-set-look-like">What does a training data set look like?</h3>
+<p>To train our Naive Bayes classifier we need some kind of learning data set. This
+would contain as many tweets as we could find and a flag to indicate which of
+these is considered “bad”. As I don’t really want to upload and work with a data
+set filled with despicable words and phrases, we will continue with our example
+of detecting if our tweets are related to the Star Wars movies. For instance the
+following (made up) tweets are considered Star Wars related:</p>
+<blockquote>
+<p>Luke Skywalker is not MY father<br />
+Darth Vader spotted in the Dagobah system<br />
+My Jedi mind tricks are amazing - just got a pay rise<br />
+Episode 1 is horrendous</p>
+</blockquote>
+<p>Whilst the following would not be related:</p>
+<blockquote>
+<p>My coffee tastes like bilge water<br />
+It’s raining cats and dogs<br />
+Sometimes I look at the stars and cry<br />
+New satellites are taking war to the stars</p>
+</blockquote>
+<p>From looking at some of these made up examples, it is clear that this problem is
+more difficult than first thought. For instance:</p>
+<ul>
+<li>Should the tweet about “Jedi mind tricks” be considered to be about Star Wars?
+Its referring to Star Wars but is not directly related</li>
+<li>without context, how do we know if “Episode 1 is horrendous” is Star Wars
+based?</li>
+<li>Other tweets such as the last one talk about “star” and “wars” but are not
+related to “Star Wars” - only by reading the context and proximity of words
+can we work out whether this tweet should count</li>
+</ul>
+<p>This is a weakness of the “bag of words” approach we are using here, and can
+easily lead to “false positives” - where we incorrectly identify a tweet as
+“Star Warsy” - or “false negatives” - where we say a tweet is not related to
+Star Wars when it is. Whilst a percentage of false positives is probably
+unavoidable, the objective is to improve the accuracy as much as possible so
+that these false classifications are the exception rather than the rule. In
+general a larger training dataset will make the classifier more likely to
+correctly group our tweets.</p>
+<p>The training set should be as large as possible but also as close to “reality”
+as possible. For instance, a review of the equations above show that the final
+classification is also dependent on the probability that a tweet is good or bad</p>
+<ul>
+<li>$P(y)$. This means that we should ensure the dataset is representative of real
+life data - if we increase the proportion of bad tweets in our training dataset
+then we increase the likelihood the algorithm will classify a tweet as bad.</li>
+</ul>
+<h3 id="gathering-the-data">Gathering the data</h3>
+<p>In a real life situation we would probably need to gather thousands of tweets,
+manually classify each one and then split this data into training and testing
+data sets. This task would be quite time intensive. Luckily for a demonstration
+like this we can create a basic twitter API script in Python to do a good
+approximation of this task for us. There are quite a few different twitter APIs
+written in Python, but the one that seemed to work the best for me was <code>tweepy</code>. I
+installed this in the usual way (<code>pip install tweepy</code>) and then wrote some very
+simple code to search for tweets.</p>
+<pre data-lang="python" style="background-color:#2b303b;color:#c0c5ce;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#b48ead;">from </span><span>tweepy </span><span style="color:#b48ead;">import </span><span style="color:#bf616a;">API </span><span style="color:#b48ead;">as </span><span>TweepyApi, OAuthHandler
+</span><span>
+</span><span style="color:#b48ead;">def </span><span style="color:#8fa1b3;">search_tweets</span><span>(</span><span style="color:#bf616a;">search</span><span>, </span><span style="color:#bf616a;">count</span><span>=</span><span style="color:#d08770;">15</span><span>):
+</span><span>    
+</span><span>    auth = </span><span style="color:#bf616a;">OAuthHandler</span><span>(
+</span><span>        </span><span style="color:#bf616a;">MY_SETTINGS</span><span>.consumer_key,
+</span><span>        </span><span style="color:#bf616a;">MY_SETTINGS</span><span>.consumer_secret
+</span><span>    )
+</span><span>    auth.</span><span style="color:#bf616a;">set_access_token</span><span>(
+</span><span>        </span><span style="color:#bf616a;">MY_SETTINGS</span><span>.access_token_key,
+</span><span>        </span><span style="color:#bf616a;">MY_SETTINGS</span><span>.access_token_secret
+</span><span>    )
+</span><span>
+</span><span>api = </span><span style="color:#bf616a;">TweepyApi</span><span>(auth)
+</span><span>
+</span><span>result = api.</span><span style="color:#bf616a;">search</span><span>(</span><span style="color:#bf616a;">q</span><span>=search, </span><span style="color:#bf616a;">count</span><span>=count, </span><span style="color:#bf616a;">lang</span><span>=&#39;</span><span style="color:#a3be8c;">en</span><span>&#39;)
+</span><span style="color:#b48ead;">return </span><span>[x.text.</span><span style="color:#bf616a;">encode</span><span>(&#39;</span><span style="color:#a3be8c;">ascii</span><span>&#39;, &#39;</span><span style="color:#a3be8c;">ignore</span><span>&#39;).</span><span style="color:#bf616a;">replace</span><span>(&#39;</span><span style="color:#96b5b4;">\n</span><span>&#39;, &#39;&#39;) </span><span style="color:#b48ead;">for </span><span>x </span><span style="color:#b48ead;">in </span><span>result]
+</span></code></pre>
+<p><code>MY_SETTINGS</code> is a dictionary I imported from another file with my API
+credentials - so that they are hidden from github. To get 20 tweets about star
+wars, I can run the following:</p>
+<pre data-lang="python" style="background-color:#2b303b;color:#c0c5ce;" class="language-python "><code class="language-python" data-lang="python"><span>star_wars_tweets = </span><span style="color:#bf616a;">search_tweets</span><span>(&quot;</span><span style="color:#a3be8c;">star wars</span><span>&quot;, </span><span style="color:#d08770;">20</span><span>)
+</span></code></pre>
+<p>This takes care of the bad tweets. To get the “good” tweets, we need a wide
+sampling of random tweets. I played around with the streaming <code>sample()</code> API but
+found that no matter what I did it denied my credentials - maybe I’m missing
+something obvious? In the end I just decided to get some tweets for a few
+unrelated topics such as “emberjs”, “nba”, “superbowl”, “science” and “bieber”.
+Whilst this data set will be definition be incomplete (and reduce accuracy) its
+a simple way to get enough data for a proof of concept.</p>
+<p>By wrapping this code in a class and adding some helper functions I was able to
+generate several hundred good tweets and 200 bad tweets in very short order. I
+could repeat this process (after a short break to allow new tweets to
+accumulate) to get another bunch of test data.</p>
+<h3 id="building-the-classifier">Building the classifier</h3>
+<p>The next step was to build the classifier itself. Lets jump straight into some
+code.</p>
+<pre data-lang="python" style="background-color:#2b303b;color:#c0c5ce;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#b48ead;">import </span><span>numpy </span><span style="color:#b48ead;">as </span><span>np
+</span><span style="color:#b48ead;">from </span><span>sklearn.feature_extraction.text </span><span style="color:#b48ead;">import </span><span>CountVectorizer, TfidfTransformer
+</span><span style="color:#b48ead;">from </span><span>sklearn.naive_bayes </span><span style="color:#b48ead;">import </span><span>MultinomialNB
+</span><span>
+</span><span style="color:#b48ead;">def </span><span style="color:#8fa1b3;">train</span><span>(</span><span style="color:#bf616a;">expected</span><span>):
+</span><span>    </span><span style="color:#65737e;">&quot;&quot;&quot;
+</span><span style="color:#65737e;">    Teaches the classifier based on the data set passed in the constructor
+</span><span style="color:#65737e;">    &quot;&quot;&quot;
+</span><span>
+</span><span>    </span><span style="color:#65737e;"># use a utility function to load the data set and expected results (0 = good, 1 = bad)
+</span><span>    raw_data, expected = </span><span style="color:#bf616a;">load_dataset</span><span>()
+</span><span>
+</span><span>    </span><span style="color:#65737e;"># STEP 1: vectorise the text
+</span><span>    vectoriser = </span><span style="color:#bf616a;">CountVectorizer</span><span>(</span><span style="color:#bf616a;">lowercase</span><span>=</span><span style="color:#d08770;">True</span><span>, </span><span style="color:#bf616a;">strip_accents</span><span>=&#39;</span><span style="color:#a3be8c;">unicode</span><span>&#39;)
+</span><span>    res = </span><span style="color:#bf616a;">self</span><span>.vectoriser.</span><span style="color:#bf616a;">fit_transform</span><span>(raw_data)
+</span><span>
+</span><span>    </span><span style="color:#65737e;"># STEP 2: Apply &quot;Term Frequency times Inverse Document Frequency&quot; methodology
+</span><span>    transformer = </span><span style="color:#bf616a;">TfidfTransformer</span><span>()
+</span><span>    res = </span><span style="color:#bf616a;">self</span><span>.transformer.</span><span style="color:#bf616a;">fit_transform</span><span>(res)
+</span><span>    
+</span><span>    </span><span style="color:#65737e;"># STEP 3: use a multinomial classifier to generate probabilities
+</span><span>    </span><span style="color:#bf616a;">self</span><span>.classifier = </span><span style="color:#bf616a;">MultinomialNB</span><span>()
+</span><span>    </span><span style="color:#bf616a;">self</span><span>.classifier.</span><span style="color:#bf616a;">fit</span><span>(res, expected)
+</span></code></pre>
+<p>Using <code>scikit-learn</code>, building a classifier is very simple, and only three main
+steps were required.</p>
+<ol>
+<li>We ‘vectorise’ the text using a <code>CountVectorizer</code>. In English this means that
+we count the number of times each word appears in the tweets and create a
+dictionary with the word as a key and the count as the value.</li>
+<li>We ‘transform’ the data using the <code>TfidfTransformer</code>. This is a useful
+operation to apply for text analysis - it basically accounts for the fact
+that words will be more frequent in longer tweets, and some words are popular
+in both “good” and “bad” tweets. Clearly the length issue is not too much of
+a problem with tweets given the character limit, but the “idf” part (Inverse
+Document Frequency) reduces the impact of words that are common in both types
+of tweets.</li>
+<li>We train the classifier using a <code>MultinomialNB</code> (Multinomial Naive Bayes)
+classifer. This uses our training set to calculate the probability table we
+discussed earlier.</li>
+</ol>
+<p>The <code>load_dataset()</code> method simply takes a text file and generates a list, with
+each item being a tweet or a 0/1 indicating if it is good or bad. The <code>expected</code>
+variable is a <code>numpy</code> array. It is possible to combine the three steps into a
+single <code>Pipeline</code>, however I found that it was easier to implement
+<code>load_dataset</code> as a generator when I did not - making it easier to parse larger
+files.</p>
+<h3 id="testing-the-classifier">Testing the classifier</h3>
+<p>With these 20 or so lines we have built a Naive Bayes classifier. We can test
+the classifier (once trained) on a single tweet by doing the following:</p>
+<pre data-lang="python" style="background-color:#2b303b;color:#c0c5ce;" class="language-python "><code class="language-python" data-lang="python"><span>classifier.</span><span style="color:#bf616a;">predict</span><span>(&quot;</span><span style="color:#a3be8c;">A tweet about Star Wars</span><span>&quot;)
+</span></code></pre>
+<p>Putting together a quick script made it simple to gather the training and test
+data, train the classifier and then run the test data, displaying results.
+Running this four times I got:</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>Tested 120 tweets, got 102 correct (85%)
+</span><span>Tested 120 tweets, got 109 correct (91%)
+</span><span>Tested 120 tweets, got 117 correct (98%)
+</span><span>Tested 120 tweets, got 113 correct (94%)
+</span></code></pre>
+<p>The number presumably improved where there were more similar tweets in the two
+datasets (i.e. if I ran the commands in quick succession then there was more
+duplication between the test and training set and hence a higher accuracy).
+Despite this, 85-90% seems to be a fairly good accuracy with such a small
+training set.</p>
+<h2 id="validating-tweets">Validating tweets</h2>
+<h3 id="client-side">Client side?</h3>
+<p>Having demonstrated that we can (with relatively good accuracy) classify Star
+Wars tweets using Python and <code>scikit-learn</code>, we need to find a way that it could
+be integrated with Twitter. One option would be to use a javascript client side
+library that would test the tweet as it was typed. This javascript would
+undertake the following steps:</p>
+<ol>
+<li>“Vectorise” the tweet, breaking into words and counting occurrences</li>
+<li>Use a static probability matrix, multiplying the required values to generate
+a probability of “good” (!$P(good)$!) and a probability of “bad” $P(bad)$</li>
+<li>If $P(good) &gt;= P(bad)$ then the tweet is good, and conversely if $P(bad) &gt;
+P(good)$ then the tweet is bad</li>
+<li>Display a warning if the tweet is bad</li>
+</ol>
+<p>We can access the probability matrix generated by <code>scikit-learn</code> to save to file
+by running</p>
+<pre data-lang="python" style="background-color:#2b303b;color:#c0c5ce;" class="language-python "><code class="language-python" data-lang="python"><span>classifier.feature_log_prob_
+</span></code></pre>
+<p>The big issue here is that for our test simple dataset this array was 2 rows,
+773 columns. This was obtained by:</p>
+<pre data-lang="python" style="background-color:#2b303b;color:#c0c5ce;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#b48ead;">print </span><span>classifier.feature_log_prob_.shape
+</span></code></pre>
+<p>Once our matrix is stored in an ASCII encoded file, we can estimate how much
+download bandwidth it would take up. Assuming 1 byte per character and with each
+probability having a length of 12 bytes including punctuation, the simple matrix
+generated from our training set above gives us a file size of around 20kB:</p>
+<p>$$1\text{ byte}\times 12\text{ characters}\times 2\text{ rows}\times 773\text{ columns} = 18,552\text{ bytes}$$</p>
+<p>To perform this operation client side, we would therefore need to download at
+least 20kB of probability matrix. Given the emphasis placed on minimising
+download amounts, this makes client side validation unlikely to be viable.</p>
+<h3 id="server-side">Server side</h3>
+<p>Another approach would be to use a simple web service approach, where the tweet
+could be periodically sent to the server and analysed, and the web service could
+return “0” if the tweet is classified as good, or “1” if the tweet is bad. This
+is pretty similar to the spam detection services offered by companies such as
+Askimet. In Python, something like this is very implemented with one of the many
+light weight web frameworks such as Tornado or Flask. A flask app which
+performed this could be as simple as the following (where the <code>TweetClassifier</code> is
+a class implementing our classification code above):</p>
+<pre data-lang="python" style="background-color:#2b303b;color:#c0c5ce;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#b48ead;">from </span><span>flask </span><span style="color:#b48ead;">import </span><span>Flask, request
+</span><span style="color:#b48ead;">from </span><span>flask_cors </span><span style="color:#b48ead;">import </span><span>cross_origin
+</span><span style="color:#b48ead;">import </span><span>os
+</span><span>
+</span><span style="color:#b48ead;">from </span><span>tweet_classifier </span><span style="color:#b48ead;">import </span><span>TweetClassifier
+</span><span>
+</span><span>app = </span><span style="color:#bf616a;">Flask</span><span>(__name__)
+</span><span>classifier = </span><span style="color:#bf616a;">TweetClassifier</span><span>()
+</span><span>
+</span><span style="color:#b48ead;">if </span><span>not os.path.</span><span style="color:#bf616a;">isfile</span><span>(&quot;</span><span style="color:#a3be8c;">train_data.txt</span><span>&quot;):
+</span><span>    classifier.</span><span style="color:#bf616a;">fetch_data</span><span>()
+</span><span>classifier.</span><span style="color:#bf616a;">train</span><span>(&quot;</span><span style="color:#a3be8c;">train_data.txt</span><span>&quot;)
+</span><span>
+</span><span>@app.</span><span style="color:#bf616a;">route</span><span>(&quot;</span><span style="color:#a3be8c;">/</span><span>&quot;, </span><span style="color:#bf616a;">methods</span><span>=[&quot;</span><span style="color:#a3be8c;">GET</span><span>&quot;])
+</span><span>@</span><span style="color:#bf616a;">cross_origin</span><span>()
+</span><span style="color:#b48ead;">def </span><span style="color:#8fa1b3;">validate_tweet</span><span>():
+</span><span>    tweet = request.args.</span><span style="color:#bf616a;">get</span><span>(&#39;</span><span style="color:#a3be8c;">tweet</span><span>&#39;)
+</span><span>    </span><span style="color:#b48ead;">return </span><span style="color:#bf616a;">str</span><span>(classifier.</span><span style="color:#bf616a;">classify</span><span>(tweet))
+</span><span>
+</span><span>app.</span><span style="color:#bf616a;">run</span><span>()
+</span></code></pre>
+<p>If this was saved in a file called <code>run_server.py</code>, setting up the server would be
+as simple as</p>
+<pre data-lang="python" style="background-color:#2b303b;color:#c0c5ce;" class="language-python "><code class="language-python" data-lang="python"><span>python run_server.py
+</span></code></pre>
+<p>The code above would set up a <code>route</code>, or a “web page” which would answer <code>GET</code>
+requests to the url <code>/</code> (e.g. <code>http://127.0.0.1/</code>) and return a response with
+<code>0</code> or <code>1</code>. A simple <code>index.html</code> page (assuming the server is running at
+<code>127.0.0.1</code>) would look like the following, using jQuery for the AJAX request:</p>
+<pre data-lang="html" style="background-color:#2b303b;color:#c0c5ce;" class="language-html "><code class="language-html" data-lang="html"><span>&lt;!</span><span style="color:#b48ead;">DOCTYPE </span><span style="color:#d08770;">html</span><span>&gt;
+</span><span>&lt;</span><span style="color:#bf616a;">html</span><span>&gt;
+</span><span>    &lt;</span><span style="color:#bf616a;">head</span><span>&gt;
+</span><span>        &lt;</span><span style="color:#bf616a;">title</span><span>&gt;Check a tweet&lt;/</span><span style="color:#bf616a;">title</span><span>&gt;
+</span><span>    &lt;/</span><span style="color:#bf616a;">head</span><span>&gt;
+</span><span>    &lt;</span><span style="color:#bf616a;">body</span><span>&gt;
+</span><span>        &lt;</span><span style="color:#bf616a;">input </span><span style="color:#d08770;">type</span><span>=&quot;</span><span style="color:#a3be8c;">text</span><span>&quot; </span><span style="color:#d08770;">value</span><span>=&quot;</span><span style="color:#a3be8c;">You are an awesome person</span><span>&quot; </span><span style="color:#8fa1b3;">id</span><span>=&quot;</span><span style="color:#a3be8c;">phrase</span><span>&quot; /&gt;
+</span><span>        &lt;</span><span style="color:#bf616a;">button </span><span style="color:#8fa1b3;">id</span><span>=&quot;</span><span style="color:#a3be8c;">check_phrase</span><span>&quot;&gt;Check&lt;/</span><span style="color:#bf616a;">button</span><span>&gt;
+</span><span>        &lt;</span><span style="color:#bf616a;">div </span><span style="color:#8fa1b3;">id</span><span>=&quot;</span><span style="color:#a3be8c;">result</span><span>&quot;&gt;&lt;/</span><span style="color:#bf616a;">div</span><span>&gt;
+</span><span>
+</span><span>        &lt;</span><span style="color:#bf616a;">script </span><span style="color:#d08770;">src</span><span>=&quot;</span><span style="color:#a3be8c;">http://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.0/jquery.min.js</span><span>&quot; </span><span style="color:#d08770;">type</span><span>=&quot;</span><span style="color:#a3be8c;">text/javascript</span><span>&quot;&gt;&lt;/</span><span style="color:#bf616a;">script</span><span>&gt;
+</span><span>        &lt;</span><span style="color:#bf616a;">script </span><span style="color:#d08770;">type</span><span>=&quot;</span><span style="color:#a3be8c;">text/javascript</span><span>&quot;&gt;
+</span><span>            </span><span style="color:#bf616a;">$</span><span>(&quot;</span><span style="color:#a3be8c;">#check_phrase</span><span>&quot;).</span><span style="color:#bf616a;">click</span><span>(</span><span style="color:#b48ead;">function</span><span>(e) {
+</span><span>                </span><span style="color:#bf616a;">e</span><span>.</span><span style="color:#bf616a;">preventDefault</span><span>();
+</span><span>  
+</span><span>                </span><span style="color:#bf616a;">$</span><span>.</span><span style="color:#bf616a;">ajax</span><span>({
+</span><span>                    type: &#39;</span><span style="color:#a3be8c;">GET</span><span>&#39;,
+</span><span>                    url: &#39;</span><span style="color:#a3be8c;">http://127.0.0.1:5000/</span><span>&#39;,
+</span><span>                    data: {
+</span><span>                        tweet: </span><span style="color:#bf616a;">$</span><span>(&quot;</span><span style="color:#a3be8c;">#phrase</span><span>&quot;).</span><span style="color:#bf616a;">val</span><span>()
+</span><span>                    },
+</span><span>                    </span><span style="color:#8fa1b3;">success</span><span>: </span><span style="color:#b48ead;">function</span><span>(data, status, xhr) {
+</span><span>                        </span><span style="color:#bf616a;">$</span><span>(&quot;</span><span style="color:#a3be8c;">#result</span><span>&quot;).</span><span style="color:#bf616a;">html</span><span>(</span><span style="color:#bf616a;">data</span><span>);
+</span><span>                    }
+</span><span>                });
+</span><span>            });
+</span><span>        &lt;/</span><span style="color:#bf616a;">script</span><span>&gt;
+</span><span>    &lt;/</span><span style="color:#bf616a;">body</span><span>&gt;
+</span><span>&lt;/</span><span style="color:#bf616a;">html</span><span>&gt;
+</span></code></pre>
+<p>Visiting the <code>index.html</code> page shows an input box. We can type something in the
+box, click the “Check” button, and in a short time either <code>0</code> or <code>1</code> will be
+displayed below the tweet.</p>
+<h2 id="accuracy">Accuracy</h2>
+<p>Its clear after a little bit of testing that the accuracy depends to a large
+extent on the quality of the training data. I tested with about 2,400 tweets as
+training data and found that the accuracy was fairly good for items like:</p>
+<blockquote>
+<p>Star Wars Episode 7 being released!<br />
+C3PO is a rockstar<br />
+Luke Skywalker, I am your father<br />
+JJ Abrams directing Episode 7</p>
+</blockquote>
+<p>However due to the narrowly defined training set (for instance only six or seven
+categories were used for “good” tweet data) statements like the following were
+false positives due to the amount of discussion about the new Star Wars movies
+being made:</p>
+<blockquote>
+<p>Harry Potter Episode 7 is boring<br />
+JJ Abrams directed Lost</p>
+</blockquote>
+<p>Some false negatives were also found due to only 200 “bad” tweets being used:</p>
+<blockquote>
+<p>3PO is a robot</p>
+</blockquote>
+<p>Despite these issues, the method produced something that could detect well over
+half of Star Wars related tweets that I typed in in only a few hours of work.
+Accuracy could be improved by gathering a broader range of random tweets
+(presuming that the Twitter streaming API can be made to return anything other
+than a 401 response code!) or by cherry picking and searching specific Star Wars
+related terms where performance is poor. It is also possible that detecting
+abusive tweets could be a little easier given certain words are exceedingly
+common in these types of tweets but not in everyday speech.</p>
+<p>Additionally the use of N-grams, which are very short phrases could also improve
+the algorithm. For instance a tweet could possibly include a phrase such as
+“this millennium I want to fly a falcon” and not be related to Star Wars, whilst
+a tweet “I like the Millennium Falcon” is far more likely to be related.</p>
+<h2 id="effectiveness">Effectiveness</h2>
+<p>The best that could be hoped from a system like this is that it would reduce
+“casual” abuse, or at the very least make people think twice before sending a
+horrible tweet. For many on the edge of society it is likely that a visual
+warning would provide no deterrence whatsoever.</p>
+<p>Additionally, the performance impact on a high volume site such as Twitter would
+be considerable. Something like 400 million tweets a day are made, and for each
+one to be passed through an “abuse” web service would require considerable
+financial investment in terms of servers, support and so on. A client side
+approach is technically feasible but unlikely to work given the large
+probability matrix that would need to be downloaded in order for it to work. A
+quick bit of research shows that a number of sentiment analysis APIs already
+exist on-line, some are listed in <a rel="noopener nofollow noreferrer" target="_blank" href="http://blog.mashape.com/post/48757031167/list-of-20-sentiment-analysis-apis">this blog post</a>.</p>
+<p>All in all, as an investigation of sentiment analysis and Naive Bayes methods
+the approach was a success but in terms of making a real dent in on-line abuse,
+sadly it seems unlikely to provide any great benefits.</p>
+<blockquote>
+<p>The full source code of the application and the article can be found at
+<a rel="noopener nofollow noreferrer" target="_blank" href="https://github.com/will-hart/twitter_sentiment">https://github.com/will-hart/twitter_sentiment</a></p>
+</blockquote>
+</article>
+
+<div class="container col">
+  <h2>Comments</h2>
+  <blockquote>Comments are powered by github and <a href="https://giscus.app">giscus</a></blockquote>
+  <script src="https://giscus.app/client.js"
+        data-repo="will-hart/will-hart.github.io"
+        data-repo-id="MDEwOlJlcG9zaXRvcnkzMjQ2NjY3Mzg="
+        data-category="General"
+        data-category-id="DIC_kwDOE1oFcs4CtiK6"
+        data-mapping="og:title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+  </script>
+</div>
+</div>
+
+  <footer id="footer">
+    <div class="container col">
+      This website was hand-made using Zola and Tera.
+      All text and images are available under CC0 1.0 Universal and code under MIT unless otherwise specified. See <a href="https://github.com/will-hart/willhart.io/blob/main/LICENSE.md">LICENSE.md</a> for more.
+    </div>
+  </footer>
+</body>
+
+</html>

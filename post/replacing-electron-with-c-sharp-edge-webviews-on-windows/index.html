@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Replacing Electron with C# WebView (Windows Only) | willhart.io</title>
+
+
+  <link rel="icon" type="image/x-icon" href="/icons/icon_light_32x32.png">
+
+  
+<meta name="description" content="A brief look at the WebView libraries coming to C# WPF. Posted on https://willhart.io" />
+<meta property="og:description" content="A brief look at the WebView libraries coming to C# WPF" />
+<meta property="og:title" content="Replacing Electron with C# WebView (Windows Only)" />
+<meta property="og:url" content="https://willhart.io/post/replacing-electron-with-c-sharp-edge-webviews-on-windows/">
+<meta property="og:type" content="article" />
+<meta property="og:locale" content="en_AU" />
+
+
+  <link rel="stylesheet" href="https://willhart.io/global.css?h=f83cd20cd0df26d72c2b" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sono:wght@200..800&display=swap" rel="stylesheet">
+
+  
+
+  <!-- Cloudflare Web Analytics -->
+  <script defer src='https://static.cloudflareinsights.com/beacon.min.js'
+    data-cf-beacon='{"token": "310f93cab66a42c5a328f246cc053025"}'></script>
+  <!-- End Cloudflare Web Analytics -->
+
+  <!-- Light/Dark theme toggling -->
+  <script type="text/javascript">
+    const storageKey = "websiteTheme";
+
+    // apply theme once we have a DOM
+    document.addEventListener("DOMContentLoaded", () => {
+      applyTheme();
+    })
+
+    // a function that toggles between light and dark theme
+    const toggleTheme = () => {
+      localStorage.setItem(storageKey, localStorage.getItem(storageKey) === "d" ? "l" : "d" );
+      applyTheme();
+    }
+
+    // a function that actually applies the theme
+    const applyTheme = () => {
+      const useDarkTheme = localStorage.getItem(storageKey) === "d";
+      document.getElementsByTagName("html")[0].className = useDarkTheme ? "dark" : "";
+      document.getElementById("theme-toggle").textContent = useDarkTheme ? "🔆" : "🌑";
+    }
+  </script>
+
+  <script type="speculationrules">
+  {
+    "prerender": [
+      { "where": { "selector_matches": "a" } }
+    ]
+  }
+  </script></head>
+
+<body>
+  <nav id="header">
+    <a href="/" aria-label="Website Logo and Link to Home Page">
+      <div id="logo" >&nbsp;</div>
+    </a>
+    <span>
+      <button type="button" id="theme-toggle" aria-label="Toggle Theme" onClick="toggleTheme()">🌑</button>
+      <a class="header-item" href="/post">POSTS</a>
+      <a class="header-item" href="/tag">TAGS</a>
+      <span class="header-item hide-when-slim">|</span>
+      <a class="header-item hide-when-slim" href="/tag/projects">PROJECTS</a>
+      <a class="header-item hide-when-slim" href="/tag/gamedev">GAMEDEV</a>
+      <a class="header-item hide-when-slim" href="/tag/electronics">ELECTRONICS</a>
+    </span>
+  </nav>
+
+  
+
+<div class="container col mb mt">
+  <h1>Replacing Electron with C# WebView (Windows Only)</h1>
+  <div class="col txtsm">
+    <span>Posted by Will Hart on 2018-12-14</span>
+    <div>
+      <span>See also:</span>
+      
+      <a class="txtsm mr" href="https://willhart.io/tag/tutorials/">#tutorials</a>
+      
+      <a class="txtsm mr" href="https://willhart.io/tag/phd/">#phd</a>
+      
+    </div>
+  </div>
+</div>
+
+
+
+<article class="container col mblg"><p>For my PhD I keep notes in Markdown documents of the key papers I’ve read. I
+recently wrote a <a rel="noopener nofollow noreferrer" target="_blank" href="https://github.com/will-hart/markdown-browser/">simple rust
+application</a> for searching and
+rendering these Markdown documents, which are often quite maths heavy. I find it
+very useful when writing things up.</p>
+<p><img src="https://willhart.io/post/replacing-electron-with-c-sharp-edge-webviews-on-windows/markdownbrowser.png" alt="The markdown browser application used to search MD notes from papers (size: 1302x632px)" /></p>
+<p>I originally thought about using electron, but was turned off by the large
+number of files an installation includes. I don’t really have an issue with the
+RAM or disk space electron requires, although its become a bit of a meme.
+Warning, personal preference: I also much prefer the <em>look and feel</em> of web
+based interfaces over most “native” interfaces.</p>
+<p>To write the application I used the <code>WebView</code> package for Rust, which
+unfortunately uses the IE version installed on the computer (IE11 I think).
+Writing code for IE and debugging was… challenging? The great thing about Rust
+was that it allowed me to build an application that is about 800kb and uses 50MB
+of RAM when holding about 300 documents in memory. Having a single application
+file was also very nice as it reduced the noise and let me just drop it into the
+folder with my notes. On the flip side, I wrote the application in Rust which
+was a good learning experience, but required (and requires!) a lot more effort
+for me to maintain than something written in JS or C#.</p>
+<p>I recently came across a <a rel="noopener nofollow noreferrer" target="_blank" href="https://docs.microsoft.com/en-au/windows/communitytoolkit/controls/wpf-winforms/webview">blog
+post</a>
+talking about how Microsoft had made Edge available as a <a rel="noopener nofollow noreferrer" target="_blank" href="https://www.nuget.org/packages/Microsoft.Toolkit.Wpf.UI.Controls.WebView">WebView in WPF /
+WinForms
+apps</a>,
+where previously it was only available through UWP. Here I’ll describe how I
+went about creating, bundling and debugging the Markdown browser in a WPF app
+built as a single <code>.exe</code> file, and using an Edge based WebView (which as we now
+know will one day run on Chromium, and should be installed on every Win 10
+machine!).</p>
+<h2 id="installation">Installation</h2>
+<p>I started with a fresh WPF project, and from the package manager console ran:</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span>  </span><span style="color:#bf616a;">Install-Package</span><span> Microsoft.Toolkit.Wpf.UI.Controls.WebView</span><span style="color:#bf616a;"> -Version</span><span> 5.0.1
+</span></code></pre>
+<p>Then in my <code>MainWindow.xaml</code> I added the namespace</p>
+<pre data-lang="XML" style="background-color:#2b303b;color:#c0c5ce;" class="language-XML "><code class="language-XML" data-lang="XML"><span>xmlns:WPF=&quot;clr-namespace:Microsoft.Toolkit.Wpf.UI.Controls;assembly=Microsoft.Toolkit.Wpf.UI.Controls.WebView&quot;
+</span></code></pre>
+<p>and added the control inside the default <code>Grid</code></p>
+<pre data-lang="xml" style="background-color:#2b303b;color:#c0c5ce;" class="language-xml "><code class="language-xml" data-lang="xml"><span>&lt;</span><span style="color:#bf616a;">WPF:WebView </span><span style="color:#d08770;">x:Name</span><span>=&quot;</span><span style="color:#a3be8c;">WebView</span><span>&quot; /&gt;
+</span></code></pre>
+<h2 id="loading-a-local-file">Loading a local file</h2>
+<p>I added a simple <code>index.html</code> file to the project under <code>www/index.html</code>. I set the build type to <code>EmbeddedResource</code>. I hooked up a <code>Window.Loaded</code> event which looked like the following:</p>
+<pre data-lang="cs" style="background-color:#2b303b;color:#c0c5ce;" class="language-cs "><code class="language-cs" data-lang="cs"><span style="color:#65737e;">// e.g.
+</span><span style="color:#65737e;">// using Microsoft.Toolkit.Win32.UI.Controls.Interop.WinRT;
+</span><span style="color:#65737e;">// using System.Linq;
+</span><span style="color:#65737e;">// using System.Reflection;
+</span><span>
+</span><span style="color:#b48ead;">private void </span><span style="color:#8fa1b3;">Window_Loaded</span><span>(</span><span style="color:#b48ead;">object </span><span style="color:#bf616a;">sender</span><span>, RoutedEventArgs </span><span style="color:#bf616a;">e</span><span>)
+</span><span>{
+</span><span style="color:#b48ead;">var </span><span style="color:#bf616a;">asm </span><span>= </span><span style="color:#bf616a;">Assembly</span><span>.</span><span style="color:#bf616a;">GetExecutingAssembly</span><span>();
+</span><span style="color:#b48ead;">var </span><span style="color:#bf616a;">fileName </span><span>= </span><span style="color:#bf616a;">asm</span><span>.</span><span style="color:#bf616a;">GetManifestResourceNames</span><span>().</span><span style="color:#bf616a;">Single</span><span>(</span><span style="color:#bf616a;">s </span><span style="color:#b48ead;">=&gt; </span><span style="color:#bf616a;">s</span><span>.</span><span style="color:#bf616a;">EndsWith</span><span>(&quot;</span><span style="color:#a3be8c;">index.html</span><span>&quot;));
+</span><span style="color:#b48ead;">string </span><span style="color:#bf616a;">index</span><span>;
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">using </span><span>(</span><span style="color:#b48ead;">var </span><span style="color:#bf616a;">stream </span><span>= </span><span style="color:#bf616a;">asm</span><span>.</span><span style="color:#bf616a;">GetManifestResourceStream</span><span>(</span><span style="color:#bf616a;">fileName</span><span>))
+</span><span>    </span><span style="color:#b48ead;">using </span><span>(</span><span style="color:#b48ead;">var </span><span style="color:#bf616a;">sr </span><span>= new StreamReader(</span><span style="color:#bf616a;">stream</span><span>))
+</span><span>    {
+</span><span>        </span><span style="color:#bf616a;">index </span><span>= </span><span style="color:#bf616a;">sr</span><span>.</span><span style="color:#bf616a;">ReadToEnd</span><span>();
+</span><span>    }
+</span><span>
+</span><span>    </span><span style="color:#bf616a;">WebView</span><span>.</span><span style="color:#bf616a;">ScriptNotify </span><span>+= </span><span style="color:#bf616a;">WebView_ScriptNotify</span><span>;
+</span><span>    </span><span style="color:#bf616a;">WebView</span><span>.</span><span style="color:#bf616a;">NavigateToString</span><span>(</span><span style="color:#bf616a;">index</span><span>);
+</span><span>
+</span><span>}
+</span></code></pre>
+<p>This waits until the <code>window</code> loads, then reads “index.html” from the embedded
+<code>index.html</code> file. It then uses the <code>WebView.NavigateToString</code> method to load
+the string into the embedded <code>WebView</code> browser.</p>
+<p>The line <code>WebView.ScriptNotify += WebView_ScriptNotify</code> adds an event handler so
+that the WebView can call into C# code through JavaScript, i.e.</p>
+<pre data-lang="javascript" style="background-color:#2b303b;color:#c0c5ce;" class="language-javascript "><code class="language-javascript" data-lang="javascript"><span>window.external.</span><span style="color:#8fa1b3;">notify</span><span>(&quot;</span><span style="color:#a3be8c;">the string to pass to the C# code</span><span>&quot;)
+</span></code></pre>
+<h2 id="bundling-as-a-single-file">Bundling as a single file</h2>
+<p>The next task was to try to build a single executable file from the WPF
+application. This required a bit of googling, but the best method I came across
+was <a rel="noopener nofollow noreferrer" target="_blank" href="https://stackoverflow.com/a/4995039/233608">predictably on StackOverflow</a>.
+Firstly I closed the solution in VisualStudio and opened the <code>.csproj</code> file in
+VSCode. I added the following before the last closing tag:</p>
+<pre data-lang="xml" style="background-color:#2b303b;color:#c0c5ce;" class="language-xml "><code class="language-xml" data-lang="xml"><span>&lt;</span><span style="color:#bf616a;">Target </span><span style="color:#d08770;">Name</span><span>=&quot;</span><span style="color:#a3be8c;">AfterResolveReferences</span><span>&quot;&gt;
+</span><span>  &lt;</span><span style="color:#bf616a;">ItemGroup</span><span>&gt;
+</span><span>    &lt;</span><span style="color:#bf616a;">EmbeddedResource </span><span style="color:#d08770;">Include</span><span>=&quot;</span><span style="color:#a3be8c;">@(ReferenceCopyLocalPaths)</span><span>&quot; </span><span style="color:#d08770;">Condition</span><span>=&quot;</span><span style="color:#a3be8c;">&#39;%(ReferenceCopyLocalPaths.Extension)&#39; == &#39;.dll&#39;</span><span>&quot;&gt;
+</span><span>      &lt;</span><span style="color:#bf616a;">LogicalName</span><span>&gt;%(ReferenceCopyLocalPaths.DestinationSubDirectory)%(ReferenceCopyLocalPaths.Filename)%(ReferenceCopyLocalPaths.Extension)&lt;/</span><span style="color:#bf616a;">LogicalName</span><span>&gt;
+</span><span>    &lt;/</span><span style="color:#bf616a;">EmbeddedResource</span><span>&gt;
+</span><span>  &lt;/</span><span style="color:#bf616a;">ItemGroup</span><span>&gt;
+</span><span>&lt;/</span><span style="color:#bf616a;">Target</span><span>&gt;
+</span></code></pre>
+<p>I then added a new <code>Program.cs</code> file, and added the following code:</p>
+<pre data-lang="cs" style="background-color:#2b303b;color:#c0c5ce;" class="language-cs "><code class="language-cs" data-lang="cs"><span style="color:#b48ead;">public static class </span><span style="color:#ebcb8b;">Program
+</span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">[</span><span style="color:#bf616a;">STAThread</span><span style="color:#eff1f5;">]
+</span><span style="color:#b48ead;">public static void </span><span style="color:#8fa1b3;">Main</span><span style="color:#eff1f5;">()
+</span><span style="color:#eff1f5;">{
+</span><span style="color:#bf616a;">AppDomain</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">CurrentDomain</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">AssemblyResolve </span><span>+= </span><span style="color:#bf616a;">OnResolveAssembly</span><span style="color:#eff1f5;">;
+</span><span style="color:#bf616a;">App</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">Main</span><span style="color:#eff1f5;">();
+</span><span style="color:#eff1f5;">}
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">private static </span><span style="color:#eff1f5;">Assembly </span><span style="color:#8fa1b3;">OnResolveAssembly</span><span style="color:#eff1f5;">(</span><span style="color:#b48ead;">object </span><span style="color:#bf616a;">sender</span><span style="color:#eff1f5;">, ResolveEventArgs </span><span style="color:#bf616a;">e</span><span style="color:#eff1f5;">)
+</span><span style="color:#eff1f5;">    {
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">var </span><span style="color:#bf616a;">thisAssembly </span><span>= </span><span style="color:#bf616a;">Assembly</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">GetExecutingAssembly</span><span style="color:#eff1f5;">();
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">var </span><span style="color:#bf616a;">assemName </span><span>= new </span><span style="color:#eff1f5;">AssemblyName(</span><span style="color:#bf616a;">e</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">Name</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">var </span><span style="color:#bf616a;">dllName </span><span>= </span><span style="color:#bf616a;">assemName</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">Name </span><span>+ &quot;</span><span style="color:#a3be8c;">.dll</span><span>&quot;</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">var </span><span style="color:#bf616a;">res </span><span>= </span><span style="color:#bf616a;">thisAssembly</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">GetManifestResourceNames</span><span style="color:#eff1f5;">().</span><span style="color:#bf616a;">Where</span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">s </span><span style="color:#b48ead;">=&gt; </span><span style="color:#bf616a;">s</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">EndsWith</span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">dllName</span><span style="color:#eff1f5;">));
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">if </span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">res</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">Any</span><span style="color:#eff1f5;">())
+</span><span style="color:#eff1f5;">        {
+</span><span style="color:#eff1f5;">            </span><span style="color:#b48ead;">var </span><span style="color:#bf616a;">resName </span><span>= </span><span style="color:#bf616a;">res</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">First</span><span style="color:#eff1f5;">();
+</span><span style="color:#eff1f5;">            </span><span style="color:#b48ead;">using </span><span style="color:#eff1f5;">(</span><span style="color:#b48ead;">var </span><span style="color:#bf616a;">stream </span><span>= </span><span style="color:#bf616a;">thisAssembly</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">GetManifestResourceStream</span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">resName</span><span style="color:#eff1f5;">))
+</span><span style="color:#eff1f5;">            {
+</span><span style="color:#eff1f5;">                </span><span style="color:#b48ead;">if </span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">stream </span><span>== </span><span style="color:#d08770;">null</span><span style="color:#eff1f5;">) </span><span style="color:#b48ead;">return </span><span style="color:#d08770;">null</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">                </span><span style="color:#b48ead;">var </span><span style="color:#bf616a;">block </span><span>= new </span><span style="color:#b48ead;">byte</span><span style="color:#eff1f5;">[</span><span style="color:#bf616a;">stream</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">Length</span><span style="color:#eff1f5;">];
+</span><span style="color:#eff1f5;">                </span><span style="color:#bf616a;">stream</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">Read</span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">block</span><span style="color:#eff1f5;">, </span><span style="color:#d08770;">0</span><span style="color:#eff1f5;">, </span><span style="color:#bf616a;">block</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">Length</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">                </span><span style="color:#b48ead;">return </span><span style="color:#bf616a;">Assembly</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">Load</span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">block</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">            }
+</span><span style="color:#eff1f5;">        }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">return </span><span style="color:#d08770;">null</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">}
+</span></code></pre>
+<blockquote>
+<p><strong>Note</strong> you might want to do some try-catch blocks around the <code>Assembly.Load</code>.</p>
+</blockquote>
+<p>After editing the project settings to use <code>Program.Main</code> as the entry point, the
+whole application was bundled inside the <code>.exe</code> file built by VisualStudio!</p>
+<h2 id="debugging-edge">Debugging Edge</h2>
+<p>Finally, for debugging the JavaScript I followed <a rel="noopener nofollow noreferrer" target="_blank" href="https://pspdfkit.com/blog/2018/edge-devtools-uwp/">another blog
+post</a> by James Swift. I
+downloaded <code>Microsoft Edge DevTools Preview</code> from the Microsoft Store, then in
+Internet Explorer I had to find <code>Internet Options &gt; Advanced &gt; Browser</code> and
+uncheck two options:</p>
+<ol>
+<li>Disable script debugging (Internet Explorer)</li>
+<li>Disable script debugging (Other)</li>
+</ol>
+<blockquote>
+<p><strong>Note</strong> that this is through IE11, not Edge (thanks Microsoft).</p>
+</blockquote>
+<p>After doing this I could start up the DevTools preview and run the application
+in VS and use the DevTools to debug the embedded WebView.</p>
+</article>
+
+<div class="container col">
+  <h2>Comments</h2>
+  <blockquote>Comments are powered by github and <a href="https://giscus.app">giscus</a></blockquote>
+  <script src="https://giscus.app/client.js"
+        data-repo="will-hart/will-hart.github.io"
+        data-repo-id="MDEwOlJlcG9zaXRvcnkzMjQ2NjY3Mzg="
+        data-category="General"
+        data-category-id="DIC_kwDOE1oFcs4CtiK6"
+        data-mapping="og:title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+  </script>
+</div>
+</div>
+
+  <footer id="footer">
+    <div class="container col">
+      This website was hand-made using Zola and Tera.
+      All text and images are available under CC0 1.0 Universal and code under MIT unless otherwise specified. See <a href="https://github.com/will-hart/willhart.io/blob/main/LICENSE.md">LICENSE.md</a> for more.
+    </div>
+  </footer>
+</body>
+
+</html>

@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>William Hart | willhart.io</title>
+
+
+  <link rel="icon" type="image/x-icon" href="/icons/icon_light_32x32.png">
+
+  
+  <meta name="description"
+    content="The home page of Will Hart, scattered with a few random thoughts about code, electronics and other things.">
+  
+
+  <link rel="stylesheet" href="https://willhart.io/global.css?h=f83cd20cd0df26d72c2b" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sono:wght@200..800&display=swap" rel="stylesheet">
+
+  
+
+  <!-- Cloudflare Web Analytics -->
+  <script defer src='https://static.cloudflareinsights.com/beacon.min.js'
+    data-cf-beacon='{"token": "310f93cab66a42c5a328f246cc053025"}'></script>
+  <!-- End Cloudflare Web Analytics -->
+
+  <!-- Light/Dark theme toggling -->
+  <script type="text/javascript">
+    const storageKey = "websiteTheme";
+
+    // apply theme once we have a DOM
+    document.addEventListener("DOMContentLoaded", () => {
+      applyTheme();
+    })
+
+    // a function that toggles between light and dark theme
+    const toggleTheme = () => {
+      localStorage.setItem(storageKey, localStorage.getItem(storageKey) === "d" ? "l" : "d" );
+      applyTheme();
+    }
+
+    // a function that actually applies the theme
+    const applyTheme = () => {
+      const useDarkTheme = localStorage.getItem(storageKey) === "d";
+      document.getElementsByTagName("html")[0].className = useDarkTheme ? "dark" : "";
+      document.getElementById("theme-toggle").textContent = useDarkTheme ? "🔆" : "🌑";
+    }
+  </script>
+
+  <script type="speculationrules">
+  {
+    "prerender": [
+      { "where": { "selector_matches": "a" } }
+    ]
+  }
+  </script></head>
+
+<body>
+  <nav id="header">
+    <a href="/" aria-label="Website Logo and Link to Home Page">
+      <div id="logo" >&nbsp;</div>
+    </a>
+    <span>
+      <button type="button" id="theme-toggle" aria-label="Toggle Theme" onClick="toggleTheme()">🌑</button>
+      <a class="header-item" href="/post">POSTS</a>
+      <a class="header-item" href="/tag">TAGS</a>
+      <span class="header-item hide-when-slim">|</span>
+      <a class="header-item hide-when-slim" href="/tag/projects">PROJECTS</a>
+      <a class="header-item hide-when-slim" href="/tag/gamedev">GAMEDEV</a>
+      <a class="header-item hide-when-slim" href="/tag/electronics">ELECTRONICS</a>
+    </span>
+  </nav>
+
+  
+<div class="hero">
+  <div class="hero-main bghl padded txtrev txtra">
+    <h1>Hi, I'm Will</h1>
+    <p>
+      I live in Melbourne, Australia
+    </P>
+    <p>
+      I work in MedTech
+    </p>
+  </div>
+
+  <div class="hero-box bghl2">
+    <h2>Previously...</h2>
+
+    
+    
+    <div class="mbsm"><a href="https:&#x2F;&#x2F;willhart.io&#x2F;post&#x2F;morse-kodeboard&#x2F;">Morse Kodeboard - a Morse Code Keyboard</a></div>
+    
+    <div class="mbsm"><a href="https:&#x2F;&#x2F;willhart.io&#x2F;post&#x2F;basketball-analysis-software&#x2F;">Building a basketball video analysis software tool</a></div>
+    
+    <div class="mbsm"><a href="https:&#x2F;&#x2F;willhart.io&#x2F;post&#x2F;embedded-rust-options&#x2F;">Embedded rust - comparing RTIC and embassy</a></div>
+    
+    <div class="mbsm"><a href="https:&#x2F;&#x2F;willhart.io&#x2F;post&#x2F;adding-comments-with-utterances&#x2F;">Adding comments with utterances</a></div>
+    
+
+    <div>
+      <a class="hlt" href="/post" title="See all past posts">See more <span>ᐅ</span></a>
+    </div>
+  </div>
+</div>
+
+<section class="padded">
+  <div class="container"><h2 class="section-header">Some of my projects</h2>
+  </div>
+
+  <div class="container row">
+    <div class="mb">
+      <figure>
+        <img src="/thumbnails/morse_kodeboard.jpg" width="256px" height="256px" alt="A three button keyboard, used for entering morse code into a computer" />
+        <figcaption>
+          <h3><a href="/post/morse-kodeboard/">Morse Kodeboard</a></h3>
+          <p>
+            A custom USB HID keyboard where the user types in morse code, and the
+            keyboard sends the correct letters and punctuation.
+          </p>
+        </figcaption>
+      </figure>
+    </div>
+  </div>
+
+  <div class="container row">
+    <div class="mb">
+      <figure>
+        <img src="/thumbnails/bball_analysis.png" width="256px" height="256px" alt="A basketball shot chart" />
+        <figcaption>
+          <h3><a href="/post/basketball-analysis-software/">Basketball analysis software</a></h3>
+          <p>
+            A full-stack software application and CLI for reviewing basketball videos and
+            performing stats analysis. Built with NextJS and axum.
+          </p>
+        </figcaption>
+      </figure>
+    </div>
+  </div>
+
+  <div class="container row">
+    <div class="mb">
+      <figure>
+        <img src="/thumbnails/clock.jpg" width="256px" height="256px" alt="A circuit with analog integrated circuits" />
+        <figcaption>
+          <h3><a href="/post/cmos-analog-clock/">CMOS clock</a></h3>
+          <p>
+            A custom, fully analog clock made out of some offcuts of French Oak, a whole
+            heap of CMOS chiups and about five years of stress.
+          </p>
+        </figcaption>
+      </figure>
+    </div>
+  </div>
+
+  <div class="container row">
+    <div class="mb">
+      <figure>
+        <img src="/thumbnails/chezdalert.jpg" width="256px" height="256px" alt="An image of a custom printed circuit board" />
+        <figcaption>
+          <h3><a href="/post/chez-dalert-pic-countdown-alarm/">"Chez D'Alert" Woodworking Timer</a></h3>
+          <p>
+            One of my first "proper" electronics projects, building a simple woodworking
+            timer for my Dad's shed. My first attempt at custom etching my own PCB.
+          </p>
+        </figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+</div>
+
+  <footer id="footer">
+    <div class="container col">
+      This website was hand-made using Zola and Tera.
+      All text and images are available under CC0 1.0 Universal and code under MIT unless otherwise specified. See <a href="https://github.com/will-hart/willhart.io/blob/main/LICENSE.md">LICENSE.md</a> for more.
+    </div>
+  </footer>
+</body>
+
+</html>

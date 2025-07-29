@@ -1,0 +1,1579 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
+    <title>William Hart | willhart.io - electronics</title>
+    <subtitle>My little internet home page, full of uninteresting musings and thinking out louds.</subtitle>
+    <link rel="self" type="application/atom+xml" href="https://willhart.io/tag/electronics/atom.xml"/>
+    <link rel="alternate" type="text/html" href="https://willhart.io"/>
+    <generator uri="https://www.getzola.org/">Zola</generator>
+    <updated>2025-07-21T00:00:00+00:00</updated>
+    <id>https://willhart.io/tag/electronics/atom.xml</id>
+    <entry xml:lang="en">
+        <title>Morse Kodeboard - a Morse Code Keyboard</title>
+        <published>2025-07-21T00:00:00+00:00</published>
+        <updated>2025-07-21T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              William Hart
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://willhart.io/post/morse-kodeboard/"/>
+        <id>https://willhart.io/post/morse-kodeboard/</id>
+        
+        <content type="html" xml:base="https://willhart.io/post/morse-kodeboard/">&lt;p&gt;Here is another project in a long line of “I don’t know why I’m doing this”
+projects! A while back my family and I spent a week in coastal Victoria as I was
+running the Great Ocean Road Marathon. While we were there we visited the
+&lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;https:&#x2F;&#x2F;www.lightstation.com&quot;&gt;Cape Otway Lightstation&lt;&#x2F;a&gt;, which was an important
+lighthouse that helped guide ships through the “Shipwreck Coast”.&lt;&#x2F;p&gt;
+&lt;p&gt;The Lightstation was also a key part of a 400km long telegraph cable that connected
+Tasmania to the Australian mainland in the 1850s. In one of the buildings we
+spotted a morse code table. My kids spent half the long drive back decoding a
+message written in &lt;code&gt;dits&lt;&#x2F;code&gt; and &lt;code&gt;dahs&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;A few weeks later, I was chatting to a friend about my weakness for clicky,
+tactile interfaces and input devices. In my excitement I got a bit careless in
+my typing and was forced to defend my accuracy. “I’m typing on my Morse Code
+keyboard” and then realised I’d found my next project.&lt;&#x2F;p&gt;
+&lt;p&gt;The idea was simple - a single button that you tap on long and short pulses. The
+keyboard reads the pulses as morse code and outputs the correct codes through a
+USB interface.&lt;&#x2F;p&gt;
+&lt;p&gt;I decided to call this a:&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;strong&gt;—— ——— ·—· ··· · | —·— ——— —·· · —··· ——— ·— ·—· —··&lt;&#x2F;strong&gt;&lt;sup class=&quot;footnote-reference&quot; id=&quot;fr-1-1&quot;&gt;&lt;a href=&quot;#fn-1&quot;&gt;1&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;You can find the source code + hardware files at &lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;will-hart&#x2F;morse-kodeboard&quot;&gt;https:&#x2F;&#x2F;github.com&#x2F;will-hart&#x2F;morse-kodeboard&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;initial-build&quot;&gt;Initial build&lt;&#x2F;h2&gt;
+&lt;p&gt;As this project was a bit of a meme, I didn’t really want to over-engineer it.
+I’ve already made quite a few USB-HID interfaces using rust firmware, and I have
+a few RaspberryPi Pico’s sitting around. So the logical choice was to throw together
+some &lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;https:&#x2F;&#x2F;embassy.dev&#x2F;&quot;&gt;embassy&lt;&#x2F;a&gt; firmware and use a third-party morse code
+library to decode. By building a simple breadboard circuit I had something up
+and running in a couple of evenings.&lt;&#x2F;p&gt;
+&lt;p&gt;As usual I had some issues with getting USB descriptors sorted, which
+in this case turned out to be because I had a few loops without any “idle” mechanism,
+which presumably meant they were hogging 100% of the microcontrollers clock cycles.
+This was a fairly easy fix with embassy as I was able to throttle the loops using
+a &lt;code&gt;Ticker&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;morse-code-decoding&quot;&gt;Morse Code Decoding&lt;&#x2F;h2&gt;
+&lt;p&gt;The next challenge was decoding the button presses into characters. I initially
+found a few libraries on crates.io and ran with those, and a couple of these
+even supported &lt;code&gt;no-std&lt;&#x2F;code&gt;. Unfortunately I found that these libraries didn’t quite
+work in my use case, as they matched “greedily”, meaning that I couldn’t continuously
+poll.&lt;&#x2F;p&gt;
+&lt;p&gt;For example, if I wanted to type &lt;code&gt;s&lt;&#x2F;code&gt; (···), then when I polled the decoder in a
+loop, I’d get &lt;code&gt;e e e&lt;&#x2F;code&gt; (· · ·). So instead I decided to implement my own decoder,
+which can be found &lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;will-hart&#x2F;morse-kodeboard&#x2F;blob&#x2F;main&#x2F;src&#x2F;decoder.rs&quot;&gt;on the GitHub&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;Its a fairly basic bit of code that has a “dit time” specified, is fed high and
+low edges of a button and converts that into pulse durations and gaps. It then
+stores these as dits, dahs and breaks in a ring buffer. The buffer is compared
+to a set of acceptable characters using a &lt;code&gt;match&lt;&#x2F;code&gt;, for example here is the pattern
+for the first few characters:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;rust&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-rust &quot;&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;if let &lt;&#x2F;span&gt;&lt;span&gt;Some(c) = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;match &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;self&lt;&#x2F;span&gt;&lt;span&gt;.value_buffer {
+&lt;&#x2F;span&gt;&lt;span&gt;            [Dit, Dah, Break, Empty, Empty, Empty] =&amp;gt; Some(&amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;a&lt;&#x2F;span&gt;&lt;span&gt;&amp;#39;),
+&lt;&#x2F;span&gt;&lt;span&gt;            [Dah, Dit, Dit, Dit, Break, Empty] =&amp;gt; Some(&amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;b&lt;&#x2F;span&gt;&lt;span&gt;&amp;#39;),
+&lt;&#x2F;span&gt;&lt;span&gt;            [Dah, Dit, Dah, Dit, Break, Empty] =&amp;gt; Some(&amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;c&lt;&#x2F;span&gt;&lt;span&gt;&amp;#39;),
+&lt;&#x2F;span&gt;&lt;span&gt;            &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F;&#x2F;...
+&lt;&#x2F;span&gt;&lt;span&gt;} {
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; handle a character
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; reset the ring buffer
+&lt;&#x2F;span&gt;&lt;span&gt;}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Using this approach made decoding a lot simpler. A task could be set up to watch
+the morse code button, feed the inputs to the decoder and when a character match
+was found, use a channel to feed that character to the task that managed the USB
+HID interface.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;more-keys&quot;&gt;More keys?&lt;&#x2F;h2&gt;
+&lt;p&gt;At this point I realised a few fundamental issues with the one button approach.
+For starters, without a space bar it is very hard to write more than one very long
+word. So a space key was a must. Secondly, without a shift key, it was very hard
+to add punctuation, proper sentence structure or beyond basic text. This might
+have been OK in the days when morse code was in regular use, but in this modern
+era I’d love to be able to type &lt;em&gt;most&lt;&#x2F;em&gt; things without being shouted at for poor
+punctuation.&lt;&#x2F;p&gt;
+&lt;p&gt;So one key turned into three keys&lt;sup class=&quot;footnote-reference&quot; id=&quot;fr-2-1&quot;&gt;&lt;a href=&quot;#fn-2&quot;&gt;2&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt; - a “morse” key, a shift key and a space key.
+This in turn meant the firmware now had a lot of different tasks spawned:&lt;&#x2F;p&gt;
+&lt;ol&gt;
+&lt;li&gt;A &lt;code&gt;usb_loop&lt;&#x2F;code&gt; that manages the underlying USB interface&lt;&#x2F;li&gt;
+&lt;li&gt;A &lt;code&gt;usb_hid_loop&lt;&#x2F;code&gt; that manages writing to the USB HID interface&lt;&#x2F;li&gt;
+&lt;li&gt;A &lt;code&gt;usb_request_handler&lt;&#x2F;code&gt; that manages incoming requests on the USB HID interface&lt;&#x2F;li&gt;
+&lt;li&gt;A &lt;code&gt;monitor_space_key&lt;&#x2F;code&gt; task that watches the space button and generates ’ ’ characters
+for the USB HID loop to send&lt;&#x2F;li&gt;
+&lt;li&gt;A &lt;code&gt;generate_morse_code_characters&lt;&#x2F;code&gt; task, that watches the &lt;code&gt;shift&lt;&#x2F;code&gt; and &lt;code&gt;morse&lt;&#x2F;code&gt;
+keys and generates the appropriate morse code characters for the &lt;code&gt;usb_hid_loop&lt;&#x2F;code&gt;
+to send.&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;p&gt;The whole thing is tied together with a series of bounded embassy &lt;code&gt;Channel&lt;&#x2F;code&gt;s.&lt;&#x2F;p&gt;
+&lt;p&gt;Here is a video of the firmware running on a breadboard device with a debugger
+attached:&lt;&#x2F;p&gt;
+&lt;video controls muted loop preload=&quot;metadata&quot; width=&quot;640&quot; height=&quot;480&quot; style=&quot;margin: -2rem auto 3rem auto;&quot;&gt;
+  &lt;source src=&quot;morse_code_example.webm&quot; type=&quot;video&#x2F;webm&quot;&gt;
+  Your browser does not support the video tag.
+&lt;&#x2F;video&gt;
+&lt;h2 id=&quot;building-the-hardware&quot;&gt;Building the hardware&lt;&#x2F;h2&gt;
+&lt;p&gt;As much as this was a meme project, I felt like adding some hardware would be nice.
+I figured as this was a keyboard (and I have some hardware lying around) that
+using hot-swappable mechanical switches would be a good first start&lt;sup class=&quot;footnote-reference&quot; id=&quot;fr-3-1&quot;&gt;&lt;a href=&quot;#fn-3&quot;&gt;3&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;From here making a PCB in Kicad was pretty straightforward, its a connector,
+three mechanical switches (using hot-swappable sockets) and a few 0603 pull-up
+resistors. It took may an hour or two, then I sent of the gerbers to a Chinese
+fab, and a week later for less than a tenner I had a few PCBs to play with.
+Soldering was very straightforward by hand and took maybe 20 minutes, although
+I have to admit to doing a pretty poor job of the connectors&lt;sup class=&quot;footnote-reference&quot; id=&quot;fr-4-1&quot;&gt;&lt;a href=&quot;#fn-4&quot;&gt;4&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt; and they’re
+straight not right-angled as I’d originally planned.&lt;&#x2F;p&gt;
+&lt;p&gt;The resulting Frankenstein looks like this:&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;willhart.io&#x2F;post&#x2F;morse-kodeboard&#x2F;morse_kodeboard_pcb.jpg&quot; alt=&quot;The Morse Kodeboard PCB&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;typing-performance&quot;&gt;Typing performance&lt;&#x2F;h2&gt;
+&lt;p&gt;OK, I know what you’re really here to see is how fast you can type on a Morse
+Kodeboard. To keep this comparison fair, I think some benchmarking is in
+order. There are lots of random typing speed tests on the internet, so let’s try
+to see how fast I can type on the Kodeboard vs a regular keyboard.&lt;&#x2F;p&gt;
+&lt;p&gt;First the control, typing on my Keychron K8:&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;willhart.io&#x2F;post&#x2F;morse-kodeboard&#x2F;keyboard_typing_test.png&quot; alt=&quot;Typing test results from a normal keyboard - 107 words per minute, 97% accuracy&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;I do find sometimes I can type faster but then get in loops where the delete key
+gets a real work out. Actually, that makes me think - I don’t actually have a
+delete key on the Kodeboard! We’re in too deep now to go back, so I’ll just have
+to be perfect.&lt;&#x2F;p&gt;
+&lt;p&gt;And the Kodeboard results are in:&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;willhart.io&#x2F;post&#x2F;morse-kodeboard&#x2F;kodeboard_typing_test.png&quot; alt=&quot;Typing test results from Morse Kodeboard - 5 words per minute, 93% accuracy&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;The Kodeboard is about 20x slower, but around the same accuracy if you squint.
+So I guess we call that tie (or should I say a &lt;code&gt;— ·· ·&lt;&#x2F;code&gt;)&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-next&quot;&gt;What next?&lt;&#x2F;h2&gt;
+&lt;p&gt;I’m not sure if there is anything next to be honest! It could do with an enclosure.
+I have a few options here&lt;&#x2F;p&gt;
+&lt;ol&gt;
+&lt;li&gt;Butcher an electronics project box (maybe a laser cut top),&lt;&#x2F;li&gt;
+&lt;li&gt;Print or laser cut a fully custom enclosure,&lt;&#x2F;li&gt;
+&lt;li&gt;Look at a more traditional morse code key, of which it seems there are a wide
+&lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;https:&#x2F;&#x2F;hamuniverse.com&#x2F;n2eycodekeys.html&quot;&gt;variety of types&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;p&gt;I could see some other features being added like:&lt;&#x2F;p&gt;
+&lt;ol&gt;
+&lt;li&gt;A rotary encoder to set the duration of a &lt;code&gt;dit&lt;&#x2F;code&gt; (i.e. how fast you have to tap)&lt;&#x2F;li&gt;
+&lt;li&gt;A delete button&lt;&#x2F;li&gt;
+&lt;li&gt;Some LEDs indicating i.e. when “shift” is down (actually its more like Capslock)&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;p&gt;A this point though I think I’ve made my point, whatever that is and I may just
+throw it in a project box and call it a day.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;notes&quot;&gt;Notes&lt;&#x2F;h2&gt;
+&lt;section class=&quot;footnotes&quot;&gt;
+&lt;ol class=&quot;footnotes-list&quot;&gt;
+&lt;li id=&quot;fn-1&quot;&gt;
+&lt;p&gt;Morse Kodeboard, as you may have guessed. &lt;a href=&quot;#fr-1-1&quot;&gt;↩&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li id=&quot;fn-2&quot;&gt;
+&lt;p&gt;Spoiler, its probably going to need more than three keys. &lt;a href=&quot;#fr-2-1&quot;&gt;↩&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li id=&quot;fn-3&quot;&gt;
+&lt;p&gt;Eventually it would be nice perhaps to build a more old-fashioned morse-code style interface, but for now this is still a “keyboard” in the modern sense. &lt;a href=&quot;#fr-3-1&quot;&gt;↩&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li id=&quot;fn-4&quot;&gt;
+&lt;p&gt;The offending soldering work is blurred for your safety. &lt;a href=&quot;#fr-4-1&quot;&gt;↩&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;&#x2F;section&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Embedded rust - comparing RTIC and embassy</title>
+        <published>2023-12-30T00:00:00+00:00</published>
+        <updated>2023-12-30T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              William Hart
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://willhart.io/post/embedded-rust-options/"/>
+        <id>https://willhart.io/post/embedded-rust-options/</id>
+        
+        <content type="html" xml:base="https://willhart.io/post/embedded-rust-options/">&lt;h2 id=&quot;writing-custom-input-devices-in-rust&quot;&gt;Writing custom input devices in rust&lt;&#x2F;h2&gt;
+&lt;p&gt;Now that the price of ICs has returned to the realms of affordability, I’ve been
+playing around with a few programmable input devices powered by STM32. For
+instance I made some sorta &lt;a href=&quot;&#x2F;post&#x2F;custom-gaming-foot-pedals&quot;&gt;programmable
+pedals&lt;&#x2F;a&gt;
+(&lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;will-hart&#x2F;pedalrs&quot;&gt;code&lt;&#x2F;a&gt;) which were a lot of fun and more
+recently I’ve been playing around with a macro-style keyboard called
+&lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;will-hart&#x2F;switchy&quot;&gt;switchy&lt;&#x2F;a&gt; which has support for 24
+switches, 4 rotary encoders with buttons, and two joysticks with buttons.&lt;&#x2F;p&gt;
+&lt;p&gt;Before 2023 work life balance got tipped strongly in favour of work (has it
+really been almost a year and a half since my last post?) I had converted the
+firmware to use something called &lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;https:&#x2F;&#x2F;rtic.rs&quot;&gt;&lt;code&gt;RTIC&lt;&#x2F;code&gt;&lt;&#x2F;a&gt; which, according to
+their website, is a “The hardware accelerated Rust RTOS”, where RTOS is a
+real-time operating system.&lt;&#x2F;p&gt;
+&lt;p&gt;The summary of what the RTOS provides is that instead of writing your code in a
+big loop, e.g.&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;rust&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-rust &quot;&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; pseudo-rust code, obvs
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;fn &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;main&lt;&#x2F;span&gt;&lt;span&gt;() {
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;loop &lt;&#x2F;span&gt;&lt;span&gt;{
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;read_adcs&lt;&#x2F;span&gt;&lt;span&gt;();
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;if &lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;time&lt;&#x2F;span&gt;&lt;span&gt;() &amp;gt; time_to_next_blink_led {
+&lt;&#x2F;span&gt;&lt;span&gt;      &lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;toggle_led&lt;&#x2F;span&gt;&lt;span&gt;();
+&lt;&#x2F;span&gt;&lt;span&gt;      time_to_next_blink_led = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;time&lt;&#x2F;span&gt;&lt;span&gt;() + &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;1000&lt;&#x2F;span&gt;&lt;span&gt;;
+&lt;&#x2F;span&gt;&lt;span&gt;    }
+&lt;&#x2F;span&gt;&lt;span&gt;  }
+&lt;&#x2F;span&gt;&lt;span&gt;}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;You structure the code into “tasks”, which are scheduled and executed at the
+appropriate time by the RTOS. The RTOS bit means that there is a scheduler that
+determines when the tasks can run. Tasks can be triggered by interrupts, a
+timer, or called as a “one-shot” task. A totally made up non-compiling toy
+example might be:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;rust&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-rust &quot;&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span&gt;async &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;fn &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;main&lt;&#x2F;span&gt;&lt;span&gt;() {
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span&gt; task1 = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;spawn&lt;&#x2F;span&gt;&lt;span&gt;(adc_task);
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span&gt; task2 = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;spawn&lt;&#x2F;span&gt;&lt;span&gt;(blink_task);
+&lt;&#x2F;span&gt;&lt;span&gt;  join!([task1, task2]).await;
+&lt;&#x2F;span&gt;&lt;span&gt;}
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;async &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;fn &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;adc_task&lt;&#x2F;span&gt;&lt;span&gt;() -&amp;gt; ! {
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;loop &lt;&#x2F;span&gt;&lt;span&gt;{
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span&gt; value = adc.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;sample&lt;&#x2F;span&gt;&lt;span&gt;();
+&lt;&#x2F;span&gt;&lt;span&gt;    serial.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;send&lt;&#x2F;span&gt;&lt;span&gt;(&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;{value}&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;);
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;wait_millis&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;1000&lt;&#x2F;span&gt;&lt;span&gt;);
+&lt;&#x2F;span&gt;&lt;span&gt;  }
+&lt;&#x2F;span&gt;&lt;span&gt;}
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;async &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;fn &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;blink_task&lt;&#x2F;span&gt;&lt;span&gt;() -&amp;gt; ! {
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;loop &lt;&#x2F;span&gt;&lt;span&gt;{
+&lt;&#x2F;span&gt;&lt;span&gt;    led.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;toggle&lt;&#x2F;span&gt;&lt;span&gt;();
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;wait_millis&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;1000&lt;&#x2F;span&gt;&lt;span&gt;);
+&lt;&#x2F;span&gt;&lt;span&gt;  }
+&lt;&#x2F;span&gt;&lt;span&gt;}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;This toy example requires a bit more code, but it also clearly separates our
+concerns. We use &lt;code&gt;main&lt;&#x2F;code&gt; to set up the logic, then there are two separate tasks
+that each do different things. Given that the microcontroller is a resource
+constrained environment, there is a fair bit of magic in the &lt;code&gt;spawn&lt;&#x2F;code&gt;ing and
+execution of tasks.&lt;&#x2F;p&gt;
+&lt;p&gt;There are two main libraries (that I’m aware of) that provide the infrastructure
+to do this: &lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;https:&#x2F;&#x2F;rtic.rs&quot;&gt;&lt;code&gt;rtic-rs&lt;&#x2F;code&gt;&lt;&#x2F;a&gt; and &lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;https:&#x2F;&#x2F;embassy.dev&quot;&gt;&lt;code&gt;embassy&lt;&#x2F;code&gt;&lt;&#x2F;a&gt;.
+Each of these rely on hardware abstraction layers (HALs) that allow &lt;em&gt;almost&lt;&#x2F;em&gt; the
+same code to be run on different MCUs. The &lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;https:&#x2F;&#x2F;rtic.rs&#x2F;2&#x2F;book&#x2F;en&#x2F;rtic_and_embassy.html&quot;&gt;RTIC
+documentation&lt;&#x2F;a&gt; has an
+interesting comparison of the aims of the RTIC project, compared to embassy:&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Embassy provides both Hardware Abstraction Layers (HALs), and an
+executor&#x2F;runtime, while RTIC aims to only provide an execution framework. [In
+RTIC] the user is responsible for providing a PAC (peripheral access crate)
+and HAL implementation.&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;In other words, RTIC aims to be a lot lower level while embassy seems to be
+taking a “batteries included” approach. In this post I want to go over my
+experience using these two libraries to write the &lt;code&gt;switchy&lt;&#x2F;code&gt; firmware, and
+outline what I love (and love slightly less) about these libraries. I decided to
+write down my notes on using &lt;code&gt;embassy&lt;&#x2F;code&gt; after returning to &lt;code&gt;switchy&lt;&#x2F;code&gt; after a 10
+month delay.&lt;&#x2F;p&gt;
+&lt;p&gt;Both embassy and RTIC are amazing software projects, and I’m very excited to
+have two solid options like these for writing rust code for embedded targets.
+I’ve seen a few fairly complex bits of firmware written using the STM32 C++ HALs
+and &lt;em&gt;hoo boy&lt;&#x2F;em&gt; does the rust code look nicer (to me at least).&lt;&#x2F;p&gt;
+&lt;p&gt;So in short, these are my opinions and first impressions only, and probably
+reflect as much on my own capacity to write embedded rust code as the libraries
+themselves, so take everything I say here with a couple of hundred grains of
+salt. My impressions are also relatively “high level”, I’m not writing
+performance critical or safety critical code so consider this a “hobbyist”
+assessment of the two frameworks, likely riddled with errors.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;getting-started&quot;&gt;Getting started&lt;&#x2F;h2&gt;
+&lt;p&gt;Both projects have pretty good getting started guides, although RTIC requires a
+bit of digging. The first thing on their home page is a discussion of whether
+RTIC is an RTOS while embassy’s home page emphasises &lt;em&gt;what&lt;&#x2F;em&gt; embassy is and shows
+a minimal code example, which IMO is a better approach.&lt;&#x2F;p&gt;
+&lt;p&gt;Either way, it only takes a little bit of scrolling or one or two clicks to find
+a template. The &lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;rtic-rs&#x2F;defmt-app-template&quot;&gt;RTIC template&lt;&#x2F;a&gt;
+has a great README, while the embassy documentation points you to some examples
+before moving on to a great walkthrough of &lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;https:&#x2F;&#x2F;embassy.dev&#x2F;book&#x2F;dev&#x2F;new_project.html&quot;&gt;starting a new
+project&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;Both frameworks have a similar amount of mucking about getting targets, build
+configurations and debugging set up. Sometimes the guides have worked for me,
+and other times I’ve spend a few hours debugging random build errors and
+incompatibilities. I think this will get better with time.&lt;&#x2F;p&gt;
+&lt;p&gt;Both frameworks now rely on &lt;code&gt;async&lt;&#x2F;code&gt; fns, which I’m ok with but lots of people
+seem to have issue with the “terrible async in lang X”. To me the code is much
+simpler and expressive with async - for instance if you’re waiting for a message
+this seems simpler than a polling loop:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;rust&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-rust &quot;&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span&gt;receiver.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;next&lt;&#x2F;span&gt;&lt;span&gt;().await
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;h2 id=&quot;configuring-the-microcontroller&quot;&gt;Configuring the microcontroller&lt;&#x2F;h2&gt;
+&lt;p&gt;Configuration is really the realm of the hardware abstraction layer, or HAL. As
+mentioned, RTIC relies on you to bring your own HAL, while embassy includes a
+bunch of HALs. The main complexity here seems to be driven by the complexity of
+the ICs themselves - no code is directly transferrable as (for instance) an
+STM32F4 handles ADCs differently to how an STM32F1 or an RP2040 does. I’d say
+the &lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;stm32-rs&quot;&gt;&lt;code&gt;stm32-rs&lt;&#x2F;code&gt;&lt;&#x2F;a&gt; and
+&lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;rp-rs&#x2F;rp-hal&quot;&gt;&lt;code&gt;rp-hal&lt;&#x2F;code&gt;&lt;&#x2F;a&gt; used by RTIC are &lt;em&gt;probably&lt;&#x2F;em&gt; a bit
+more mature here, but they aren’t far off each other.&lt;&#x2F;p&gt;
+&lt;p&gt;The configuration function for switchy in the RTIC version lives
+&lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;will-hart&#x2F;switchy&#x2F;blob&#x2F;develop&#x2F;src&#x2F;configure.rs#L52&quot;&gt;here&lt;&#x2F;a&gt;.
+A typical digital IO pin configuration might look like:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;rust&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-rust &quot;&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span&gt; gpioc = device_peripherals.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;GPIOC&lt;&#x2F;span&gt;&lt;span&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;split&lt;&#x2F;span&gt;&lt;span&gt;();
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span&gt; pin = gpioc.pc3.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;into_push_pull_output&lt;&#x2F;span&gt;&lt;span&gt;();
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;For embassy, a similar RP2040 configuration might be:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;rust&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-rust &quot;&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span&gt; p = embassy_rp::init(config);
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span&gt; pin = p.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;PIN_2&lt;&#x2F;span&gt;&lt;span&gt;;
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;I did have some issues getting USB HID to work with embassy on an STM32F401
+microcontroller. For whatever reason the device just wouldn’t be detected no
+matter what I tried. Its possible the chip was faulty, but I changed to a RPi
+Pico, spent about an hour converting the code base from STM32F4 to RP2040, and
+it worked flawlessly.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;the-hardware-abstraction-layer&quot;&gt;The Hardware Abstraction Layer&lt;&#x2F;h2&gt;
+&lt;p&gt;Both HALs rely on &lt;code&gt;embedded_hal&lt;&#x2F;code&gt; to provide common structures for
+Pins, allowing re-use of device drivers between MCUs, which is a pretty feature
+thing to have for somebody like me with a drawer full of different dev boards.&lt;&#x2F;p&gt;
+&lt;p&gt;I’ve been successful in running both stm32 and embassy HALs on STM32F0, STM32F1,
+STM32F4 and RP2040 targets, often with minimal code changes between MCUs thanks
+to &lt;code&gt;embedded_hal&lt;&#x2F;code&gt;s.&lt;&#x2F;p&gt;
+&lt;p&gt;My general impression here is that the &lt;code&gt;stm32-rs&lt;&#x2F;code&gt; &#x2F; &lt;code&gt;rp-hal&lt;&#x2F;code&gt; HALs used with RTIC
+are a bit more mature, but &lt;em&gt;feel&lt;&#x2F;em&gt; more varied in approach as they’re from lots
+of different projects. Embassy HALs felt more consistent between MCU families,
+but maybe a little less mature in some cases(?).&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;resource-sharing-between-tasks&quot;&gt;Resource sharing between tasks&lt;&#x2F;h2&gt;
+&lt;p&gt;There is often a requirement in non-trivial firmware to share resources or
+state, or maintain global state for tasks. This might be something like whether
+an LED should be on, or in the case of the USB input devices it might be a
+current map of the state of buttons. Both
+&lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;https:&#x2F;&#x2F;rtic.rs&#x2F;2&#x2F;book&#x2F;en&#x2F;by-example&#x2F;channel.html&quot;&gt;RTIC&lt;&#x2F;a&gt; and
+&lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;https:&#x2F;&#x2F;docs.embassy.dev&#x2F;embassy-sync&#x2F;git&#x2F;default&#x2F;index.html&quot;&gt;embassy&lt;&#x2F;a&gt; allow
+sync structures with things like &lt;code&gt;queues&lt;&#x2F;code&gt; and &lt;code&gt;channels&lt;&#x2F;code&gt; for passing data
+between tasks in a pretty straightforward way.&lt;&#x2F;p&gt;
+&lt;p&gt;RTIC and embassy do differ though on how resources are shared globally. Embassy
+takes a fairly standard approach of requiring all resources to be statically
+allocated. This requires a lot of &lt;code&gt;static&lt;&#x2F;code&gt; types or the use of something like
+&lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;https:&#x2F;&#x2F;docs.rs&#x2F;static_cell&#x2F;latest&#x2F;static_cell&#x2F;&quot;&gt;&lt;code&gt;StaticCell&lt;&#x2F;code&gt;&lt;&#x2F;a&gt;. Its a bit of a
+mouthful to write code this way in rust, but it is fairly obvious and direct. To
+quote an “industry source” that I discussed this with:&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;rust is exposing a constraint that’s already there [in C++ firmware], but I’m
+finding it annoying to write [in rust].&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;Here is an example from my keyboard firmware:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;rust&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-rust &quot;&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span&gt; channel: &amp;amp;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;&amp;#39;static mut&lt;&#x2F;span&gt;&lt;span&gt; KeyboardActionChannel = {
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;static &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;CHANNEL&lt;&#x2F;span&gt;&lt;span&gt;: StaticCell&amp;lt;KeyboardActionChannel&amp;gt; = StaticCell::new();
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;CHANNEL&lt;&#x2F;span&gt;&lt;span&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;init_with&lt;&#x2F;span&gt;&lt;span&gt;(|| KeyboardActionChannel::new())
+&lt;&#x2F;span&gt;&lt;span&gt;};
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; spawn a task and pass in the reference to our channel
+&lt;&#x2F;span&gt;&lt;span&gt;unwrap!(spawner.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;spawn&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;send_dummy_key_presses&lt;&#x2F;span&gt;&lt;span&gt;(channel)));
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;A limitation of embassy tasks is that they cannot accept generic function
+arguments, which includes non-static lifetimes. Often I found myself stumbling
+over this and fighting with the compiler.&lt;&#x2F;p&gt;
+&lt;p&gt;RTIC uses a more “magical” macro-based approach to
+&lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;https:&#x2F;&#x2F;rtic.rs&#x2F;2&#x2F;book&#x2F;en&#x2F;by-example&#x2F;resources.html&quot;&gt;resources&lt;&#x2F;a&gt;. There are
+&lt;code&gt;shared&lt;&#x2F;code&gt; resources and &lt;code&gt;local&lt;&#x2F;code&gt; resources. Shared resources are available to any
+task, usually accessed through a mutex, while local resources are available only
+to a single task. This model works very well when it works, but I found the
+macro approach often resulted in obscure hard-to-debug errors because if I made
+a mistake in my resource initialisation code the error was reported somewhere
+else (i.e. in the macro), and often took a bit of digging to work out. An
+example of how this works (adapted from the docs linked above) is:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;rust&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-rust &quot;&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span&gt;#[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;rtic&lt;&#x2F;span&gt;&lt;span&gt;::&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;app&lt;&#x2F;span&gt;&lt;span&gt;(device = stm32f401, dispatchers = [EXTI1])]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;mod &lt;&#x2F;span&gt;&lt;span&gt;app {
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F;.. use blah;
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;    #[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;shared&lt;&#x2F;span&gt;&lt;span&gt;]
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;struct &lt;&#x2F;span&gt;&lt;span&gt;Shared {
+&lt;&#x2F;span&gt;&lt;span&gt;      &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;driver&lt;&#x2F;span&gt;&lt;span&gt;: MyDeviceDriver,
+&lt;&#x2F;span&gt;&lt;span&gt;    }
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;    #[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;local&lt;&#x2F;span&gt;&lt;span&gt;]
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;struct &lt;&#x2F;span&gt;&lt;span&gt;Local {
+&lt;&#x2F;span&gt;&lt;span&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;local_to_foo&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;i64&lt;&#x2F;span&gt;&lt;span&gt;,
+&lt;&#x2F;span&gt;&lt;span&gt;    }
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;    #[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;init&lt;&#x2F;span&gt;&lt;span&gt;]
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;fn &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;init&lt;&#x2F;span&gt;&lt;span&gt;(_: init::Context) -&amp;gt; (Shared, Local) {
+&lt;&#x2F;span&gt;&lt;span&gt;        foo::spawn().&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;unwrap&lt;&#x2F;span&gt;&lt;span&gt;();
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; get GPIOs here
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span&gt; driver: MyDeviceDriver::new(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;* move in a bunch of GPIOs *&#x2F;&lt;&#x2F;span&gt;&lt;span&gt;);
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;        (
+&lt;&#x2F;span&gt;&lt;span&gt;            Shared { driver },
+&lt;&#x2F;span&gt;&lt;span&gt;            Local {
+&lt;&#x2F;span&gt;&lt;span&gt;                local_to_foo: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;0&lt;&#x2F;span&gt;&lt;span&gt;,
+&lt;&#x2F;span&gt;&lt;span&gt;            },
+&lt;&#x2F;span&gt;&lt;span&gt;        )
+&lt;&#x2F;span&gt;&lt;span&gt;    }
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;    #[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;task&lt;&#x2F;span&gt;&lt;span&gt;(local = [local_to_foo], shared = [driver], priority = 1)]
+&lt;&#x2F;span&gt;&lt;span&gt;    async &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;fn &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;foo&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;cx&lt;&#x2F;span&gt;&lt;span&gt;: foo::Context) {
+&lt;&#x2F;span&gt;&lt;span&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span&gt; local_to_foo = cx.local.local_to_foo;
+&lt;&#x2F;span&gt;&lt;span&gt;        *local_to_foo += &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;1&lt;&#x2F;span&gt;&lt;span&gt;;
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;        cx.shared.driver.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;lock&lt;&#x2F;span&gt;&lt;span&gt;(|&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;driver&lt;&#x2F;span&gt;&lt;span&gt;| {
+&lt;&#x2F;span&gt;&lt;span&gt;          driver.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;do_something&lt;&#x2F;span&gt;&lt;span&gt;();
+&lt;&#x2F;span&gt;&lt;span&gt;        });      
+&lt;&#x2F;span&gt;&lt;span&gt;    }
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Another challenge I found with RTIC’s approach was that the task functions must
+be &lt;code&gt;async&lt;&#x2F;code&gt; but the &lt;code&gt;init&lt;&#x2F;code&gt; function which initialises global resources was
+&lt;code&gt;sync&lt;&#x2F;code&gt;. Some libraries (for instance for interfacing with &lt;code&gt;nrf24&lt;&#x2F;code&gt;) only came in
+an async variant, meaning it was a real struggle to get them to work properly
+with RTIC.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;availability-of-community-support-and-examples&quot;&gt;Availability of community support and examples&lt;&#x2F;h2&gt;
+&lt;p&gt;Rust projects usually have very thorough API documentation and detailed
+examples, and both RTIC and embassy are no exception here. There are tonnes of
+examples for both. As the HAL and framework are the same for embassy, the
+examples are a bit more coherent and unified, and &lt;em&gt;oh my&lt;&#x2F;em&gt; there are &lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;embassy-rs&#x2F;embassy&#x2F;tree&#x2F;main&#x2F;examples&quot;&gt;a lot of
+examples&lt;&#x2F;a&gt; for
+different MCUs.&lt;&#x2F;p&gt;
+&lt;p&gt;The RTIC examples are &lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;rtic-rs&#x2F;rtic-examples&quot;&gt;a bit more
+sparse&lt;&#x2F;a&gt;, and don’t seem to have any v2
+specific examples yet, however the HALs usually provide examples. Again this
+means that you’re a bit at the mercy of how mature the specific HAL is. For both
+frameworks this is a function of their rapid development - some of the examples
+get stale relatively quickly which can make finding relevant examples tricky at
+times.&lt;&#x2F;p&gt;
+&lt;p&gt;One thing that is missing for both frameworks is “intermediate” complexity
+examples. For instance most of the embassy examples don’t actually spawn
+&lt;code&gt;tasks&lt;&#x2F;code&gt;, which is a core feature of the framework. The examples seemingly go
+from “how to blink an LED” to “here is a huge repository for 3d printer
+firmware”, leaving little clue for the newcomer on how to sensibly structure an
+application with complexity anywhere above “trivial”. In some ways this should
+be left up to the developer, but I felt like RTIC perhaps provided a bit welcome
+more guidance here.&lt;&#x2F;p&gt;
+&lt;p&gt;Often for the embassy examples there are HAL specific features that are
+required. However as the examples for a particular MCU are all in one directory,
+its a bit unclear which feature relates to which example. This isn’t a big deal,
+but adds a bit of friction to implementing examples into your own code. There
+were also some non-obvious dependencies (for instance &lt;code&gt;portable_atomic&lt;&#x2F;code&gt; was
+required for &lt;code&gt;thumbv6&lt;&#x2F;code&gt; target to use &lt;code&gt;static_cell&lt;&#x2F;code&gt;, which wasn’t immediately
+obvious when moving between targets).&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;&#x2F;h2&gt;
+&lt;p&gt;I love writing embedded rust code. For me, its easier to read and write than the
+typical C++ code bases, while allowing a bit more power and flexibility than
+something like Arduino.&lt;&#x2F;p&gt;
+&lt;p&gt;There definitely some cons. I’m not 100% sure rust embedded in general is
+&lt;em&gt;quite&lt;&#x2F;em&gt; ready for mission critical applications, although seems more than stable
+enough for regular old firmware. The usual rust trade offs are multiplied in a
+&lt;code&gt;no-std&lt;&#x2F;code&gt; environment - finnicky compiler errors, types and lifetime management,
+and many of the “nicer” rust features like dynamically sized &lt;code&gt;Vec&lt;&#x2F;code&gt;s  are not
+immediately available without an external crate. I’d say that usually rust
+trades up front development time for less future debugging time, and I think
+that is exacerbated in embedded.&lt;&#x2F;p&gt;
+&lt;p&gt;There are definite pros to rust embedded though. The ecosystem is already very
+strong with lots of drivers, crates, and wide MCU support from a single language
+and coding environment. Once I’ve gotten past the initial hurdle of lifetimes,
+device initialisation and so on, writing application logic has been an absolute
+dream, and the code usually “just works”.&lt;&#x2F;p&gt;
+&lt;p&gt;I would happily reach for either embassy or RTIC. I think my own preference
+would probably be to reach for embassy for simple projects, and RTIC for things
+that are likely to be more complex, but really I think it would be hard to go
+wrong using either for rust embedded development.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>3D printed flexure foot pedal</title>
+        <published>2022-02-13T00:00:00+00:00</published>
+        <updated>2022-02-13T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              William Hart
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://willhart.io/post/3d-printed-flexure-foot-pedal/"/>
+        <id>https://willhart.io/post/3d-printed-flexure-foot-pedal/</id>
+        
+        <content type="html" xml:base="https://willhart.io/post/3d-printed-flexure-foot-pedal/">&lt;p&gt;Following on from my &lt;a href=&quot;&#x2F;post&#x2F;custom-gaming-foot-pedals&quot;&gt;previous post&lt;&#x2F;a&gt;
+on some custom foot pedals I designed, I decided to try simplifying the design
+using 3D printed mechanical flexures in the place of the three part design with
+springs. This provided to be surprisingly easy to do, although I did play around
+a lot with different types of flexures to find a design I was happy with, mostly
+inspired by &lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;https:&#x2F;&#x2F;hackaday.com&#x2F;2021&#x2F;06&#x2F;22&#x2F;print-your-own-flexures&#x2F;&quot;&gt;several&lt;&#x2F;a&gt;
+&lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;https:&#x2F;&#x2F;hackaday.com&#x2F;2021&#x2F;12&#x2F;14&#x2F;fabulous-flexure-mechanism-makes-for-resetting-cat-calendar&#x2F;&quot;&gt;posts&lt;&#x2F;a&gt;
+on hackaday and one timely youtube video about &lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;https:&#x2F;&#x2F;www.youtube.com&#x2F;watch?v=5MxH1sfJLBQ&quot;&gt;mirror actuators on the James
+Webb telescope&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;I also had to experiment with what the printer could handle, and what sort of
+thickenss and joints were required to make sure the plastic didn’t snap when
+actuated. Giving the flexures to my kids to play with was a great way to stress
+test them! I wanted about 10mm of movement and so designing the flexure in a way
+that it stayed out of its own way was part of the challenge. The designs I tried
+are below, each is about 40mm x 30mm, and some of them are missing a few pieces.
+(As a side effect these proved to be great little fidget pieces for long zoom
+meetings.)&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;willhart.io&#x2F;post&#x2F;3d-printed-flexure-foot-pedal&#x2F;flexures.png&quot; alt=&quot;Different flexure designs I trialled before settling on a modified version of the right most design.&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;The left most designs were just test runs to work out the width of cuts and
+beams that my printer and the PLA material could support. The two designs below
+“A” were good at deflecting but tended to permanently deform. The designs under
+“B” had similar issues. In the end I want with a variation on the “C” design,
+this easily deflected 10mm at the end of the beam and reliably returned to its
+original shape.&lt;&#x2F;p&gt;
+&lt;p&gt;The next step was to translate the flexure into a workable design. In this case
+it was also relatively straightforward. From design “C” in the image above, the
+outer rectangular frame would be the main body of the pedal, while the pedal
+button itself would be attached where the red dot is on the image.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;willhart.io&#x2F;post&#x2F;3d-printed-flexure-foot-pedal&#x2F;back_view.jpg&quot; alt=&quot;The final printed pedal, with a tactile button hot glued in place.&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;To act as a button, I just hot glued a tactile switch with a nice red switch cap
+on it to the frame of the pedal. An interesting feature about this design is
+that the pedal moves very easily when I place my foot on it, but it requires
+quite a positive force to depress the switch. The switch itself has a nice
+tactile click when it is pressed. A side-effect of this design is that its very
+digital, i.e. in its current form it probably couldn’t be used to provide an
+analog signal, while the previous spring-driven design would be much more suited
+to that use case. It also requires quite a lot of support material when
+printing, which seems a bit wasteful and probably increases the risk of damage
+to the pedal while removing it.&lt;&#x2F;p&gt;
+&lt;p&gt;It seems pretty durable in “normal” operation, but I’m not sure how it would go
+if loaded up with excessive force. Overall I think the feel of the pedal is
+nicer and a lot simpler, but I’m not sure if this is the design I’ll “mass
+produce” for my mates. I do like this clicky tactile switch more than the limit
+switches I used on my previous design so I might end up somewhere in the middle
+for the final “rev 3” design.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Custom gaming foot pedals</title>
+        <published>2022-02-08T00:00:00+00:00</published>
+        <updated>2022-02-08T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              William Hart
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://willhart.io/post/custom-gaming-foot-pedals/"/>
+        <id>https://willhart.io/post/custom-gaming-foot-pedals/</id>
+        
+        <content type="html" xml:base="https://willhart.io/post/custom-gaming-foot-pedals/">&lt;p&gt;While playing a certain online shooter with some friends, one of our party noted
+that having some foot pedals to lean would make it easier than using the default
+Q and E keys. We found a bunch of commercial ones online, with prices from about
+$50 to $350 after shipping (electronics and shipping to Australia tend to be
+pretty expensive). One of my side projects at the moment is to build my own
+mechanical keyboard from scratch, and thinking about it I was almost certain I
+had everything I needed on hand to make a set of my own custom pedals.&lt;&#x2F;p&gt;
+&lt;p&gt;The idea was simple - grab a couple of limit switches I had for upgrading my
+budget CNC, wire them up with a microcontroller with USB HID capability and make
+a little custom keyboard that could only press Q or E. The only thing I needed
+to buy were springs, as I didn’t have any suitable ones in my random stash of
+salvaged mechanical pieces. These were about $3 from the local big box hardware
+store.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;willhart.io&#x2F;post&#x2F;custom-gaming-foot-pedals&#x2F;pedals_disassembled.jpg&quot; alt=&quot;The foot pedals during assembly&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;The design was otherwise fairly simple. The main structure was a box with an
+angled top, and a hole for the foot button to poke through. A skirt on the
+button prevents it from popping out the top, and two springs keep the pedal up
+off the switch and provide some resistance. The limit switch is hot glued down
+onto a raised base which limits the travel of the foot pedal, and M3 bolts in
+heat set threaded inserts were used to fix the two halves together and lock the
+“button” in place.&lt;&#x2F;p&gt;
+&lt;p&gt;The electronics are equally simple, I had a stash of “blue pill” STM32F103C8
+chips, which can be programmed through the Arduino environment. Its a bit of a
+hassle because programming requires an external FTDI adapter and manually moving
+jumpers around, but once I got the process sorted out it was easy enough. By
+putting the GPIO pins into &lt;code&gt;INPUT_PULLUP&lt;&#x2F;code&gt; mode, I could also avoid any external
+components and just wire the limit switches between the GPIO pins and ground.&lt;&#x2F;p&gt;
+&lt;p&gt;Using the inbuilt &lt;code&gt;USBComposite&lt;&#x2F;code&gt; library for STM32 chips, the firmware was also
+pretty trivial. I’ve included the gist below. (I’m fairly certain as well that
+later on I could provide a two way USB Serial interface to rebind the keys).&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;results&quot;&gt;Results&lt;&#x2F;h2&gt;
+&lt;p&gt;The results were pretty satisfactory, and I can now lean left and right with my
+feet while keeping my hands on the WASD keys - its truly a fantastic age to be a
+nerd with a tiny home workshop! My friends have both placed orders but I’m not
+sure I want to ship them rev 1. I can think of a number of mechanical
+improvements I could make, and its hard to resist making custom electronics.&lt;&#x2F;p&gt;
+&lt;p&gt;I’d be curious to try other switches, for instance I’ve got some spare MX Browns
+from a mechanical keyboard I’m building that might be interesting to test. I
+could even make my own &lt;a
+href=&quot;https:&#x2F;&#x2F;hackaday.com&#x2F;2022&#x2F;01&#x2F;17&#x2F;3d-printed-magnetic-switches-promise-truly-custom-keyboards&#x2F;&quot;
+target=&quot;_blank&quot; rel=&quot;noopener noreferrer&quot;&gt;magnetic mechanical switches&lt;&#x2F;a&gt;!&lt;&#x2F;p&gt;
+&lt;p&gt;I’m also looking into removing the springs and replacing them with mechanical
+flexures (assuming they last long enough to be useful). This would also allow
+combining the button and lid into one part which would make manufacturing and
+assembly easier.&lt;&#x2F;p&gt;
+&lt;p&gt;Either way, it was a fairly trivial and fun project - but very satisfying to
+play with.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;firmware&quot;&gt;Firmware&lt;&#x2F;h2&gt;
+&lt;script src=&quot;https:&#x2F;&#x2F;gist.github.com&#x2F;will-hart&#x2F;45090e7d43fe5d6656ce9fc78dbceb27.js&quot;&gt;&lt;&#x2F;script&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Diptrace Hierarchical Schematics</title>
+        <published>2012-03-11T00:00:00+00:00</published>
+        <updated>2012-03-11T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              William Hart
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://willhart.io/post/diptrace-hierarchical-schematics/"/>
+        <id>https://willhart.io/post/diptrace-hierarchical-schematics/</id>
+        
+        <content type="html" xml:base="https://willhart.io/post/diptrace-hierarchical-schematics/">&lt;p&gt;A neat feature of Diptrace is the ability to include “sub-assemblies” as a hierarchy in your schematics. This Diptrace Tutorial runs through creating a hierarchy block and using it in your schematic.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;https:&#x2F;&#x2F;www.youtube.com&#x2F;watch?v=j9pNDn5G7yE&quot;&gt;&lt;img src=&quot;https:&#x2F;&#x2F;willhart.io&#x2F;post&#x2F;diptrace-hierarchical-schematics&#x2F;diptrace_hierarchies_youtubelink.png&quot; alt=&quot;Youtube video link&quot; &#x2F;&gt;&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Moving away from Arduino</title>
+        <published>2012-02-24T00:00:00+00:00</published>
+        <updated>2012-02-24T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              William Hart
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://willhart.io/post/moving-away-from-arduino/"/>
+        <id>https://willhart.io/post/moving-away-from-arduino/</id>
+        
+        <content type="html" xml:base="https://willhart.io/post/moving-away-from-arduino/">&lt;p&gt;Arduinos are great for getting started, they’re easy to use, relatively cheap
+and you can find a tonne of information, ideas and support online. For most
+people, however, there comes a time when they feel they have outgrown the
+Arduino’s capabilities, or want something a bit more flexible, or they just want
+to build their own circuits from scratch. Moving away from an Arduino into the
+big bad world of “proper” micros can be a bit daunting, so I’ve collected a kind
+of (work in progress) top ten list of the things you need to consider when
+moving away from the Arduino.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-brand-of-microcontroller&quot;&gt;What brand of microcontroller?&lt;&#x2F;h2&gt;
+&lt;h3 id=&quot;the-confusing-bit&quot;&gt;The Confusing Bit&lt;&#x2F;h3&gt;
+&lt;p&gt;Any search online about “which microcontroller should I start with” will give
+you about a thousand different chips brands, chip types and about twice as many
+differing opinions. Where on earth do you start?&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;the-skinny&quot;&gt;The Skinny&lt;&#x2F;h3&gt;
+&lt;p&gt;It doesn’t matter - just pick one that looks appealing to you and get on with it!&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;thats-it&quot;&gt;Thats it?&lt;&#x2F;h3&gt;
+&lt;p&gt;Kind of… you can narrow down your search a bit. The most popular micros are
+Atmel’s or PICs. There are other brands (i.e. TI make some pretty cheap “dev
+boards”) but these are the ones where you will find the most online support and
+experience. The Arduino has an Atmel chip inside it, so many people start there,
+but I personally chose PIC to start with because … well, I don’t really
+remember to be honest!&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;anything-else-to-read&quot;&gt;Anything else to read?&lt;&#x2F;h3&gt;
+&lt;p&gt;&lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;http:&#x2F;&#x2F;www.ladyada.net&#x2F;library&#x2F;picvsavr.html&quot;&gt;Lady Ada Smackdown&lt;&#x2F;a&gt; (PIC vs AVR)&lt;br &#x2F;&gt;
+Hmmm… just use google I guess.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;which-microcontroller&quot;&gt;Which microcontroller?&lt;&#x2F;h2&gt;
+&lt;h3 id=&quot;the-confusing-bit-1&quot;&gt;The Confusing Bit&lt;&#x2F;h3&gt;
+&lt;p&gt;OK, you’ve chosen which brand of microcontroller you would like to use, now to
+choose which particular chip! So you visit the manufacturers home page and
+there’s a hundred thousand different parts! Where do you start?&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;the-skinny-1&quot;&gt;The Skinny&lt;&#x2F;h3&gt;
+&lt;p&gt;Again, it almost doesn’t matter - just pick one that looks appealing to you and
+get on with it!&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;thats-it-1&quot;&gt;Thats it?&lt;&#x2F;h3&gt;
+&lt;p&gt;Again, kind of… there are certainly some chips that are better than others. If
+you’ve chosen Atmel then its probably worth having a look at the ATmega328 which
+is inside the Arduino Uno. If you are looking at a PIC, then something like the
+PIC16F628A is a great starting point as it has an internal oscillator (see below
+for what that means!) making it dead easy to hook up.&lt;&#x2F;p&gt;
+&lt;p&gt;If you know a bit more about what you are doing, then there are online part
+selectors which let you put in some parameters and it lists the chips that
+match. See the links below.&lt;&#x2F;p&gt;
+&lt;p&gt;Another viable option is to check out your favourite electronics store and find
+out what they have in stock. Check out the features of the chip online and if
+you are happy, just buy it!&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;anything-else-to-read-1&quot;&gt;Anything else to read?&lt;&#x2F;h3&gt;
+&lt;p&gt;&lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;http:&#x2F;&#x2F;www.atmel.com&#x2F;devices&#x2F;ATMEGA328.aspx&quot;&gt;ATmega328 web page&lt;&#x2F;a&gt;&lt;br &#x2F;&gt;
+&lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;http:&#x2F;&#x2F;www.microchip.com&#x2F;wwwproducts&#x2F;Devices.aspx?dDocName=en010210&quot;&gt;PIC16F628A web page&lt;&#x2F;a&gt;&lt;br &#x2F;&gt;
+&lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;http:&#x2F;&#x2F;www.microchip.com&#x2F;productselector&#x2F;MCUProductSelector.html&quot;&gt;Microchip Product Selector&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;eeeek-your-datasheet-is-huge&quot;&gt;Eeeek, your datasheet is huge!&lt;&#x2F;h2&gt;
+&lt;h3 id=&quot;the-confusing-bit-2&quot;&gt;The Confusing Bit&lt;&#x2F;h3&gt;
+&lt;p&gt;You’ve chosen your chip, put your hard earned down and its arrived in the mail.
+Time to jump online and work out to use the silly thing! You browse to the
+product home page and click on the “datasheet” link. Up pops a 300 page document
+written by a electrical engineer with a PhD in confusing the lights out of you.
+What the hell, was that really necessary?&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;the-skinny-2&quot;&gt;The Skinny&lt;&#x2F;h3&gt;
+&lt;p&gt;The short answer is yes… (almost) everything you will ever need is in this
+document. Read it, print it out, sleep with it under your pillow and you’ll be
+fine.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;thats-it-2&quot;&gt;Thats it?&lt;&#x2F;h3&gt;
+&lt;p&gt;Not really. In reality, there are only a few things that are really important in
+a datasheet - you really need to know&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;what registers (see below) the device has and what the different bits do&lt;&#x2F;li&gt;
+&lt;li&gt;how to configure the device&lt;&#x2F;li&gt;
+&lt;li&gt;what features to turn on or off&lt;&#x2F;li&gt;
+&lt;li&gt;what to connect to which pins&lt;&#x2F;li&gt;
+&lt;li&gt;how much power to put into the device&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;Thats all well and good, but where do you find these mysterious things. Well,
+er… glad you asked. The best way to find these things is to … (drum roll)
+read the datasheet!&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;anything-else-to-read-2&quot;&gt;Anything else to read?&lt;&#x2F;h3&gt;
+&lt;p&gt;&lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;http:&#x2F;&#x2F;www.atmel.com&#x2F;devices&#x2F;ATMEGA328.aspx&quot;&gt;ATmega328 web page&lt;&#x2F;a&gt;&lt;br &#x2F;&gt;
+&lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;http:&#x2F;&#x2F;www.microchip.com&#x2F;wwwproducts&#x2F;Devices.aspx?dDocName=en010210&quot;&gt;PIC16F628A web page&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;do-i-need-a-development-board&quot;&gt;Do I need a development board?&lt;&#x2F;h2&gt;
+&lt;h3 id=&quot;the-confusing-bit-3&quot;&gt;The Confusing Bit&lt;&#x2F;h3&gt;
+&lt;p&gt;Egad, there are more options! I’m ready to go, should I get a development board,
+with buttons, LCDs etc, or should I just use a breadboard?&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;the-skinny-3&quot;&gt;The Skinny&lt;&#x2F;h3&gt;
+&lt;p&gt;No, it is not compulsory to have a dev board.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;thats-it-3&quot;&gt;Thats it?&lt;&#x2F;h3&gt;
+&lt;p&gt;Well this one is really up to you. The cheapest and most flexible way is to buy
+the individual components from someone like mouser, digikey or farnell and
+breadboard a circuit. If you build on a breadboard (or even your own custom PCB)
+there is the added advantage of being able to learn more about the hardware at
+the same time. You can always use google to find sample circuits (or open source
+dev boards) and build those yourself.&lt;&#x2F;p&gt;
+&lt;p&gt;Its quite a bit more expensive, but possible simpler and faster to buy a
+prebuilt development board from someone like Olimex, Mikro Elektroinica, ebay,
+etc. You can select a board with the features you want to learn and the hardware
+part is all built for you. Many people would say that you aren’t getting the
+full learning experience by doing this and I would tend to agree!&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;anything-else-to-read-3&quot;&gt;Anything else to read?&lt;&#x2F;h3&gt;
+&lt;p&gt;Google is your friend&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;do-i-need-to-make-my-own-pcb&quot;&gt;Do I need to make my own PCB?&lt;&#x2F;h2&gt;
+&lt;h3 id=&quot;the-confusing-bit-4&quot;&gt;The Confusing Bit&lt;&#x2F;h3&gt;
+&lt;p&gt;With the Arduino I only have to plug things in to the pin headers, or into a
+shield. With another microcontroller, do I have to make my own PCB?&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;the-skinny-4&quot;&gt;The Skinny&lt;&#x2F;h3&gt;
+&lt;p&gt;No, it is not really compulsory to have your own PCB made.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;thats-it-4&quot;&gt;Thats it?&lt;&#x2F;h3&gt;
+&lt;p&gt;This is a similar answer to the previous question, and it depends on your
+application. If you use through-hole components, then you will be able to use a
+breadboard to build a working circuit. If you want something more permanent,
+then veroboard or perfboard is a good option.&lt;&#x2F;p&gt;
+&lt;p&gt;Of course, I like nothing more than to have a custom made PCB fitting perfectly
+into the enclosure I designed for it. Here you can either make your own (plenty
+of tutorials about that on the internet - I use acetate sheets, a laminator for
+toner transfer and ammonium persulphate but there are tonnes of other&#x2F;better
+methods around) or get someone like Seeedstudio, iTead Studio, pcb cart etc to
+make you a couple of prototypes.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;anything-else-to-read-4&quot;&gt;Anything else to read?&lt;&#x2F;h3&gt;
+&lt;p&gt;Google is your friend&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Diptrace Libraries and Patterns</title>
+        <published>2012-02-22T00:00:00+00:00</published>
+        <updated>2012-02-22T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              William Hart
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://willhart.io/post/diptrace-libraries-and-patterns/"/>
+        <id>https://willhart.io/post/diptrace-libraries-and-patterns/</id>
+        
+        <content type="html" xml:base="https://willhart.io/post/diptrace-libraries-and-patterns/">&lt;p&gt;Diptrace makes it really easy to make your own patterns (physical footprints)
+and components (electronic footprints) for your designs. There are tonnes of
+‘wizard’ options which mean if you can’t find something the library you can be
+up and running in a few moments.&lt;&#x2F;p&gt;
+&lt;p&gt;In my first foray into video tutorials, I show you my approach to Diptrace
+component and pattern libraries&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;https:&#x2F;&#x2F;youtu.be&#x2F;bIiXPo-vnRA&quot;&gt;&lt;img src=&quot;https:&#x2F;&#x2F;willhart.io&#x2F;post&#x2F;diptrace-libraries-and-patterns&#x2F;diptrace_libraries_youtubelink.png&quot; alt=&quot;Youtube video link&quot; &#x2F;&gt;&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>SMD Prototype PCB</title>
+        <published>2012-02-18T00:00:00+00:00</published>
+        <updated>2012-02-18T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              William Hart
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://willhart.io/post/smd-prototype-pcb/"/>
+        <id>https://willhart.io/post/smd-prototype-pcb/</id>
+        
+        <content type="html" xml:base="https://willhart.io/post/smd-prototype-pcb/">&lt;p&gt;I frequently come up with ideas for projects. If I really like the idea, I draw
+up the schematic and then maybe breadboard it. If I think the idea might be
+useful I normally try to make something a bit more permanent. This is fine for
+through hole devices - a slab of vero board, a couple of components from my
+through hole collection and away we go, however it is not so great for SMD
+circuits. I decided I needed to build and SMD prototype board.&lt;&#x2F;p&gt;
+&lt;p&gt;I’ve been enticed into trying out SMD designs, partly because there is a better
+range of components, partly because the designs are smaller and mostly because
+it’s a new challenge. SMD designs are all well and good, but they makes bread
+boarding extremely difficult and more or less require a custom PCB every time
+you want to mock up a design. I could make the boards myself, but as I’m
+studying full time I don’t have all the time in the world so the decision is
+normally to try and buy one. What tends to happen then is I do the sums and
+realise that I don’t really need to spend 40 quid to make some transistor logic
+gates, and the project gets filed away.&lt;&#x2F;p&gt;
+&lt;p&gt;A few days ago it hit me… the thing that’s missing in my life is an SMD
+prototype PCB, basically an “SMD breadboard”. After some ebay searching and a
+bit of head scratching I realised that there wasn’t much out there that I would
+actually like to pay for. So I decided to design one myself.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;specification&quot;&gt;Specification&lt;&#x2F;h2&gt;
+&lt;p&gt;The first thing I did was sit down and try to work out what I wanted from the PCB. The basic idea is to build an SMD Prototype PCB that can be used flexibly either as a breadboard &#x2F; breakout, or as a PCB in its own right. SMD parts can be soldered to it and prototype circuits built. The eventual design concept I came up with was:&lt;&#x2F;p&gt;
+&lt;ol&gt;
+&lt;li&gt;Breadboard compatible&lt;&#x2F;li&gt;
+&lt;li&gt;Footprints for several SOIC 300 chips&lt;&#x2F;li&gt;
+&lt;li&gt;Prototyping area for through hole components&lt;&#x2F;li&gt;
+&lt;li&gt;ICSP and XTAL connectors for one of the SOIC footprints&lt;&#x2F;li&gt;
+&lt;li&gt;A place for one 0805 chip on each SOIC pin&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;h2 id=&quot;the-design&quot;&gt;The Design&lt;&#x2F;h2&gt;
+&lt;p&gt;With the specification on board, I set about routing the board. I started using
+a Schematic and converting this into a PCB, but in the end ditched the schematic
+and just worked on the PCB manually. The Rev A design I came up with is shown
+below:&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;willhart.io&#x2F;post&#x2F;smd-prototype-pcb&#x2F;smd_proto_board_1.png&quot; alt=&quot;SMD Prototype Board&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;I decided to use the 0805 footprints on each SOIC pin as a solder jumper if no
+component is required. In practice, this requires either a 0 ohm resistor on the
+pad, or a bit of wire as a solder jumper. I also pulled the solder mask back on
+the through hole area to match the approach of a copper clad vero board.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;usage&quot;&gt;Usage&lt;&#x2F;h2&gt;
+&lt;p&gt;The basic idea is to solder your components on the footprint and then hookup
+with jumper wire where its needed. I’ve tried to find a balance in the design
+between pre wired connections and flexibility.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;willhart.io&#x2F;post&#x2F;smd-prototype-pcb&#x2F;soic_dev_breadboard.jpg&quot; alt=&quot;SMD Prototype Board&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;The image above shows the board with a PIC 28 pin device and a 24 pin 16 channel
+LED driver. There is a slight misalignment between the two SOIC sections meaning
+it takes a second or two to push it into the breadboard. I’m about to wire this
+one up to control the LED matrix via the LED driver.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Chez D&#x27;Alert: PIC Countdown Alarm</title>
+        <published>2012-01-24T00:00:00+00:00</published>
+        <updated>2012-01-24T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              William Hart
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://willhart.io/post/chez-dalert-pic-countdown-alarm/"/>
+        <id>https://willhart.io/post/chez-dalert-pic-countdown-alarm/</id>
+        
+        <content type="html" xml:base="https://willhart.io/post/chez-dalert-pic-countdown-alarm/">&lt;p&gt;For my Dad’s 60th birthday, I wanted to make him something a bit special. Dad
+spends a fair bit of his spare time in his shed “doing woodwork” and building
+some really nice pieces of furniture. However he is a busy man and sometimes
+only has a little bit of spare time to plane a few bits of timber, use a
+thicknesser or whatever woodworky stuff he does. So I decided the best possible
+thing to make would be a PIC countdown Alarm so that he can use his time in the
+shed efficiently&lt;&#x2F;p&gt;
+&lt;p&gt;As a friend of mine mentioned, he can even use it to time lacquer and stains for
+drying and curing, so its not all about getting his nose back to the grindstone
+on time!&lt;&#x2F;p&gt;
+&lt;p&gt;Thus, the Chez D’Alert (pronounced Shed Alert in Australian) was born, a PIC
+based countdown timer with a laser cut body. In this article I’m going to
+describe a bit about the design process, and in particular some of the lessons I
+learned through the process.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;the-pic-countdown-alarm-design&quot;&gt;The PIC Countdown Alarm Design&lt;&#x2F;h2&gt;
+&lt;h3 id=&quot;enclosure&quot;&gt;Enclosure&lt;&#x2F;h3&gt;
+&lt;p&gt;Custom laser cut acrylic, designed in SolidWorks and transferred to Inkscape for
+laser cutting.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;inputs&quot;&gt;Inputs&lt;&#x2F;h3&gt;
+&lt;p&gt;Four buttons - +1 minute, +15minutes, start&#x2F;stop and reset. Custom software
+debounce routine.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;outputs&quot;&gt;Outputs&lt;&#x2F;h3&gt;
+&lt;p&gt;A seven segment LED display, multiplexed.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;electronics&quot;&gt;Electronics&lt;&#x2F;h3&gt;
+&lt;p&gt;Main controller board with PIC16F877A. IO board with buttons and displays.&lt;&#x2F;p&gt;
+&lt;hr &#x2F;&gt;
+&lt;p&gt;As this was my first properly complex, permanent electronics project I didn’t
+try to do anything too flashy. Basically the PIC countdown timer has four
+buttons, a seven segment display, a buzzer, some LEDs and a microcontroller to
+control it all. You set the time with two buttons, then start&#x2F;stop and reset the
+timer using the other two buttons. When the timer runs out, the buzzer beeps and
+the LEDs flash.&lt;&#x2F;p&gt;
+&lt;p&gt;I put a bit of effort into the enclosure which is basically a laser cut version
+of Melbourne’s skyline. I’ve seen quite a few articles and forum discussions
+about whether you should design your PCB or enclosure first, however in this
+case the enclosure would be custom made, and as size was not a particular issue
+I decided to design the schematic and PCB first. The final design had two boards&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;an IO board with buttons and a display, and&lt;&#x2F;li&gt;
+&lt;li&gt;a main board with the PIC, buzzer, and most of the passive components.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;This was partly because the IO board required very thin traces so I had it
+manufactured, but also because it fit better in an enclosure with the buttons
+and display slightly elevated.&lt;&#x2F;p&gt;
+&lt;p&gt;The original design had a PIC16F628A, however it quickly became apparent that a
+board with more IO pins would be a better option. From Rev C of the main board I
+switched to a PIC16F877A, mostly because my preferred online hobby store had
+them in stock!&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;the-final-product&quot;&gt;The Final Product&lt;&#x2F;h2&gt;
+&lt;p&gt;So, after quite a bit of back and forth and a lot of revisions, the final
+product was completed. Some photos are shown below, and I hope to have some more
+once Dad takes some of it in place (he’s 17,000km away so it takes a while for
+the emails to get here).&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;willhart.io&#x2F;post&#x2F;chez-dalert-pic-countdown-alarm&#x2F;shed-alert-breadboard.jpg&quot; alt=&quot;Chez D’Alert Breadboard Breadboard&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;willhart.io&#x2F;post&#x2F;chez-dalert-pic-countdown-alarm&#x2F;shed-alert-revb-board.jpg&quot; alt=&quot;Chez D’Alert RevB Board Rev B Board&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;willhart.io&#x2F;post&#x2F;chez-dalert-pic-countdown-alarm&#x2F;shed-alert-revd-board.jpg&quot; alt=&quot;Chez D’Alert RevD Board Rev D Board&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;There were some issues with the finished design - basically I mucked up in
+Solidworks, and as I hadn’t built anything when I sent the enclosure off for
+manufacturing, I had the button holes about 10mm from where they should have
+been. This was mainly because I had assumed the IO board would be centred on the
+main board, but because of the heat sink it was not. The enclosure had to be
+“customised” later with a drill and some paper labels which ruined the look a
+little bit. The original button labels were laser engraved in and looked quite
+professional.&lt;&#x2F;p&gt;
+&lt;p&gt;One of the features that I wanted to add was to have flash LEDs when the timer
+went off. My idea was to have several colours (I settled on white, blue and red)
+with two LEDs of each type that were turned on at the same time. To reduce the
+number of pins that were required to drive this, I decided to &lt;a href=&quot;&#x2F;chez-dalert-pic-countdown-alarm&quot;&gt;Charlieplex the
+LEDs&lt;&#x2F;a&gt;. The circuit is shown below. Basically
+by setting the pins to a combination of +5v, GND or “disconnected” I could turn
+on just two LEDs at a time by only using four pins. (On reflection it would have
+been better to do this with three pins!)&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;willhart.io&#x2F;post&#x2F;chez-dalert-pic-countdown-alarm&#x2F;led_charlieplex.png&quot; alt=&quot;Four Pin LED Charliplex&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;The code to run this was fairly simple, basically I used the arrays below to OR
+with TRISB and PORTB, setting the pins to the correct mode. You can see the full
+working version in the C source code attached below.&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;c&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-c &quot;&gt;&lt;code class=&quot;language-c&quot; data-lang=&quot;c&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;const&lt;&#x2F;span&gt;&lt;span&gt; uchar LED_TRISB_OR[] =
+&lt;&#x2F;span&gt;&lt;span&gt;{
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;0&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#bf616a;color:#2b303b;&quot;&gt;b00111100&lt;&#x2F;span&gt;&lt;span&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; off
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;0&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#bf616a;color:#2b303b;&quot;&gt;b00000100&lt;&#x2F;span&gt;&lt;span&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; blue
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;0&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#bf616a;color:#2b303b;&quot;&gt;b00100000&lt;&#x2F;span&gt;&lt;span&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; white
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;0&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#bf616a;color:#2b303b;&quot;&gt;b00000000&lt;&#x2F;span&gt;&lt;span&gt; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; red
+&lt;&#x2F;span&gt;&lt;span&gt;};
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;const&lt;&#x2F;span&gt;&lt;span&gt; uchar LED_PORTB_OR[] =
+&lt;&#x2F;span&gt;&lt;span&gt;{
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;0&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#bf616a;color:#2b303b;&quot;&gt;b00000000&lt;&#x2F;span&gt;&lt;span&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; off
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;0&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#bf616a;color:#2b303b;&quot;&gt;b00011000&lt;&#x2F;span&gt;&lt;span&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; blue
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;0&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#bf616a;color:#2b303b;&quot;&gt;b00011000&lt;&#x2F;span&gt;&lt;span&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; white
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;0&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#bf616a;color:#2b303b;&quot;&gt;b00100100&lt;&#x2F;span&gt;&lt;span&gt; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; red
+&lt;&#x2F;span&gt;&lt;span&gt;};
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;h2 id=&quot;a-few-gotchas&quot;&gt;A Few Gotchas&lt;&#x2F;h2&gt;
+&lt;p&gt;I came across a few gotchas throughout the design which I’ll describe here in
+the hope that somebody will find them useful!&lt;&#x2F;p&gt;
+&lt;p&gt;I ended with about Revision E of the main board and D of the IO board. The
+original Rev A designs had a PIC16F628A, however it quickly became apparent that
+a board with more IO pins would be a better option. From Rev C of the main board
+I switched to a PIC16F877A. I chose this chip because I was time and budget
+constrained, and my local hobby store had them in stock. In reality (and if I
+had the ability at this stage to comfortably solder SMD parts) an SMD chip with
+a real time clock and “nanowatt” power mode would be a better option.&lt;&#x2F;p&gt;
+&lt;p&gt;The main electronics issues I ran across were:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;ICSP - In the first prototype I forget to add an ICSP to my circuit. Don’t do
+this! For a prototype you would be insane not to include this port - it only
+needs a few connectors but its impossibly painful to try to debug the software
+without it!&lt;&#x2F;li&gt;
+&lt;li&gt;I had some issues with RA4 on the PIC16F628A, before I re-read the datasheet
+and noticed it was an “open drain”. This mean it can’t really be used for
+output unless some additional circuitry is used. The lesson learned here is to
+thoroughly read the datasheet before ordering any parts and re-read it again
+before soldering!&lt;&#x2F;li&gt;
+&lt;li&gt;My PCB manufacturing technique was not perfected, and I had some issues with
+traces and ground planes being “smushed” during toner transfer and bridging.
+The solution was to buy a laminator to do the toner transfer, and to increase
+the isolation in eagles DRC rules. In the case of the IO board I had it
+manufactured for me.&lt;&#x2F;li&gt;
+&lt;li&gt;Sometimes the PICKIT2 would freeze, all lights on, when attempting to read or
+program a chip using ICSP. I eventually worked out that this was because the
+software had reset the power voltage from 5V to 2.5V. Setting the voltage to
+5v again stopped the PICKIT2 from freezing&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;h2 id=&quot;better-luck-next-time&quot;&gt;Better Luck Next Time?&lt;&#x2F;h2&gt;
+&lt;p&gt;Without meaning to use Dad’s birthday present as a bit of a guinea pig, it has
+kind of turned out that way. The experience has taught me a lot about how to
+approach my next design task, and in particular the importance of a thorough
+testing &#x2F; prototyping &#x2F; breadboarding stage. The PIC Countdown Alarm turned out
+ok, but I could probably have got there in a lot fewer iterations with a bit
+more effort in the design phase!&lt;&#x2F;p&gt;
+&lt;p&gt;If I were to do the project again, or a similar one, I might do a few things
+differently:&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;micro-selection&quot;&gt;Micro Selection&lt;&#x2F;h3&gt;
+&lt;p&gt;I originally chose the PIC16F628A for the project because I had used this
+before, had a few development boards built, and was familiar with the basics. On
+reflection, this chip is unsuitable for a number of reasons - firstly it didn’t
+have enough IO pins, meaning that an additional shift register was required, but
+secondly it is not a low power chip. The final chip I selected does not have the
+XLP features of some PIC chips, so is probably not ideal, but was what I could
+get a hold of in the time&#x2F;budget I had available. For future projects I would
+spend a lot more time selecting an appropriate chip, and would be more likely to
+order one from RS or something especially (extremely high shipping costs aside).&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;component-types&quot;&gt;Component Types&lt;&#x2F;h3&gt;
+&lt;p&gt;I used DIP &#x2F; through-hole components for the design but I think for future
+projects I would really like to give SMD components a go as it will give me more
+room to route the boards and make smaller PCBs. This will require a bit of
+experimentation to make sure the PCB manufacturing accuracy is high enough,
+or…&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;make-vs-buy-pcbs&quot;&gt;Make vs Buy PCBs&lt;&#x2F;h3&gt;
+&lt;p&gt;My original plan was to make the PCB as a way of saving a bit of cash and also
+because I felt it would be a bit more “personal”. In the end I think it has cost
+me more money from buying materials, remaking and certainly has taken a lot
+longer with a poorer quality output. The jury is out on this one!&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;NOTE FROM 2020 Will&lt;&#x2F;strong&gt; the jury is no longer out on this one, since 2012 an absolute truck
+load of low-cost, high-quality PCB prototyping services have emerged&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>PIC16F628A TMR0 Interrupts</title>
+        <published>2012-01-15T00:00:00+00:00</published>
+        <updated>2012-01-15T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              William Hart
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://willhart.io/post/pic16f628a-tmr0-interrupts/"/>
+        <id>https://willhart.io/post/pic16f628a-tmr0-interrupts/</id>
+        
+        <content type="html" xml:base="https://willhart.io/post/pic16f628a-tmr0-interrupts/">&lt;p&gt;PIC TMR0 Interrupts, (or any PIC interrupts!) can be very confusing to setup,
+but the rewards are well worthwhile! They allow you to have something happen
+after a certain period of time, or for some interrupt types, something happens
+when a button is pushed or a sensor reads a certain value. This means that the
+microcontroller can automatically respond to user input. This article shows how
+to set up a PIC16F628 TMR0 Interrupt, using MikroC.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-on-earth-are-interrupts&quot;&gt;What on earth are interrupts?&lt;&#x2F;h2&gt;
+&lt;p&gt;An interrupt is basically what it sounds like. It is a piece of code that
+interrupts the main program and is executed when asked. Once the interrupt code
+is executed, the normal program flow resumes. PIC Interrupts can be based on
+PORT values (e.g. if PORTB is high) or on a “timer overflow”.&lt;&#x2F;p&gt;
+&lt;p&gt;On the PIC16F628A (and most PICs), a register is set aside to act as a counter.
+This basically counts upwards as the microcontroller clock “ticks”. Counters are
+commonly “8 bits”, meaning they can count from 0 to 255. When the counter tries
+to go past 255, it “overflows” and goes back to 0. If the correct settings are
+made in the registers, this triggers the PIC TMR0 Interrupt code to run.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-would-i-use-interrupts&quot;&gt;Why would I use interrupts?&lt;&#x2F;h2&gt;
+&lt;p&gt;One way to get the same functionality as an interrupt is to put in some sort of
+check in your main loop. Say you want to execute some code when a button is
+pressed, in your program loop you could have something similar to the following:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;c&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-c &quot;&gt;&lt;code class=&quot;language-c&quot; data-lang=&quot;c&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;do &lt;&#x2F;span&gt;&lt;span&gt;{
+&lt;&#x2F;span&gt;&lt;span&gt; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;if &lt;&#x2F;span&gt;&lt;span&gt;(BUTTON == &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;1&lt;&#x2F;span&gt;&lt;span&gt;)
+&lt;&#x2F;span&gt;&lt;span&gt;    {
+&lt;&#x2F;span&gt;&lt;span&gt;     execute your &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;interrupt code&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span&gt;    }
+&lt;&#x2F;span&gt;&lt;span&gt;} &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;while&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;1&lt;&#x2F;span&gt;&lt;span&gt;);
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;This code looks fairly simple, but what if you have five buttons, or want
+something to be checked on a regular basis (say every second). Or what if your
+main loop has some extremely intensive calculations going on which means that
+your test of whether the button is pushed or not may only happen every 20
+seconds or so? Not a very good user experience!&lt;&#x2F;p&gt;
+&lt;p&gt;An interrupt basically allows you to offload this functionality from the program
+loop and let the micro hardware work out when the button is pushed or a second
+has elapsed. This article focuses on PIC TMR0 interrupts, so if you are
+interested in the PORT interrupts, then have a look at the datasheet!&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;the-code&quot;&gt;The Code&lt;&#x2F;h2&gt;
+&lt;p&gt;I have broken out the interrupt configuration separately in the code below and
+the comments should be fairly self explanatory. Basically we tell the micro what
+source to use for its timer interrupts, “scale” the timer and then turn on
+interrupts.&lt;&#x2F;p&gt;
+&lt;p&gt;The &lt;code&gt;OPTION_REG.T0CS&lt;&#x2F;code&gt; bit sets our source for the &lt;code&gt;TIMER0&lt;&#x2F;code&gt; clock. In this case I
+am using the PIC16F628A internal clock and hence I clear (set to 0) this bit.&lt;&#x2F;p&gt;
+&lt;p&gt;Recall that most TMR0 registers are 8-bit and can only count up to 255. We can
+count the number of overflows in our interrupt code to get a certain time
+period, or if we are really clever us the inbuilt prescaler to only call the
+interrupt after a certain number of loops. If we set the prescaler to 1:64, like
+we have below this means that we are only calling the interrupt every 64 times
+that the TMR0 register overflows. The last 3 bits of &lt;code&gt;OPTION_REG&lt;&#x2F;code&gt; on the 628A
+control the prescalar, and &lt;code&gt;OPTION_REG.PSA&lt;&#x2F;code&gt; sets what the prescaler is applied
+to. We clear &lt;code&gt;OPTION_REG.PSA&lt;&#x2F;code&gt; to turn the prescaler on for TMR0 and set the last
+three bits to 1 to set a 1:64 ratio. This can be done in one line with the
+following:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;c&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-c &quot;&gt;&lt;code class=&quot;language-c&quot; data-lang=&quot;c&quot;&gt;&lt;span&gt;OPTION_REG |= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;0x07
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Finally we set &lt;code&gt;INTCON.GIE&lt;&#x2F;code&gt; and &lt;code&gt;INTCON.T0IE&lt;&#x2F;code&gt; to enable interrupts globally, and
+&lt;code&gt;TMR0&lt;&#x2F;code&gt; in particular.&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;c&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-c &quot;&gt;&lt;code class=&quot;language-c&quot; data-lang=&quot;c&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;void &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;setup_interrupts&lt;&#x2F;span&gt;&lt;span&gt;()
+&lt;&#x2F;span&gt;&lt;span&gt;{
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; clear the TMR0 register
+&lt;&#x2F;span&gt;&lt;span&gt;    TMR0 = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;0&lt;&#x2F;span&gt;&lt;span&gt;;
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; set up interrupt registers
+&lt;&#x2F;span&gt;&lt;span&gt;    OPTION_REG.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;T0CS &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;0&lt;&#x2F;span&gt;&lt;span&gt;;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; clock source is internal instruction clock
+&lt;&#x2F;span&gt;&lt;span&gt;    OPTION_REG.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;PSA &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;0&lt;&#x2F;span&gt;&lt;span&gt;;   &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; prescaler assigned to TMR0
+&lt;&#x2F;span&gt;&lt;span&gt;    OPTION_REG |= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;0x07&lt;&#x2F;span&gt;&lt;span&gt;;   &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; set the prescaler to 1:64 scale using an or
+&lt;&#x2F;span&gt;&lt;span&gt;    INTCON.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;GIE &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;1&lt;&#x2F;span&gt;&lt;span&gt;;       &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; enable global interrupts
+&lt;&#x2F;span&gt;&lt;span&gt;    INTCON.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;T0IE &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;1&lt;&#x2F;span&gt;&lt;span&gt;;      &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; enable TMR0 interrupt
+&lt;&#x2F;span&gt;&lt;span&gt;}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;The main loop is pretty basic - it sets some standard PIC16F628A configurations,
+calls the &lt;code&gt;setup_interrupts()&lt;&#x2F;code&gt; function declared above and then loops forever.&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;c&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-c &quot;&gt;&lt;code class=&quot;language-c&quot; data-lang=&quot;c&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;void &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;main&lt;&#x2F;span&gt;&lt;span&gt;() {
+&lt;&#x2F;span&gt;&lt;span&gt;     &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; some standard PIC16F628A configuration
+&lt;&#x2F;span&gt;&lt;span&gt;     TRISA = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;0x00&lt;&#x2F;span&gt;&lt;span&gt;;   &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; output
+&lt;&#x2F;span&gt;&lt;span&gt;     TRISB = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;0x07&lt;&#x2F;span&gt;&lt;span&gt;;   &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; input
+&lt;&#x2F;span&gt;&lt;span&gt;     PORTA = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;0x01&lt;&#x2F;span&gt;&lt;span&gt;;   &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; set PORTA to off
+&lt;&#x2F;span&gt;&lt;span&gt;     CMCON = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;0x07&lt;&#x2F;span&gt;&lt;span&gt;;   &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; turn off comparators
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;     &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; setup interrupts
+&lt;&#x2F;span&gt;&lt;span&gt;     &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;setup_interrupts&lt;&#x2F;span&gt;&lt;span&gt;();
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;     &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; loop forever and ever and ever and ...
+&lt;&#x2F;span&gt;&lt;span&gt;     &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;while&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;1&lt;&#x2F;span&gt;&lt;span&gt;);
+&lt;&#x2F;span&gt;&lt;span&gt;}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;If we turn the interrupts on, we also need to define an interrupt function. This
+is saved at the “interrupt vector” which is basically the location in memory
+where the micro goes when an interrupt is called. This is done with the line
+void &lt;code&gt;ISR() iv 0x0004&lt;&#x2F;code&gt; below. This declares an interrupt service routine (ISR)
+that is located at interrupt vector &lt;code&gt;0x0004&lt;&#x2F;code&gt; in memory. From there its a
+standard function!&lt;&#x2F;p&gt;
+&lt;p&gt;Note that its considered poor practice to call functions from within your
+interrupt, and if you do want a specific function called its best to set a flag
+in your interrupt function and process this somewhere in your main loop. The
+interrupt function below basically flips PORTA. This can be used to blink an
+LED, sound a buzzer or whatever… Once your interrupt routine has run you need
+to restart the timer interrupts. This can be done by clearing &lt;code&gt;INTCON.TMR0IF&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;c&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-c &quot;&gt;&lt;code class=&quot;language-c&quot; data-lang=&quot;c&quot;&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; the interrupt vector
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;void &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;ISR&lt;&#x2F;span&gt;&lt;span&gt;() iv &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;0x0004
+&lt;&#x2F;span&gt;&lt;span&gt;{
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;if&lt;&#x2F;span&gt;&lt;span&gt;(INTCON.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;TMR0IF &lt;&#x2F;span&gt;&lt;span&gt;&amp;amp;amp;&amp;amp;amp; INTCON.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;T0IE&lt;&#x2F;span&gt;&lt;span&gt;)
+&lt;&#x2F;span&gt;&lt;span&gt;    {
+&lt;&#x2F;span&gt;&lt;span&gt;        PORTA = ~PORTA;
+&lt;&#x2F;span&gt;&lt;span&gt;        INTCON.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;TMR0IF &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;0&lt;&#x2F;span&gt;&lt;span&gt;; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; unset the interrupt flag for TMR0
+&lt;&#x2F;span&gt;&lt;span&gt;    }
+&lt;&#x2F;span&gt;&lt;span&gt;}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;h2 id=&quot;a-note-on-clocks&quot;&gt;A note on “clocks”&lt;&#x2F;h2&gt;
+&lt;p&gt;One of the things I found most confusing when learning about PIC timers was the
+concept of clocks, oscillators, resonators, etc. Why did some micros need an
+external crystal oscillator, whilst others didn’t? What was the benefit of
+having an external crystal, and what was the difference between a clock and a
+crystal?&lt;&#x2F;p&gt;
+&lt;p&gt;To cut to the chase, most micros will need some sort of external timing source
+to function at all, and those that have this timing source built in are
+frequently not very accurate. The best way to find out whether a timing source
+is needed is to read the data sheet, but as an example the PIC16F628A has an
+internal crystal but the PIC16F877A does not.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Live Electric Vehicle Telemetry Software</title>
+        <published>2012-01-14T00:00:00+00:00</published>
+        <updated>2012-01-14T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              William Hart
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://willhart.io/post/live-telemetry-software/"/>
+        <id>https://willhart.io/post/live-telemetry-software/</id>
+        
+        <content type="html" xml:base="https://willhart.io/post/live-telemetry-software/">&lt;p&gt;As part of my course we can get involved in the Formula Student race team. At my
+university this is quite a big deal with three distinct projects - a petrol car,
+an electric car and a bespoke twin cylinder engine. I’m working mostly on the
+electric car and volunteered myself to update our data logging &#x2F; telemetry
+software.&lt;&#x2F;p&gt;
+&lt;p&gt;This allows us to record and replay the data in real time from our onboard
+CANBus network. Luckily we had existing C++ based CANBus libraries for decoding
+the information, and an array of sensors &#x2F; telemetry hardware already on board.
+The scope was therefore to build a student run version of something like Pi
+Toolbox.&lt;&#x2F;p&gt;
+&lt;p&gt;This is important for testing and troubleshooting of the motor and for safety
+reasons - our drive is strapped next to some pretty mean batteries and we want
+to know if they are getting hot!&lt;&#x2F;p&gt;
+&lt;p&gt;This project is ongoing, and is based on a C# desktop application and SQLite
+database. Currently we can log decoded CANBus messages and there are
+“sparklines” showing all our sensor readings. I’m working on a simple graph
+control after having had difficulty finding something lightweight and compatible
+with WPF. As it gets more complete I’ll throw up some screenshots!&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>PIC16F628A Serial Communication</title>
+        <published>2012-01-14T00:00:00+00:00</published>
+        <updated>2012-01-14T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              William Hart
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://willhart.io/post/pic16f628a-serial-communication/"/>
+        <id>https://willhart.io/post/pic16f628a-serial-communication/</id>
+        
+        <content type="html" xml:base="https://willhart.io/post/pic16f628a-serial-communication/">&lt;p&gt;Serial communication is used extensively in electronics projects, and many
+microcontrollers come with some form of USART on board. I’m going to describe
+here how I got PIC USART serial communication working with a PIC16F628A, and got
+the PIC talking to an Arduino Uno. For this I’m using a PICKIT2, my own
+PIC16F628A breakout board and MicroC compiler because it has a handy serial
+library all built in. If you are using MPLAB or some other development tool, you
+can find the locations of the relevant registers in the datasheets for &lt;code&gt;TXSTA&lt;&#x2F;code&gt; and
+&lt;code&gt;RCSTA&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;the-code&quot;&gt;The Code&lt;&#x2F;h2&gt;
+&lt;p&gt;The code itself is very simple - most of the setup is done using two registers -
+&lt;code&gt;TXSTA&lt;&#x2F;code&gt; and &lt;code&gt;RCSTA&lt;&#x2F;code&gt;. There are three main steps in setting up serial transmission on
+the PIC16F628A:&lt;&#x2F;p&gt;
+&lt;ol&gt;
+&lt;li&gt;Enable serial communication&lt;&#x2F;li&gt;
+&lt;li&gt;Set up the communication mode&lt;&#x2F;li&gt;
+&lt;li&gt;Set the baud rate&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;p&gt;The best source of information is (of course) the datasheet, however… to
+enable serial communication we set (i.e. make equal to 1) &lt;code&gt;TXSTA.TXEN&lt;&#x2F;code&gt; and
+&lt;code&gt;RCSTA.SPEN&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;We then set to 8 bit mode (there is quite a bit of information in the datasheet
+about 9 bit mode, but for this simple example probably not relevant) by clearing
+&lt;code&gt;TXSTA.TX9&lt;&#x2F;code&gt; and &lt;code&gt;RCSTA.RX9&lt;&#x2F;code&gt; (i.e. making equal to 0). The 16F628A can run in
+either synchronous or asynchronous serial modes, but here we set asynchronous by
+clearing &lt;code&gt;TXSTA.SYNC&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;c&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-c &quot;&gt;&lt;code class=&quot;language-c&quot; data-lang=&quot;c&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;void &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;main&lt;&#x2F;span&gt;&lt;span&gt;() {
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;     &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; some standard PIC16F628A configuration
+&lt;&#x2F;span&gt;&lt;span&gt;     TRISA = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;0x00&lt;&#x2F;span&gt;&lt;span&gt;;   &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; output
+&lt;&#x2F;span&gt;&lt;span&gt;     TRISB = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;0xFF&lt;&#x2F;span&gt;&lt;span&gt;;   &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; input
+&lt;&#x2F;span&gt;&lt;span&gt;     PORTA = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;0x00&lt;&#x2F;span&gt;&lt;span&gt;;   &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; set PORTA to off
+&lt;&#x2F;span&gt;&lt;span&gt;     CMCON = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;0x07&lt;&#x2F;span&gt;&lt;span&gt;;   &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; turn off comparators by setting the last three bits to 111
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;     &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; Step 1, enable USART
+&lt;&#x2F;span&gt;&lt;span&gt;     TXSTA.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;TXEN &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;1&lt;&#x2F;span&gt;&lt;span&gt;; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; transmission enabled
+&lt;&#x2F;span&gt;&lt;span&gt;     RCSTA.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;SPEN &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;1&lt;&#x2F;span&gt;&lt;span&gt;; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; enable serial port
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;     &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; Step 2, Set 8 bit, asynchronous continuous mode
+&lt;&#x2F;span&gt;&lt;span&gt;     TXSTA.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;TX9 &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;0&lt;&#x2F;span&gt;&lt;span&gt;;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; 8 bit transmission
+&lt;&#x2F;span&gt;&lt;span&gt;     RCSTA.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;RX9 &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;0&lt;&#x2F;span&gt;&lt;span&gt;;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; 8 bit reception
+&lt;&#x2F;span&gt;&lt;span&gt;     TXSTA.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;SYNC &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;0&lt;&#x2F;span&gt;&lt;span&gt;; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; asynchronous mode
+&lt;&#x2F;span&gt;&lt;span&gt;     RCSTA.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;CREN &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;1&lt;&#x2F;span&gt;&lt;span&gt;; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; enable continuous receive mode
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;     &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; Step 3, Set the baud rate using the built in baud rate generator
+&lt;&#x2F;span&gt;&lt;span&gt;     TXSTA.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;BRGH &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;1&lt;&#x2F;span&gt;&lt;span&gt;; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; set baud rate generator high
+&lt;&#x2F;span&gt;&lt;span&gt;     SPBRG = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;0&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#bf616a;color:#2b303b;&quot;&gt;b00011001&lt;&#x2F;span&gt;&lt;span&gt;; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; set the baud rate to 9600kb, Asynchronous mode BTGH=1
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;     &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; initialise the library and wait for it to start
+&lt;&#x2F;span&gt;&lt;span&gt;     &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;UART1_Init&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;9600&lt;&#x2F;span&gt;&lt;span&gt;);
+&lt;&#x2F;span&gt;&lt;span&gt;     &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;Delay_ms&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;100&lt;&#x2F;span&gt;&lt;span&gt;);
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;     &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; ok, now some dummy code... (loop forever and ever and ever and ...)
+&lt;&#x2F;span&gt;&lt;span&gt;     &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; just send some information every second
+&lt;&#x2F;span&gt;&lt;span&gt;     &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;do
+&lt;&#x2F;span&gt;&lt;span&gt;     {
+&lt;&#x2F;span&gt;&lt;span&gt;         &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;UART1_Write_Text&lt;&#x2F;span&gt;&lt;span&gt;(&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;Sending some text&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;);
+&lt;&#x2F;span&gt;&lt;span&gt;         &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;Delay_ms&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;1000&lt;&#x2F;span&gt;&lt;span&gt;); &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; wait one second
+&lt;&#x2F;span&gt;&lt;span&gt;     } &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;while&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;1&lt;&#x2F;span&gt;&lt;span&gt;);
+&lt;&#x2F;span&gt;&lt;span&gt;}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;I then built a very basic Arduino sketch, from memory (and untested) something
+along the lines of:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;c&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-c &quot;&gt;&lt;code class=&quot;language-c&quot; data-lang=&quot;c&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;void &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;setup&lt;&#x2F;span&gt;&lt;span&gt;() {
+&lt;&#x2F;span&gt;&lt;span&gt;        Serial.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;begin&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;9600&lt;&#x2F;span&gt;&lt;span&gt;);
+&lt;&#x2F;span&gt;&lt;span&gt;}
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;void &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;loop&lt;&#x2F;span&gt;&lt;span&gt;() {
+&lt;&#x2F;span&gt;&lt;span&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;while&lt;&#x2F;span&gt;&lt;span&gt;(Serial.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;available&lt;&#x2F;span&gt;&lt;span&gt;() &amp;gt; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;0&lt;&#x2F;span&gt;&lt;span&gt;) {
+&lt;&#x2F;span&gt;&lt;span&gt;         Serial.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;write&lt;&#x2F;span&gt;&lt;span&gt;(Serial.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;read&lt;&#x2F;span&gt;&lt;span&gt;());
+&lt;&#x2F;span&gt;&lt;span&gt;        }
+&lt;&#x2F;span&gt;&lt;span&gt;}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;h2 id=&quot;what-happens&quot;&gt;What happens?&lt;&#x2F;h2&gt;
+&lt;p&gt;Wire up the RX and TX ports from the PIC16F628A to the TX and RX ports of the
+Arduino. Compile the sketch, program the PIC and then open up the Arduino serial
+monitor. Every second or so you should see a message appear on the serial
+monitor… &lt;code&gt;Sending some text&lt;&#x2F;code&gt;. There you go - your first serial communication!&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Using software PWM on Arduino</title>
+        <published>2012-01-14T00:00:00+00:00</published>
+        <updated>2012-01-14T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              William Hart
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://willhart.io/post/software-pwm-on-an-arduino/"/>
+        <id>https://willhart.io/post/software-pwm-on-an-arduino/</id>
+        
+        <content type="html" xml:base="https://willhart.io/post/software-pwm-on-an-arduino/">&lt;p&gt;The Arduino Uno has six PWM ports, but not every micro-controller has this many.
+In this tutorial I will show you how to implement software PWM. By using a
+potentiometer to input a desired level we can then control the brightness of an
+LED on another pin.&lt;&#x2F;p&gt;
+&lt;p&gt;First of all I’m going to assume you know what PWM is. If you don’t, &lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;http:&#x2F;&#x2F;en.wikipedia.org&#x2F;wiki&#x2F;Pulse-width_modulation&quot;&gt;Wikipedia
+is your friend&lt;&#x2F;a&gt;. Basically
+PWM uses a digital port to approximate an analog port. It does this by setting a
+percentage of a set cycle to HIGH, and the rest to LOW. When this repeats really
+fast (say 10,000 times a second) the voltage averages out to somewhere in
+between HIGH and LOW. You can set the voltage by determining how much of the
+cycle is HIGH and how much is LOW (the duty cycle). Ok, carry on!&lt;&#x2F;p&gt;
+&lt;p&gt;The circuit setup is pretty basic. Simply set up a potentiometer between +5v and
+GND, and connect the wiper (the middle pin) to an analog input - in this case
+analog pin 1 on the Arduino. An LED is then connected to a digital output pin
+(digital pin 8), and you can see on the schematic that it is placed after two
+Resistance - Capacitor (RC) filters. If you would like to know more about RC
+filters, then I recommend you look at EEVBlog
+&lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;http:&#x2F;&#x2F;www.eevblog.com&#x2F;2011&#x2F;12&#x2F;07&#x2F;eevblog-225-lab-power-supply-design-part-4-pwm-control&#x2F;&quot;&gt;http:&#x2F;&#x2F;www.eevblog.com&#x2F;2011&#x2F;12&#x2F;07&#x2F;eevblog-225-lab-power-supply-design-part-4-pwm-control&#x2F;&lt;&#x2F;a&gt; - the post that inspired this tutorial! Dave gives quite a bit of information on
+RC filters on this post and shows how to use LTSpice to simulate. I highly
+recommend you have a look at this video!&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;willhart.io&#x2F;post&#x2F;software-pwm-on-an-arduino&#x2F;softwarepwm_schematic-1024x695.png&quot; alt=&quot;Software PWM schematic&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;You may think that my capacitor&#x2F;resistor values area bit strange in the
+schematic, well thats because I just grabbed what was at the top of my bits box!
+If you were doing this in “production” you would take a lot more care selecting
+your values - again, have a look at Dave’s post for more information. You can
+see the circuit setup in Fritzing below.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;willhart.io&#x2F;post&#x2F;software-pwm-on-an-arduino&#x2F;softwarepwm-circuit_bb-845x1024.png&quot; alt=&quot;SoftwarePWM circuit&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;And then the following code was used:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;c&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-c &quot;&gt;&lt;code class=&quot;language-c&quot; data-lang=&quot;c&quot;&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;**************************************************************&#x2F;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;* POT controlled software PWM                                *&#x2F;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;*                                                            *&#x2F;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;* Code written by William Hart, 2011                         *&#x2F;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;* http:&#x2F;&#x2F;www.williamhart.info                                *&#x2F;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;*                                                            *&#x2F;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;* This is a very simple circuit which uses a potentiometer   *&#x2F;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;* to set an analog input and then uses this input to drive a *&#x2F;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;* PWM signal using a standard (non-PWM) port on the Arduino. *&#x2F;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;**************************************************************&#x2F;
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F;Serial.println(microsecondsToClockCycles(1)); &#x2F;&#x2F; gives a result of 16 clock cycles per microsecond
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; define pins
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;#define &lt;&#x2F;span&gt;&lt;span&gt;ADJ_PIN &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;1 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; Adjustment pin is analog 0
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;#define &lt;&#x2F;span&gt;&lt;span&gt;PWM_PIN &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;8 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; PWM output pin is digital 8
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; setup PWM values
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;#define &lt;&#x2F;span&gt;&lt;span&gt;PWM_FREQ &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;300 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; PWM Hz, must be greater than 60Hz to avoid delayMicroseconds issues
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;#define &lt;&#x2F;span&gt;&lt;span&gt;MAX_V &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;5.00 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; the maximum voltage we can output
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;long&lt;&#x2F;span&gt;&lt;span&gt; cycle_length;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;float&lt;&#x2F;span&gt;&lt;span&gt; v_out;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;float&lt;&#x2F;span&gt;&lt;span&gt; duty_cycle;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;int&lt;&#x2F;span&gt;&lt;span&gt; on_time;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;int&lt;&#x2F;span&gt;&lt;span&gt; off_time;
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;void &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;setup&lt;&#x2F;span&gt;&lt;span&gt;()
+&lt;&#x2F;span&gt;&lt;span&gt;{
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; start up serial for debugging
+&lt;&#x2F;span&gt;&lt;span&gt;  Serial.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;begin&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;9600&lt;&#x2F;span&gt;&lt;span&gt;);
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; set pin states
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;pinMode&lt;&#x2F;span&gt;&lt;span&gt;(ADJ_PIN, INPUT);
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;pinMode&lt;&#x2F;span&gt;&lt;span&gt;(PWM_PIN, OUTPUT);
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;digitalWrite&lt;&#x2F;span&gt;&lt;span&gt;(PWM_PIN, LOW);
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; calculate the cycle length
+&lt;&#x2F;span&gt;&lt;span&gt;  cycle_length = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;1000000&lt;&#x2F;span&gt;&lt;span&gt;&#x2F;PWM_FREQ; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; the length of a single cycle of the PWM signal
+&lt;&#x2F;span&gt;&lt;span&gt;}
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;void &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;loop&lt;&#x2F;span&gt;&lt;span&gt;()
+&lt;&#x2F;span&gt;&lt;span&gt;{
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; read in the potentiometer value
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;int&lt;&#x2F;span&gt;&lt;span&gt; val = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;analogRead&lt;&#x2F;span&gt;&lt;span&gt;(ADJ_PIN);
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; map the pot value to the PWM value - 0-5V, to two decimal places
+&lt;&#x2F;span&gt;&lt;span&gt;  v_out = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;map&lt;&#x2F;span&gt;&lt;span&gt;(val, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;0&lt;&#x2F;span&gt;&lt;span&gt;,&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;1024&lt;&#x2F;span&gt;&lt;span&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;0&lt;&#x2F;span&gt;&lt;span&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;500&lt;&#x2F;span&gt;&lt;span&gt;);
+&lt;&#x2F;span&gt;&lt;span&gt;  duty_cycle = (v_out&#x2F;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;100&lt;&#x2F;span&gt;&lt;span&gt;) &#x2F; MAX_V; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; work out what percentage of the PWM cycle we should set high
+&lt;&#x2F;span&gt;&lt;span&gt;  on_time = duty_cycle * cycle_length;
+&lt;&#x2F;span&gt;&lt;span&gt;  off_time = cycle_length - on_time;
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; now set high, then delay for the duty_cycle percentage * cycle_length
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;if&lt;&#x2F;span&gt;&lt;span&gt;(on_time &amp;gt; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;0&lt;&#x2F;span&gt;&lt;span&gt;)
+&lt;&#x2F;span&gt;&lt;span&gt;  {
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;digitalWrite&lt;&#x2F;span&gt;&lt;span&gt;(PWM_PIN, HIGH);
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;delayMicroseconds&lt;&#x2F;span&gt;&lt;span&gt;(on_time);
+&lt;&#x2F;span&gt;&lt;span&gt;  }
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;digitalWrite&lt;&#x2F;span&gt;&lt;span&gt;(PWM_PIN, LOW);
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;delayMicroseconds&lt;&#x2F;span&gt;&lt;span&gt;(off_time);
+&lt;&#x2F;span&gt;&lt;span&gt;}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Phew, what a lump of code! Once you break it down though, its quite simple. The
+basic principle is this:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;Setup : Work out how long our cycle is&lt;&#x2F;li&gt;
+&lt;li&gt;Loop:
+&lt;ol&gt;
+&lt;li&gt;Read the potentiometer value and determine the output voltage we would like&lt;&#x2F;li&gt;
+&lt;li&gt;Set the digital port high for the correct portion of the cycle&lt;&#x2F;li&gt;
+&lt;li&gt;Set the digital port LOW for the remainder of the cycle&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;I use the &lt;code&gt;delayMicroseconds()&lt;&#x2F;code&gt; function from Arduino to time the PWM cycle,
+however this has the limitation of being able to delay for a maximum of around
+16,000 microseconds. This means that we can’t set value below 61Hz for our PWM
+frequency. This could be remedied by a more intelligent use of &lt;code&gt;delay()&lt;&#x2F;code&gt;,
+however I leave this as an exercise for you!&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Charlieplexing LEDs with Arduino</title>
+        <published>2011-12-13T00:00:00+00:00</published>
+        <updated>2011-12-13T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              William Hart
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://willhart.io/post/charlieplexing-leds-with-arduino/"/>
+        <id>https://willhart.io/post/charlieplexing-leds-with-arduino/</id>
+        
+        <content type="html" xml:base="https://willhart.io/post/charlieplexing-leds-with-arduino/">&lt;p&gt;You can never have enough pins on your micro-controller, right? Plug in an LCD
+display, a couple of status LEDs and a few sensors and you are already up to
+more pins than most entry level micros. Sure, you can plug in a &lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;http:&#x2F;&#x2F;en.wikipedia.org&#x2F;wiki&#x2F;Shift_register&quot;&gt;shift
+register&lt;&#x2F;a&gt; like the 8-bit
+&lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;http:&#x2F;&#x2F;www.ti.com&#x2F;lit&#x2F;ds&#x2F;symlink&#x2F;sn74hc595.pdf&quot;&gt;74HC595&lt;&#x2F;a&gt;, but is that the only
+way?&lt;&#x2F;p&gt;
+&lt;p&gt;One less common way is to use a technique called
+&lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;http:&#x2F;&#x2F;en.wikipedia.org&#x2F;wiki&#x2F;Charlieplex&quot;&gt;Charlieplexing&lt;&#x2F;a&gt;. You can Charlieplex
+a bunch of LEDs from a few Arduino ports, and save those precious ports for
+something exciting! In the following tutorial, I’m going to show you how to use
+an Arduino and this charlieplexing technique to use 3 output pins to control 6
+LEDs.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-is-charlieplexing&quot;&gt;What is Charlieplexing?&lt;&#x2F;h2&gt;
+&lt;p&gt;If you have a quick scan of the charlieplex Wiki entry, you can see that this
+technique allows you to drive $n^2 - n$ LEDs using only n Arduino pins. What
+does that mean? Well in our case we have 3 pins, which will allow us to drive
+$3^2 - 3 = 6$ LEDs. This simple technique basically uses the properties of LEDs
+being diodes, and therefore only allowing current (within limits of course) to
+pass in one direction.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;how-do-i-charlieplex&quot;&gt;How do I Charlieplex?&lt;&#x2F;h2&gt;
+&lt;p&gt;A simple LED charlieplex circuit can be setup using my Arduino Uno like the
+circuit diagram below.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;willhart.io&#x2F;post&#x2F;charlieplexing-leds-with-arduino&#x2F;charlieplex_schematic.png&quot; alt=&quot;Charlieplex Eagle Schematic&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;Plugging into my breadboard gives the following physical circuit - its a bit
+messy but take your time and you should see the pattern!&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;willhart.io&#x2F;post&#x2F;charlieplexing-leds-with-arduino&#x2F;charlieplex_breadboard.png&quot; alt=&quot;Fritzing Circuit, Charlieplex LEDs on an Arduino&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;Basically, the circuit involves setting up three Arduino pins. For each pair of
+pins we put two LEDs between them, with on LED being placed in each direction.
+(Remember LEDs have an anode and a cathode, usually the longer leg being the +
+leg or the anode). The clever bit about the charlieplex technique is recognising
+that we can set pins (on the Arduino as well) to one of three states:&lt;&#x2F;p&gt;
+&lt;ol&gt;
+&lt;li&gt;HIGH - usually +5v&lt;&#x2F;li&gt;
+&lt;li&gt;LOW - usually 0v&lt;&#x2F;li&gt;
+&lt;li&gt;High Impedence - disconnected&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;p&gt;Lets use an example. Have a look at the circuit diagram above. First we set the
+Arduino pin 5 to HIGH, pin 6 to High Impedance and pin 7 to LOW (more on how we
+do this later). Now, lets follow the current through from pin 5 (note we are
+talking about conventional current, not electron flow). We can see that there
+are four LEDs connected to this pin - the first two linked to pin 6 and the last
+two linked to pin 7. We can ignore two of these LEDs as they are the “wrong way
+around” and blocking current flow.&lt;&#x2F;p&gt;
+&lt;p&gt;Now recall that we set pin 6 to this high impedance state, which means it is in
+effect disconnected. As pin 7 is set to low, we can see that current will flow
+along from pin 5, then through the LED connected between pin 5 and pin 7. (This
+is the 5th LED along). In this same fashion we can then set one of each of the
+three pins to high, low and high impedance to control which LED is switched on.&lt;&#x2F;p&gt;
+&lt;p&gt;I have provided some sample Arduino code below to show this in action. Note that
+the &lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;http:&#x2F;&#x2F;www.arduino.cc&#x2F;en&#x2F;Reference&#x2F;Constants&quot;&gt;Arduino reference&lt;&#x2F;a&gt; says&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Arduino (Atmega) pins configured as &lt;code&gt;INPUT&lt;&#x2F;code&gt; with &lt;code&gt;pinMode()&lt;&#x2F;code&gt; are said to be in
+a high-impedance state.&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;This means we can just set a pin to input mode using &lt;code&gt;pinMode(pin_number, INPUT);&lt;&#x2F;code&gt; and it will count as disconnected.&lt;&#x2F;p&gt;
+&lt;p&gt;I used a form of Charlieplexing on my PIC Countdown Timer to light up three sets
+of two LEDs using only four pins. You can see the schematic and some photos
+through the link.&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;c&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-c &quot;&gt;&lt;code class=&quot;language-c&quot; data-lang=&quot;c&quot;&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;**************************************&#x2F;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;* Charlieplexing 6 LEDs with 3 Pins  *&#x2F;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;*                                    *&#x2F;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;* Code written by William Hart, 2011 *&#x2F;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;* http:&#x2F;&#x2F;www.williamhart.info        *&#x2F;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;*                                    *&#x2F;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;* Uses 3 pins to power a network of  *&#x2F;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;* 6 LEDs using the charlieplexing    *&#x2F;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;* technique.                         *&#x2F; 
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;**************************************&#x2F;
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;#define &lt;&#x2F;span&gt;&lt;span&gt;LED_A &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;5
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;#define &lt;&#x2F;span&gt;&lt;span&gt;LED_B &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;6
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;#define &lt;&#x2F;span&gt;&lt;span&gt;LED_C &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;7
+&lt;&#x2F;span&gt;&lt;span&gt; 
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;void &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;setup&lt;&#x2F;span&gt;&lt;span&gt;()
+&lt;&#x2F;span&gt;&lt;span&gt;{
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; first set all pins to input, or high impedance
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; (not strictly necessary as all pins are inputs by default)
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;pinMode&lt;&#x2F;span&gt;&lt;span&gt;(LED_A, INPUT);
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;pinMode&lt;&#x2F;span&gt;&lt;span&gt;(LED_B, INPUT);
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;pinMode&lt;&#x2F;span&gt;&lt;span&gt;(LED_C, INPUT);
+&lt;&#x2F;span&gt;&lt;span&gt;}
+&lt;&#x2F;span&gt;&lt;span&gt; 
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;void &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;loop&lt;&#x2F;span&gt;&lt;span&gt;()
+&lt;&#x2F;span&gt;&lt;span&gt;{
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; run through a sample loop, lighting each LED
+&lt;&#x2F;span&gt;&lt;span&gt; 
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; in turn and holding for half a second.
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;set_pins&lt;&#x2F;span&gt;&lt;span&gt;(LED_A, LED_B);
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;delay&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;100&lt;&#x2F;span&gt;&lt;span&gt;);
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;set_pins&lt;&#x2F;span&gt;&lt;span&gt;(LED_B, LED_A);
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;delay&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;100&lt;&#x2F;span&gt;&lt;span&gt;);
+&lt;&#x2F;span&gt;&lt;span&gt; 
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;set_pins&lt;&#x2F;span&gt;&lt;span&gt;(LED_C, LED_A); 
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;delay&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;100&lt;&#x2F;span&gt;&lt;span&gt;);
+&lt;&#x2F;span&gt;&lt;span&gt; 
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;set_pins&lt;&#x2F;span&gt;&lt;span&gt;(LED_A, LED_C);
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;delay&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;100&lt;&#x2F;span&gt;&lt;span&gt;);
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;set_pins&lt;&#x2F;span&gt;&lt;span&gt;(LED_B, LED_C);
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;delay&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;100&lt;&#x2F;span&gt;&lt;span&gt;);
+&lt;&#x2F;span&gt;&lt;span&gt; 
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;set_pins&lt;&#x2F;span&gt;&lt;span&gt;(LED_C, LED_B);
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;delay&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;100&lt;&#x2F;span&gt;&lt;span&gt;); 
+&lt;&#x2F;span&gt;&lt;span&gt;}
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;void &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;set_pins&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;int &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;high_pin&lt;&#x2F;span&gt;&lt;span&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;int &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;low_pin&lt;&#x2F;span&gt;&lt;span&gt;)
+&lt;&#x2F;span&gt;&lt;span&gt;{
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; reset all the pins
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;reset_pins&lt;&#x2F;span&gt;&lt;span&gt;();
+&lt;&#x2F;span&gt;&lt;span&gt; 
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; set the high and low pins to output
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;pinMode&lt;&#x2F;span&gt;&lt;span&gt;(high_pin, OUTPUT);
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;pinMode&lt;&#x2F;span&gt;&lt;span&gt;(low_pin, OUTPUT);
+&lt;&#x2F;span&gt;&lt;span&gt; 
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; set high pin to logic high, low to logic low
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;digitalWrite&lt;&#x2F;span&gt;&lt;span&gt;(high_pin, HIGH);
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;digitalWrite&lt;&#x2F;span&gt;&lt;span&gt;(low_pin,LOW);
+&lt;&#x2F;span&gt;&lt;span&gt;}
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;void &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;reset_pins&lt;&#x2F;span&gt;&lt;span&gt;()
+&lt;&#x2F;span&gt;&lt;span&gt;{
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; start by ensuring all pins are at input and low
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;pinMode&lt;&#x2F;span&gt;&lt;span&gt;(LED_A, INPUT); 
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;pinMode&lt;&#x2F;span&gt;&lt;span&gt;(LED_B, INPUT);
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;pinMode&lt;&#x2F;span&gt;&lt;span&gt;(LED_C, INPUT);
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;digitalWrite&lt;&#x2F;span&gt;&lt;span&gt;(LED_A, LOW);
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;digitalWrite&lt;&#x2F;span&gt;&lt;span&gt;(LED_B, LOW);
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;digitalWrite&lt;&#x2F;span&gt;&lt;span&gt;(LED_C, LOW);
+&lt;&#x2F;span&gt;&lt;span&gt;}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+</content>
+        
+    </entry>
+</feed>

@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Building a basketball video analysis software tool | willhart.io</title>
+
+
+  <link rel="icon" type="image/x-icon" href="/icons/icon_light_32x32.png">
+
+  
+<meta name="description" content="Describes my 8 year journey to build some basketball video analysis software in rust and typescript. Posted on https://willhart.io" />
+<meta property="og:description" content="Describes my 8 year journey to build some basketball video analysis software in rust and typescript" />
+<meta property="og:title" content="Building a basketball video analysis software tool" />
+<meta property="og:url" content="https://willhart.io/post/basketball-analysis-software/">
+<meta property="og:type" content="article" />
+<meta property="og:locale" content="en_AU" />
+
+
+  <link rel="stylesheet" href="https://willhart.io/global.css?h=f83cd20cd0df26d72c2b" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sono:wght@200..800&display=swap" rel="stylesheet">
+
+  
+
+  <!-- Cloudflare Web Analytics -->
+  <script defer src='https://static.cloudflareinsights.com/beacon.min.js'
+    data-cf-beacon='{"token": "310f93cab66a42c5a328f246cc053025"}'></script>
+  <!-- End Cloudflare Web Analytics -->
+
+  <!-- Light/Dark theme toggling -->
+  <script type="text/javascript">
+    const storageKey = "websiteTheme";
+
+    // apply theme once we have a DOM
+    document.addEventListener("DOMContentLoaded", () => {
+      applyTheme();
+    })
+
+    // a function that toggles between light and dark theme
+    const toggleTheme = () => {
+      localStorage.setItem(storageKey, localStorage.getItem(storageKey) === "d" ? "l" : "d" );
+      applyTheme();
+    }
+
+    // a function that actually applies the theme
+    const applyTheme = () => {
+      const useDarkTheme = localStorage.getItem(storageKey) === "d";
+      document.getElementsByTagName("html")[0].className = useDarkTheme ? "dark" : "";
+      document.getElementById("theme-toggle").textContent = useDarkTheme ? "🔆" : "🌑";
+    }
+  </script>
+
+  <script type="speculationrules">
+  {
+    "prerender": [
+      { "where": { "selector_matches": "a" } }
+    ]
+  }
+  </script></head>
+
+<body>
+  <nav id="header">
+    <a href="/" aria-label="Website Logo and Link to Home Page">
+      <div id="logo" >&nbsp;</div>
+    </a>
+    <span>
+      <button type="button" id="theme-toggle" aria-label="Toggle Theme" onClick="toggleTheme()">🌑</button>
+      <a class="header-item" href="/post">POSTS</a>
+      <a class="header-item" href="/tag">TAGS</a>
+      <span class="header-item hide-when-slim">|</span>
+      <a class="header-item hide-when-slim" href="/tag/projects">PROJECTS</a>
+      <a class="header-item hide-when-slim" href="/tag/gamedev">GAMEDEV</a>
+      <a class="header-item hide-when-slim" href="/tag/electronics">ELECTRONICS</a>
+    </span>
+  </nav>
+
+  
+
+<div class="container col mb mt">
+  <h1>Building a basketball video analysis software tool</h1>
+  <div class="col txtsm">
+    <span>Posted by Will Hart on 2024-05-30</span>
+    <div>
+      <span>See also:</span>
+      
+      <a class="txtsm mr" href="https://willhart.io/tag/random/">#random</a>
+      
+      <a class="txtsm mr" href="https://willhart.io/tag/projects/">#projects</a>
+      
+    </div>
+  </div>
+</div>
+
+
+  <div class="container col txtsm mb page-toc">
+    <h2>Table of contents</h2>
+    <ul>
+    
+        <li>
+            <a href="https://willhart.io/post/basketball-analysis-software/#defining-the-product">Defining the “product”</a>
+            
+        </li>
+    
+        <li>
+            <a href="https://willhart.io/post/basketball-analysis-software/#challenges">Challenges</a>
+            
+                <ul>
+                    
+                        <li>
+                            <a href="https://willhart.io/post/basketball-analysis-software/#1-the-tagging-problem">1. The tagging problem</a>
+                        </li>
+                    
+                        <li>
+                            <a href="https://willhart.io/post/basketball-analysis-software/#2-the-video-hosting-problem">2. The video hosting problem</a>
+                        </li>
+                    
+                </ul>
+            
+        </li>
+    
+        <li>
+            <a href="https://willhart.io/post/basketball-analysis-software/#first-attempt-net-wpf">First attempt - .NET WPF</a>
+            
+        </li>
+    
+        <li>
+            <a href="https://willhart.io/post/basketball-analysis-software/#second-attempt-rust-tui">Second attempt - rust TUI</a>
+            
+                <ul>
+                    
+                        <li>
+                            <a href="https://willhart.io/post/basketball-analysis-software/#typestate-to-the-rescue">Typestate to the rescue</a>
+                        </li>
+                    
+                        <li>
+                            <a href="https://willhart.io/post/basketball-analysis-software/#syncing-to-video">Syncing to video</a>
+                        </li>
+                    
+                        <li>
+                            <a href="https://willhart.io/post/basketball-analysis-software/#challenge-clock-management">Challenge: Clock management</a>
+                        </li>
+                    
+                        <li>
+                            <a href="https://willhart.io/post/basketball-analysis-software/#challenge-sharing">Challenge: Sharing</a>
+                        </li>
+                    
+                </ul>
+            
+        </li>
+    
+        <li>
+            <a href="https://willhart.io/post/basketball-analysis-software/#third-attempt-rust-axum-and-next-js">Third attempt - rust (axum) and Next.js</a>
+            
+                <ul>
+                    
+                        <li>
+                            <a href="https://willhart.io/post/basketball-analysis-software/#tech-stack">Tech stack</a>
+                        </li>
+                    
+                        <li>
+                            <a href="https://willhart.io/post/basketball-analysis-software/#building-a-tagging-language">Building a tagging “language”</a>
+                        </li>
+                    
+                        <li>
+                            <a href="https://willhart.io/post/basketball-analysis-software/#stats-and-analysis">Stats and analysis</a>
+                        </li>
+                    
+                        <li>
+                            <a href="https://willhart.io/post/basketball-analysis-software/#sharing-games">Sharing games</a>
+                        </li>
+                    
+                </ul>
+            
+        </li>
+    
+        <li>
+            <a href="https://willhart.io/post/basketball-analysis-software/#what-next">What next?</a>
+            
+                <ul>
+                    
+                        <li>
+                            <a href="https://willhart.io/post/basketball-analysis-software/#a-proper-tagging-interface">A proper tagging interface</a>
+                        </li>
+                    
+                        <li>
+                            <a href="https://willhart.io/post/basketball-analysis-software/#integration-with-diagramming-software">Integration with diagramming software</a>
+                        </li>
+                    
+                        <li>
+                            <a href="https://willhart.io/post/basketball-analysis-software/#machine-learning">Machine learning</a>
+                        </li>
+                    
+                        <li>
+                            <a href="https://willhart.io/post/basketball-analysis-software/#video-hosting">Video hosting</a>
+                        </li>
+                    
+                </ul>
+            
+        </li>
+    
+    </ul>
+  </div>
+
+
+<article class="container col mblg"><blockquote>
+<p>This is a super long article discussing a tool that has been on my mind for at
+least eight years. I’m probably the only one interested in these details, but
+it is satisfying for me to document this project as I’m unlikely to release
+the source code and it seems my work on the project is coming to an end.</p>
+</blockquote>
+<p>In fiction writing, there is a saying - “show don’t tell”. I think this is also
+a great phrase to apply as a youth sports coach. I’ve been coaching junior
+basketball for about 25 years now at various levels. Over that time I’ve
+noticed a big increase in the level of professionalism and the technical
+expertise of coaches.</p>
+<p>For instance, twenty years ago video analysis was very rare, but these days
+analysing game film with the team can be done routinely, even at the youngest
+levels of representative basketball. All our games are now filmed and available
+on Youtube or other services. Video analysis is a fantastic tool as a coach to
+both highlight areas for improvement and show where players are doing things
+well. Often a message only really sinks in for players when they see the
+examples (both positive and negative) in game film.</p>
+<p>I previously posted about my <a href="/post/first-impressions-converting-a-firebase-project-to-graphql">basketball diagram
+software</a>
+which I used to write training plans, do scouting reports and diagram plays. In
+addition to this tool, I’ve also spent over eight years slowly building a tool
+for video analysis, similar to tools from hudl or Catapult. I’m going to
+describe a little bit about this tool and how I built it in this post.</p>
+<h2 id="defining-the-product">Defining the “product”</h2>
+<p>I’m a volunteer coach with my own job and family, and so in addition to having
+limited training time, I also want to spend as little time as possible preparing
+for video analysis (Yes, I’m aware that I probably spent hundreds of hours
+building a software tool to save me minutes of effort).</p>
+<p>So about eight years ago I began to develop a software tool that would:</p>
+<ul>
+<li>let me watch a game film (preferably at 1.5x speed),</li>
+<li>“tag up” key plays with text, or as specific “events” in the game,</li>
+<li>play back the video using the list of tags to jump to key sections,</li>
+<li>filter the list of tags so that I can jump to “every time we ran offence X” or
+“defence Y”</li>
+<li>generate box scores, shot charts, and other stats from the tags.</li>
+</ul>
+<p>As the tool evolved I added and removed some other features:</p>
+<ul>
+<li>a <a rel="noopener nofollow noreferrer" target="_blank" href="https://en.wikipedia.org/wiki/Telestrator">telestrator</a> feature to
+playback,</li>
+<li>automatically export a filtered set of tags to a “highlights video”</li>
+</ul>
+<h2 id="challenges">Challenges</h2>
+<p>I want to highlight up front some of the key challenges I faced while building
+this tool, and then discuss later how each implementation attempted to address
+them.</p>
+<h3 id="1-the-tagging-problem">1. The tagging problem</h3>
+<p>Strangely enough, one of the trickiest pieces of the project was how to create
+the video tags. From the start I wanted to be able to gather more data than just
+a plain text “bookmark”. This requires being able to provide a UI that can
+select from different basketball actions, including:</p>
+<ul>
+<li>typical basketball stats like pass, shot, turnover, rebound, etc,</li>
+<li>plain text tags at a specific time (“x happened at this time”),</li>
+<li>plain text tags across a time span (“y happened at this time, for A seconds”),</li>
+<li>add “meta” tags like lineup changes, clock times, clock start/stop, etc</li>
+</ul>
+<p>It turns out that each of these potential tags requires different metadata to be
+associated with it, for instance a shot may require:</p>
+<ul>
+<li>the player that took the shot,</li>
+<li>where the shot was taken from (and maybe whether it was a free throw, 2pt or
+3pt shot),</li>
+<li>whether the shot missed or was made,</li>
+</ul>
+<p>while a metadata tag like a “lineup change” may require a list of players that
+went on and a list of players that went off.</p>
+<p>This is a complex data modelling problem for strongly typed languages, but it is
+even more complex as a UI problem, because different controls need to be
+displayed depending on both <em>what</em> tag is being created and <em>which</em> details are
+being provided. For most UI frameworks this results in a lot of spaghetti code.</p>
+<p>I also wanted to be able to annotate a full set of tags while watching the video
+at 1.5x speed. I’ll revisit this challenge more as the article goes on.</p>
+<h3 id="2-the-video-hosting-problem">2. The video hosting problem</h3>
+<p>From the start I had a challenge around how the videos would be made available
+to the app and when I was showing them to the players in the video analysis
+session. Back when I started mobile data was poor (in Australia) and our
+internet speeds didn’t really allow large videos to be uploaded and streamed
+reliably. Local files initially seemed like a better option, but that made it
+harder to share with other coaches.</p>
+<p>Later, once internet speeds improved it became a question of where to host -
+either my own cloud media server (expensive and with complex access controls -
+these are videos of kids after all) or through an existing hosting site like
+youtube. In the end most game film these days ends up on youtube so that became
+the logical choice for hosting.</p>
+<h2 id="first-attempt-net-wpf">First attempt - .NET WPF</h2>
+<p>My first attempt was made about eight years ago using a WPF app in C#.
+Unfortunately I seem to have lost the source code and all screenshots, but this
+was a pretty good first attempt that had tagging and playback of local video
+files, showed the tags on the playback progress bar and had a telestrator
+functionality.</p>
+<p>There were two issues with this implementation:</p>
+<ol>
+<li>it was offline only, so it was a bit tricky to share with others,</li>
+<li>the tagging interface was very clunky - because of the complexity of the tags
+required, it was very difficult in C# to add new tags or to show a custom UI
+flow for tagging particular things and adding the relevant metadata. In other
+words, the tagging pattern required very stateful UI, which was a bit clumsy
+to do in WPF.</li>
+</ol>
+<p>To get around the tagging issues I had  brief foray with trying to write the
+code in typescript / React as a part of the play diagramming tool, but the UI
+flow still didn’t sit well and I quickly abandoned the approach.</p>
+<h2 id="second-attempt-rust-tui">Second attempt - rust TUI</h2>
+<h3 id="typestate-to-the-rescue">Typestate to the rescue</h3>
+<p>About this time I encountered a language called <code>rust</code>, which you may have heard
+of. I pretty quickly fell in love with it (and now use it relatively often in my
+day job!). I was playing around with rust for a bunch of tools, but it didn’t
+occur to me to try building the video analysis tool in rust until I found the
+article by Cliffle on <a rel="noopener nofollow noreferrer" target="_blank" href="https://cliffle.com/blog/rust-typestate/">type states in
+rust</a>.</p>
+<blockquote>
+<p>TLDR: the type state approach is sort of like a state machine baked into the
+types. In other words, it uses the type system at compile time to ensure only
+valid state transitions are available to be called.</p>
+</blockquote>
+<p>As I was reading the article it dawned on me that this was a great model for
+tagging videos. The core of the complex user flow could be reduced to a fairly
+readable rust enum:</p>
+<p><img src="https://willhart.io/post/basketball-analysis-software/typestate_implementation_of_tagging.png" alt="A screenshot of a rust enum showing the typestate pattern used for tagging" /></p>
+<p>Here the variants of the enum are the different states our tagging UI can be in,
+for instance setting whether a shot was made or missed, selecting a player, or
+selecting a shot location. The <code>VideoTagFactory&lt;T&gt;</code> could then be used to ensure
+that <em>only</em> the relevant transitions are available from each “UI state”. It took
+a bit of noodling but in short order I’d written up the tagging logic and a rust
+“terminal user interface” (TUI) to provide the UI.</p>
+<h3 id="syncing-to-video">Syncing to video</h3>
+<p>To manage the video, I worked with local files and used <a rel="noopener nofollow noreferrer" target="_blank" href="https://wiki.videolan.org/VLC_HTTP_requests/">VLC HTTP
+requests</a> to control the player.
+Overall it was a pretty reliable system, although sometimes VLC would have some
+issues buffering when playing youtube videos. I set it up so that I could use
+<code>youtube-dl</code> to download videos locally, and configure my tool to accept both a
+youtube and local video path, preferring local where available.</p>
+<p>This approach <em>immediately</em> felt better. The code was cleaner, the UI just
+naturally flowed from the state of the tag, and it was easy to add new tags. I
+added a second simpler factory for “text-based” tags, and implemented all the
+logic around live box scores. The result looked like this:</p>
+<p><img src="https://willhart.io/post/basketball-analysis-software/rust_tui.png" alt="The rust TUI" /></p>
+<p>Tagging was via keyboard inputs, for instance to add a new shot, I would press
+<code>&lt;tab&gt; 2 2 1 4553&lt;enter&gt; y &lt;enter&gt;</code>. Decoding this:</p>
+<ul>
+<li><code>&lt;tab&gt;</code> to start a tag</li>
+<li><code>2</code> to select a two-point shot tag</li>
+<li><code>2</code> to select player number 2 in the list as the shooter,</li>
+<li><code>1</code> to select player number 1 in the list as having assisted the shooter,</li>
+<li><code>4553&lt;enter&gt;</code> to use a “keypad” system to select where on the court the shot was taken,</li>
+<li><code>y</code> to say the shot was made.</li>
+</ul>
+<p>While this looks a bit complicated, after a few minutes of tagging I could
+basically tag in real-time (i.e. at 1x playback speed). Tags were saved in a
+local file. I also implemented exporting highlights from a list of filtered
+plays using <code>ffmpeg</code>.</p>
+<h3 id="challenge-clock-management">Challenge: Clock management</h3>
+<p>An interesting problem came about with mapping video time to game time. For
+instance a video may start a few minutes before the game starts, and in our
+timing rules the clock stops on every whistle. This means that in order to track
+how many minutes players are playing you need to have a separate concept for
+“game time” vs “video time”. Tags are in “video time”, while all of the stats
+are in “video time”.</p>
+<p>The problem is compounded in that all of our scorers are parents, and its fairly
+common for them to forget to start or stop the clock at key moments. Depending
+on the angle, there isn’t always a scoreboard visible in the video, so its not
+always obvious what the game clock is actually showing!</p>
+<p>To solve this I introduced the concept of a “clock sync” tag. This was a tag
+that was considered a “source of truth” for the current game time, for instance
+<code>03:13 remaining in the third quarter</code>. There were also “clock start” and “clock
+stop” tags, and “period start” and “period end” tags which were essentially
+fancy clock sync tags.</p>
+<p>Between these it was possible to produce a basic algorithm which used the
+elapsed video time and the clock management tags to determine the game time.
+When a clock sync tag was found, the game clock was updated to match, and
+elapsed times for things like lineup combinations and player minutes were
+reconciled using some business logic.</p>
+<p>Overall this wasn’t a complex problem but took a bit of thinking to get right.</p>
+<h3 id="challenge-sharing">Challenge: Sharing</h3>
+<p>One challenge was that this was not easy to share with non-technical people.
+Around this time I wanted to step back a little from coaching so I joined
+another coach as their assistant. One of my jobs was tagging the video for
+analysis with the team, but I couldn’t hand over a terminal program for them to
+use. Instead I ended up building a simple <code>tera</code> template generator to output a
+standalone HTML file with an embedded youtube player and list of tags.</p>
+<p>This was … ugly, but it worked pretty well. Up until Covid hit and we lost
+basically two years to the pandemic. Overall I was fairly happy other than it
+feeling a bit too “technical” to run, being a bit slapped together with separate
+video and TUI windows, and still only letting me tag at about 1x game speed.</p>
+<h2 id="third-attempt-rust-axum-and-next-js">Third attempt - rust (axum) and Next.js</h2>
+<p>I took a couple of year hiatus from the project while Covid messed up our
+basketball seasons. When things started to return to normal, I began to get more
+and more frustrated by the slightly janky TUI and the awkwardness of sharing
+game footage.</p>
+<p>If I’m honest I also began to wonder at this point whether I had a “genuine
+product” on my hands. If I recall at the time hudl cost hundreds of dollars a
+month. There seemed to be a gap in the market for a simpler “semi-pro” service
+targeted at representative / amateur sports where budgets are typically
+non-existent. The main problem at this point was around UX pain points, the TUI
+worked great for me (and the four or five other people who prefer a TUI over a
+GUI) but wasn’t SaaS-ready.</p>
+<p>I began to consider turning the tool into a web app, with some of the features a
+SaaS requires like user accounts, sharing, granular permissions and so on.</p>
+<h3 id="tech-stack">Tech stack</h3>
+<p>After a bit of research I settled on a tech stack for round 3.</p>
+<ul>
+<li>postgresql database hosted on <a rel="noopener nofollow noreferrer" target="_blank" href="https://fly.io">fly.io</a>,</li>
+<li>rust / axum backend hosted on <a rel="noopener nofollow noreferrer" target="_blank" href="https://fly.io">fly.io</a>, which allowed me to
+reuse a bunch of the TUI code,</li>
+<li>auth via <a rel="noopener nofollow noreferrer" target="_blank" href="https://auth0.com">auth0</a>, so I could outsource user/auth code,</li>
+</ul>
+<p>Then I picked a few “comfort” options:</p>
+<ul>
+<li>react front end using next.js,</li>
+<li>CI/CD via github actions</li>
+</ul>
+<h3 id="building-a-tagging-language">Building a tagging “language”</h3>
+<p>Initially I started reusing a lot of the typestate logic from the TUI. However
+at the time I was skimming through <a rel="noopener nofollow noreferrer" target="_blank" href="https://app.thestorygraph.com/books/10606458-5ea8-499a-9940-ed13667d511a">Basketball on
+Paper</a>,
+a book about the use of data and statistics in basketball. I remember seeing a
+lot of basic statistical errors in the book, however one really interesting
+feature of the book was their way of annotating a game using a series of letters
+and numbers. I decided to adapt this to my needs.</p>
+<p>For instance the following would be used to describe a complete possession:</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>01:11 a 19i 9 19 36d 19i 9 4 29x3- 4rt
+</span></code></pre>
+<p>This can be broken down as follows:</p>
+<ul>
+<li><code>01:11</code> this is the “video time” when the possession started</li>
+<li><code>a</code> indicates this is a possession for the away team</li>
+<li><code>19i</code> indicates player <code>19</code> from the away team inbounded the ball</li>
+<li>There were a series of passes between players <code>9 -&gt; 19 -&gt; 36</code></li>
+<li>When they caught the ball, player <code>36</code> dribbled, and at some point the ball
+when out of bounds (probably deflected, but I don’t record that here).</li>
+<li><code>19i</code> player 19 inbounded the ball again, and a series of passes followed.</li>
+<li><code>29x3-</code> indicates that player 29 took a shot from “region 3” of the court, and
+the <code>-</code> indicates it missed. A <code>+</code> would indicate that the shot was made, and
+a <code>++</code> would indicate the shot was made and the player who gave them the ball
+should be awarded an assist.</li>
+<li><code>4r</code> player 4 rebounded the ball (we know this is an offensive rebound
+because their team has possession)</li>
+<li>the final <code>t</code> indicates that player 4 then turned it over.</li>
+</ul>
+<p>There is a lot of data packed into this single line, and it can be very compact
+and detailed, for instance <code>12 99f36x3++.</code> indicates:</p>
+<ul>
+<li>#99 took a 2pt shot from “region 3” which is in the key,</li>
+<li>They made the shot and #12 was awarded an assist,</li>
+<li>#99 was fouled in the act of shooting by #36 from the other team,</li>
+<li>#99 missed the resulting free throw</li>
+</ul>
+<p>I can make text tags by typing:</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>@01:11 Good drive and kick (Bob to Fred)
+</span></code></pre>
+<p>Or a text range tag using</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>@01:11 +5 A five second range with a text annotation
+</span></code></pre>
+<p>I implemented a parser using <a rel="noopener nofollow noreferrer" target="_blank" href="https://crates.io/crates/nom"><code>nom</code></a>, and the
+React GUI had some logic to pre-fill the video time in the tagging text input. A
+typical game has 100-150 lines of this format which includes all possessions,
+clock management, lineups, annotations and so on.</p>
+<p>An excerpt from an actual game looks like this, and can be imported or exported
+from the GUI:</p>
+<p><img src="https://willhart.io/post/basketball-analysis-software/game_metadata.png" alt="An extract from a game summary written using the custom tagging DSL" /></p>
+<p>In terms of UX I’d consider this a “pro” interface - its extremely fast to
+annotate and quite natural once you learn the key codes, however has a bit of a
+learning curve. For a SaaS product it would still need a more traditional “point
+and click” GUI interface.</p>
+<p>For the users at least the output was human readable, for instance the input
+above would be displayed in the UI by a stream of possession logs like this,
+along with a running score:</p>
+<p><img src="https://willhart.io/post/basketball-analysis-software/game_runsheet.png" alt="A stream of events for a single game" /></p>
+<p>Clicking on a timestamp takes you to that time in the video.</p>
+<h3 id="stats-and-analysis">Stats and analysis</h3>
+<p>The great thing about all this rich data and the parser was that it suddenly
+became possible to “reduce” over these lines and produce detailed stats by
+parsing the game sequence into a vector of “actions”, and then running a
+“map-reduce” on those to produce a box score. It was also possible to produce a
+quarter by quarter breakdown, see an example:</p>
+<p><img src="https://willhart.io/post/basketball-analysis-software/box_scores.png" alt="An example box score" /></p>
+<p>Short charts can also be produced from the same data:</p>
+<p><img src="https://willhart.io/post/basketball-analysis-software/shot_charts.png" alt="An example short chart" /></p>
+<p>It was also possible to compute more interesting statistics, such as the
+effectiveness of specific lineups:</p>
+<p><img src="https://willhart.io/post/basketball-analysis-software/lineups.png" alt="An example of lineup effectiveness stats for a single game" /></p>
+<p>There are a lot of lineups in a junior basketball game because for player
+development and well-being its important that everybody plays a decent amount of
+minutes. I also implemented some possession statistics, which in many cases
+matched my “feel” of the tempo and outcome of the game pretty closely:</p>
+<p><img src="https://willhart.io/post/basketball-analysis-software/possession_stats.png" alt="Example possession statistics" /></p>
+<p>A neat feature of rust was how easy it was to go from a single game box score to
+an average across a subset of games or even a season. By implementing the
+<code>std::ops::Add</code> trait on the Box Score then this could be done with basically no
+code changes in the API.</p>
+<h3 id="sharing-games">Sharing games</h3>
+<p>As this version of the analysis software was written using a SaaS model, there
+was a fairly basic underlying role-based permission system. This meant it was
+easy to create a “shared” link that was essentially a read-only version of the
+page. These were enforced at the postgres DB level using row-level permissions
+and tested with unit tests (I know, unit tests a side project!?).</p>
+<h2 id="what-next">What next?</h2>
+<p>Developing the analysis tool has been a very rewarding long-term project. I
+learned quite a lot out of doing it and got a lot of pleasure out of using it to
+analyse a bunch of games. Since I started working on these tools almost a decade
+ago, my life has changed a lot. I have my own little people who rely on me,
+other hobbies demanding my time, and a job which seems to drain most of my
+energy. I’m probably going to have to hang up my coaching boots at the end of
+this season, at least until (or if) my own little kids decide to play. Its hard
+to keep plugging away at something that I’ll probably no longer have a use for.</p>
+<p>There were some features or ideas that I wanted to return to, and who knows -
+maybe one day if my kids are playing and I lace up the coaching clipboard again,
+I’ll return to these to “save some time”.</p>
+<h3 id="a-proper-tagging-interface">A proper tagging interface</h3>
+<p>The “text-based” tagging interface in the latest iteration of the analysis
+software works for me, but if I ever want other people to use it I’d have to
+create a proper GUI for tagging. I think a React interface would have the same
+limitations as the original C# one in handling the branching tagging interface.
+I’d be curious to try something that uses the existing rust typestate backend
+for tagging (developed for the TUI) and delivers HTMX to the front end to show
+the correct GUI.</p>
+<h3 id="integration-with-diagramming-software">Integration with diagramming software</h3>
+<p>I also have some really capable play diagramming software, which at the moment
+is a separate tool. I think it would be really interesting to merge the two
+tools, and in particular I’d love to be able to draw up diagrams right from
+within the video analysis software, either as a teaching or a scouting tool.</p>
+<h3 id="machine-learning">Machine learning</h3>
+<p>I think the ultimate UI for tagging videos would be… no UI at all! Could we
+get machine learning algorithms to tag up the video for us? I’m not 100% on the
+AI hype train, but I do think some good old fashioned machine learning tools to
+analyse the video would be useful, especially if they could extract highlights
+and tags automatically. It would be even cooler if the ML could process the
+video and turn it into play diagrams.</p>
+<p><a rel="noopener nofollow noreferrer" target="_blank" href="https://www.statsperform.com/opta-tracking/">I’m</a>
+<a rel="noopener nofollow noreferrer" target="_blank" href="https://medium.com/@kalidrafts/exploring-basketball-spacing-through-computer-vision-broadcast-data-cdff8a118c4f">clearly</a>
+<a rel="noopener nofollow noreferrer" target="_blank" href="https://medium.com/swlh/automating-basketball-highlights-with-object-tracking-b134ce9afec2">not</a>
+<a rel="noopener nofollow noreferrer" target="_blank" href="https://datahacker.rs/005-advanced-computer-vision-basketball-layer-tracking-with-open-cv/">the</a>
+<a rel="noopener nofollow noreferrer" target="_blank" href="https://www.youtube.com/watch?v=yJWAtr3kvPU">first</a>
+<a rel="noopener nofollow noreferrer" target="_blank" href="https://blog.roboflow.com/track-football-players/">to</a>
+<a rel="noopener nofollow noreferrer" target="_blank" href="https://www.youtube.com/watch?v=XHT2c8jT3Bc">think</a>
+<a rel="noopener nofollow noreferrer" target="_blank" href="https://github.com/sketscripter/Computer-vision-basketball-court-mapping-and-player-tracking">of</a>
+<a rel="noopener nofollow noreferrer" target="_blank" href="https://neptune.ai/blog/dive-into-football-analytics-with-tensorflow-object-detection-api">this</a>.</p>
+<p>I think this would be very challenging given the majority of game films in
+amateur leagues probably use off the shelf cameras with poor low-light
+performance, and the video angle is often very shallow with lots of players or
+spectators obscuring the feed. Despite this it would be <em>very</em> cool.</p>
+<h3 id="video-hosting">Video hosting</h3>
+<p>Long-term it would be interesting to have a custom video pipeline using some
+sort of streaming media server. I looked at a few options for doing this,
+including off the shelf things like Cloudflare Stream, but at the end of the day
+for a hobby project Youtube is more than enough!</p>
+</article>
+
+<div class="container col">
+  <h2>Comments</h2>
+  <blockquote>Comments are powered by github and <a href="https://giscus.app">giscus</a></blockquote>
+  <script src="https://giscus.app/client.js"
+        data-repo="will-hart/will-hart.github.io"
+        data-repo-id="MDEwOlJlcG9zaXRvcnkzMjQ2NjY3Mzg="
+        data-category="General"
+        data-category-id="DIC_kwDOE1oFcs4CtiK6"
+        data-mapping="og:title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+  </script>
+</div>
+</div>
+
+  <footer id="footer">
+    <div class="container col">
+      This website was hand-made using Zola and Tera.
+      All text and images are available under CC0 1.0 Universal and code under MIT unless otherwise specified. See <a href="https://github.com/will-hart/willhart.io/blob/main/LICENSE.md">LICENSE.md</a> for more.
+    </div>
+  </footer>
+</body>
+
+</html>

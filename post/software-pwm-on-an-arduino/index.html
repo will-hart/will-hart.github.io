@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Using software PWM on Arduino | willhart.io</title>
+
+
+  <link rel="icon" type="image/x-icon" href="/icons/icon_light_32x32.png">
+
+  
+<meta name="description" content="A quick tutorial on using software PWM on an Arduino. Posted on https://willhart.io" />
+<meta property="og:description" content="A quick tutorial on using software PWM on an Arduino" />
+<meta property="og:title" content="Using software PWM on Arduino" />
+<meta property="og:url" content="https://willhart.io/post/software-pwm-on-an-arduino/">
+<meta property="og:type" content="article" />
+<meta property="og:locale" content="en_AU" />
+
+
+  <link rel="stylesheet" href="https://willhart.io/global.css?h=f83cd20cd0df26d72c2b" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sono:wght@200..800&display=swap" rel="stylesheet">
+
+  
+
+  <!-- Cloudflare Web Analytics -->
+  <script defer src='https://static.cloudflareinsights.com/beacon.min.js'
+    data-cf-beacon='{"token": "310f93cab66a42c5a328f246cc053025"}'></script>
+  <!-- End Cloudflare Web Analytics -->
+
+  <!-- Light/Dark theme toggling -->
+  <script type="text/javascript">
+    const storageKey = "websiteTheme";
+
+    // apply theme once we have a DOM
+    document.addEventListener("DOMContentLoaded", () => {
+      applyTheme();
+    })
+
+    // a function that toggles between light and dark theme
+    const toggleTheme = () => {
+      localStorage.setItem(storageKey, localStorage.getItem(storageKey) === "d" ? "l" : "d" );
+      applyTheme();
+    }
+
+    // a function that actually applies the theme
+    const applyTheme = () => {
+      const useDarkTheme = localStorage.getItem(storageKey) === "d";
+      document.getElementsByTagName("html")[0].className = useDarkTheme ? "dark" : "";
+      document.getElementById("theme-toggle").textContent = useDarkTheme ? "🔆" : "🌑";
+    }
+  </script>
+
+  <script type="speculationrules">
+  {
+    "prerender": [
+      { "where": { "selector_matches": "a" } }
+    ]
+  }
+  </script></head>
+
+<body>
+  <nav id="header">
+    <a href="/" aria-label="Website Logo and Link to Home Page">
+      <div id="logo" >&nbsp;</div>
+    </a>
+    <span>
+      <button type="button" id="theme-toggle" aria-label="Toggle Theme" onClick="toggleTheme()">🌑</button>
+      <a class="header-item" href="/post">POSTS</a>
+      <a class="header-item" href="/tag">TAGS</a>
+      <span class="header-item hide-when-slim">|</span>
+      <a class="header-item hide-when-slim" href="/tag/projects">PROJECTS</a>
+      <a class="header-item hide-when-slim" href="/tag/gamedev">GAMEDEV</a>
+      <a class="header-item hide-when-slim" href="/tag/electronics">ELECTRONICS</a>
+    </span>
+  </nav>
+
+  
+
+<div class="container col mb mt">
+  <h1>Using software PWM on Arduino</h1>
+  <div class="col txtsm">
+    <span>Posted by Will Hart on 2012-01-14</span>
+    <div>
+      <span>See also:</span>
+      
+      <a class="txtsm mr" href="https://willhart.io/tag/tutorials/">#tutorials</a>
+      
+      <a class="txtsm mr" href="https://willhart.io/tag/electronics/">#electronics</a>
+      
+    </div>
+  </div>
+</div>
+
+
+
+<article class="container col mblg"><p>The Arduino Uno has six PWM ports, but not every micro-controller has this many.
+In this tutorial I will show you how to implement software PWM. By using a
+potentiometer to input a desired level we can then control the brightness of an
+LED on another pin.</p>
+<p>First of all I’m going to assume you know what PWM is. If you don’t, <a rel="noopener nofollow noreferrer" target="_blank" href="http://en.wikipedia.org/wiki/Pulse-width_modulation">Wikipedia
+is your friend</a>. Basically
+PWM uses a digital port to approximate an analog port. It does this by setting a
+percentage of a set cycle to HIGH, and the rest to LOW. When this repeats really
+fast (say 10,000 times a second) the voltage averages out to somewhere in
+between HIGH and LOW. You can set the voltage by determining how much of the
+cycle is HIGH and how much is LOW (the duty cycle). Ok, carry on!</p>
+<p>The circuit setup is pretty basic. Simply set up a potentiometer between +5v and
+GND, and connect the wiper (the middle pin) to an analog input - in this case
+analog pin 1 on the Arduino. An LED is then connected to a digital output pin
+(digital pin 8), and you can see on the schematic that it is placed after two
+Resistance - Capacitor (RC) filters. If you would like to know more about RC
+filters, then I recommend you look at EEVBlog
+<a rel="noopener nofollow noreferrer" target="_blank" href="http://www.eevblog.com/2011/12/07/eevblog-225-lab-power-supply-design-part-4-pwm-control/">http://www.eevblog.com/2011/12/07/eevblog-225-lab-power-supply-design-part-4-pwm-control/</a> - the post that inspired this tutorial! Dave gives quite a bit of information on
+RC filters on this post and shows how to use LTSpice to simulate. I highly
+recommend you have a look at this video!</p>
+<p><img src="https://willhart.io/post/software-pwm-on-an-arduino/softwarepwm_schematic-1024x695.png" alt="Software PWM schematic" /></p>
+<p>You may think that my capacitor/resistor values area bit strange in the
+schematic, well thats because I just grabbed what was at the top of my bits box!
+If you were doing this in “production” you would take a lot more care selecting
+your values - again, have a look at Dave’s post for more information. You can
+see the circuit setup in Fritzing below.</p>
+<p><img src="https://willhart.io/post/software-pwm-on-an-arduino/softwarepwm-circuit_bb-845x1024.png" alt="SoftwarePWM circuit" /></p>
+<p>And then the following code was used:</p>
+<pre data-lang="c" style="background-color:#2b303b;color:#c0c5ce;" class="language-c "><code class="language-c" data-lang="c"><span style="color:#65737e;">/**************************************************************/
+</span><span style="color:#65737e;">/* POT controlled software PWM                                */
+</span><span style="color:#65737e;">/*                                                            */
+</span><span style="color:#65737e;">/* Code written by William Hart, 2011                         */
+</span><span style="color:#65737e;">/* http://www.williamhart.info                                */
+</span><span style="color:#65737e;">/*                                                            */
+</span><span style="color:#65737e;">/* This is a very simple circuit which uses a potentiometer   */
+</span><span style="color:#65737e;">/* to set an analog input and then uses this input to drive a */
+</span><span style="color:#65737e;">/* PWM signal using a standard (non-PWM) port on the Arduino. */
+</span><span style="color:#65737e;">/**************************************************************/
+</span><span>
+</span><span style="color:#65737e;">//Serial.println(microsecondsToClockCycles(1)); // gives a result of 16 clock cycles per microsecond
+</span><span>
+</span><span style="color:#65737e;">// define pins
+</span><span style="color:#b48ead;">#define </span><span>ADJ_PIN </span><span style="color:#d08770;">1 </span><span style="color:#65737e;">// Adjustment pin is analog 0
+</span><span style="color:#b48ead;">#define </span><span>PWM_PIN </span><span style="color:#d08770;">8 </span><span style="color:#65737e;">// PWM output pin is digital 8
+</span><span>
+</span><span style="color:#65737e;">// setup PWM values
+</span><span style="color:#b48ead;">#define </span><span>PWM_FREQ </span><span style="color:#d08770;">300 </span><span style="color:#65737e;">// PWM Hz, must be greater than 60Hz to avoid delayMicroseconds issues
+</span><span style="color:#b48ead;">#define </span><span>MAX_V </span><span style="color:#d08770;">5.00 </span><span style="color:#65737e;">// the maximum voltage we can output
+</span><span>
+</span><span style="color:#b48ead;">long</span><span> cycle_length;
+</span><span style="color:#b48ead;">float</span><span> v_out;
+</span><span style="color:#b48ead;">float</span><span> duty_cycle;
+</span><span style="color:#b48ead;">int</span><span> on_time;
+</span><span style="color:#b48ead;">int</span><span> off_time;
+</span><span>
+</span><span style="color:#b48ead;">void </span><span style="color:#8fa1b3;">setup</span><span>()
+</span><span>{
+</span><span>  </span><span style="color:#65737e;">// start up serial for debugging
+</span><span>  Serial.</span><span style="color:#bf616a;">begin</span><span>(</span><span style="color:#d08770;">9600</span><span>);
+</span><span>
+</span><span>  </span><span style="color:#65737e;">// set pin states
+</span><span>  </span><span style="color:#bf616a;">pinMode</span><span>(ADJ_PIN, INPUT);
+</span><span>  </span><span style="color:#bf616a;">pinMode</span><span>(PWM_PIN, OUTPUT);
+</span><span>  </span><span style="color:#bf616a;">digitalWrite</span><span>(PWM_PIN, LOW);
+</span><span>
+</span><span>  </span><span style="color:#65737e;">// calculate the cycle length
+</span><span>  cycle_length = </span><span style="color:#d08770;">1000000</span><span>/PWM_FREQ; </span><span style="color:#65737e;">// the length of a single cycle of the PWM signal
+</span><span>}
+</span><span>
+</span><span style="color:#b48ead;">void </span><span style="color:#8fa1b3;">loop</span><span>()
+</span><span>{
+</span><span>  </span><span style="color:#65737e;">// read in the potentiometer value
+</span><span>  </span><span style="color:#b48ead;">int</span><span> val = </span><span style="color:#bf616a;">analogRead</span><span>(ADJ_PIN);
+</span><span>
+</span><span>  </span><span style="color:#65737e;">// map the pot value to the PWM value - 0-5V, to two decimal places
+</span><span>  v_out = </span><span style="color:#bf616a;">map</span><span>(val, </span><span style="color:#d08770;">0</span><span>,</span><span style="color:#d08770;">1024</span><span>, </span><span style="color:#d08770;">0</span><span>, </span><span style="color:#d08770;">500</span><span>);
+</span><span>  duty_cycle = (v_out/</span><span style="color:#d08770;">100</span><span>) / MAX_V; </span><span style="color:#65737e;">// work out what percentage of the PWM cycle we should set high
+</span><span>  on_time = duty_cycle * cycle_length;
+</span><span>  off_time = cycle_length - on_time;
+</span><span>
+</span><span>  </span><span style="color:#65737e;">// now set high, then delay for the duty_cycle percentage * cycle_length
+</span><span>  </span><span style="color:#b48ead;">if</span><span>(on_time &gt; </span><span style="color:#d08770;">0</span><span>)
+</span><span>  {
+</span><span>    </span><span style="color:#bf616a;">digitalWrite</span><span>(PWM_PIN, HIGH);
+</span><span>    </span><span style="color:#bf616a;">delayMicroseconds</span><span>(on_time);
+</span><span>  }
+</span><span>
+</span><span>  </span><span style="color:#bf616a;">digitalWrite</span><span>(PWM_PIN, LOW);
+</span><span>  </span><span style="color:#bf616a;">delayMicroseconds</span><span>(off_time);
+</span><span>}
+</span></code></pre>
+<p>Phew, what a lump of code! Once you break it down though, its quite simple. The
+basic principle is this:</p>
+<ul>
+<li>Setup : Work out how long our cycle is</li>
+<li>Loop:
+<ol>
+<li>Read the potentiometer value and determine the output voltage we would like</li>
+<li>Set the digital port high for the correct portion of the cycle</li>
+<li>Set the digital port LOW for the remainder of the cycle</li>
+</ol>
+</li>
+</ul>
+<p>I use the <code>delayMicroseconds()</code> function from Arduino to time the PWM cycle,
+however this has the limitation of being able to delay for a maximum of around
+16,000 microseconds. This means that we can’t set value below 61Hz for our PWM
+frequency. This could be remedied by a more intelligent use of <code>delay()</code>,
+however I leave this as an exercise for you!</p>
+</article>
+
+<div class="container col">
+  <h2>Comments</h2>
+  <blockquote>Comments are powered by github and <a href="https://giscus.app">giscus</a></blockquote>
+  <script src="https://giscus.app/client.js"
+        data-repo="will-hart/will-hart.github.io"
+        data-repo-id="MDEwOlJlcG9zaXRvcnkzMjQ2NjY3Mzg="
+        data-category="General"
+        data-category-id="DIC_kwDOE1oFcs4CtiK6"
+        data-mapping="og:title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+  </script>
+</div>
+</div>
+
+  <footer id="footer">
+    <div class="container col">
+      This website was hand-made using Zola and Tera.
+      All text and images are available under CC0 1.0 Universal and code under MIT unless otherwise specified. See <a href="https://github.com/will-hart/willhart.io/blob/main/LICENSE.md">LICENSE.md</a> for more.
+    </div>
+  </footer>
+</body>
+
+</html>

@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>The Perils of Unity&#x27;s execution order | willhart.io</title>
+
+
+  <link rel="icon" type="image/x-icon" href="/icons/icon_light_32x32.png">
+
+  
+<meta name="description" content="A deep and confusing dive into Unity&#x27;s execution order. Posted on https://willhart.io" />
+<meta property="og:description" content="A deep and confusing dive into Unity&#x27;s execution order" />
+<meta property="og:title" content="The Perils of Unity&#x27;s execution order" />
+<meta property="og:url" content="https://willhart.io/post/the-perils-of-unitys-execution-order/">
+<meta property="og:type" content="article" />
+<meta property="og:locale" content="en_AU" />
+
+
+  <link rel="stylesheet" href="https://willhart.io/global.css?h=f83cd20cd0df26d72c2b" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sono:wght@200..800&display=swap" rel="stylesheet">
+
+  
+
+  <!-- Cloudflare Web Analytics -->
+  <script defer src='https://static.cloudflareinsights.com/beacon.min.js'
+    data-cf-beacon='{"token": "310f93cab66a42c5a328f246cc053025"}'></script>
+  <!-- End Cloudflare Web Analytics -->
+
+  <!-- Light/Dark theme toggling -->
+  <script type="text/javascript">
+    const storageKey = "websiteTheme";
+
+    // apply theme once we have a DOM
+    document.addEventListener("DOMContentLoaded", () => {
+      applyTheme();
+    })
+
+    // a function that toggles between light and dark theme
+    const toggleTheme = () => {
+      localStorage.setItem(storageKey, localStorage.getItem(storageKey) === "d" ? "l" : "d" );
+      applyTheme();
+    }
+
+    // a function that actually applies the theme
+    const applyTheme = () => {
+      const useDarkTheme = localStorage.getItem(storageKey) === "d";
+      document.getElementsByTagName("html")[0].className = useDarkTheme ? "dark" : "";
+      document.getElementById("theme-toggle").textContent = useDarkTheme ? "🔆" : "🌑";
+    }
+  </script>
+
+  <script type="speculationrules">
+  {
+    "prerender": [
+      { "where": { "selector_matches": "a" } }
+    ]
+  }
+  </script></head>
+
+<body>
+  <nav id="header">
+    <a href="/" aria-label="Website Logo and Link to Home Page">
+      <div id="logo" >&nbsp;</div>
+    </a>
+    <span>
+      <button type="button" id="theme-toggle" aria-label="Toggle Theme" onClick="toggleTheme()">🌑</button>
+      <a class="header-item" href="/post">POSTS</a>
+      <a class="header-item" href="/tag">TAGS</a>
+      <span class="header-item hide-when-slim">|</span>
+      <a class="header-item hide-when-slim" href="/tag/projects">PROJECTS</a>
+      <a class="header-item hide-when-slim" href="/tag/gamedev">GAMEDEV</a>
+      <a class="header-item hide-when-slim" href="/tag/electronics">ELECTRONICS</a>
+    </span>
+  </nav>
+
+  
+
+<div class="container col mb mt">
+  <h1>The Perils of Unity&#x27;s execution order</h1>
+  <div class="col txtsm">
+    <span>Posted by Will Hart on 2017-02-05</span>
+    <div>
+      <span>See also:</span>
+      
+      <a class="txtsm mr" href="https://willhart.io/tag/code/">#code</a>
+      
+      <a class="txtsm mr" href="https://willhart.io/tag/gamedev/">#gamedev</a>
+      
+    </div>
+  </div>
+</div>
+
+
+
+<article class="container col mblg"><p><img src="https://willhart.io/post/the-perils-of-unitys-execution-order/execution_order.png" alt="Testing Unity’s script execution order" /></p>
+<p>I came across an interesting problem when I was posting about our <a href="/post/zenobits-unity-ecs-part-1">Zenobit
+ECS</a> a while back. In our ECS I
+had noticed that as when we retrieve a list of Components from our ECS engine
+(say a list of “attack” components), they are always in the same order. This
+meant there was the potential for some sort of bias to occur when resolving
+attacks. For instance, entities that attacked earlier in each Update loop were
+at an advantage if it meant that others were killed before they could fight
+back.</p>
+<p>As I was thinking about how this would work in Unity’s preferred architecture, I
+realised I didn’t really know much about how Unity resolves its “order of
+execution” of scripts by default. You can set the order that Mono Behaviours are
+executed in the “Script Execution Order” (or SEO) settings panel, but I wasn’t
+really clear what happened if you scripts weren’t in the SEO panel. Was this a
+potential source of “hidden” bias or errors in Unity code? (There is only one
+way to find out!)</p>
+<p>Unity’s documentation on Script Execution Order is… well not great. It
+<a rel="noopener nofollow noreferrer" target="_blank" href="https://docs.unity3d.com/Manual/class-ScriptExecution.html">contains the following
+line</a>:</p>
+<blockquote>
+<p>By default, the Awake, OnEnable and Update functions of different scripts are
+called in the order the <strong>scripts</strong> are loaded (which is arbitrary). However,
+it is possible to modify this order using the Script Execution Order settings</p>
+</blockquote>
+<p>The emphasis is mine - the word “scripts” is highly ambiguous, and is not a C#
+term. By script they could either mean the <code>Type</code>, i.e. <code>typeof(MyClass)</code> or an
+instance, <code>var instance = gameObject.AddComponent(MyClass)</code>. Even after writing
+this post, I still don’t really know what they mean.</p>
+<h2 id="what-could-possibly-go-wrong">What could possibly go wrong?</h2>
+<p>Why does the distinction matter? Well picture a scenario, similar to the ranged
+combat example provided in <a href="/zenobits-unity-ecs-part-3">part 3 of my ECS
+series</a>. You have two <code>GameObject</code>s, each can attack
+the other game object, and it can also die if it is attacked. A simple
+implementation, where we have a reference to the other game object <code>enemy</code> looks
+like:</p>
+<pre data-lang="cs" style="background-color:#2b303b;color:#c0c5ce;" class="language-cs "><code class="language-cs" data-lang="cs"><span style="color:#b48ead;">public class </span><span style="color:#ebcb8b;">Attack </span><span style="color:#eff1f5;">: </span><span style="color:#a3be8c;">MonoBehaviour
+</span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">  </span><span style="color:#b48ead;">private void </span><span style="color:#8fa1b3;">Update</span><span style="color:#eff1f5;">()
+</span><span style="color:#eff1f5;">  {
+</span><span style="color:#eff1f5;">    </span><span style="color:#bf616a;">Destroy</span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">enemy</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">  }
+</span><span style="color:#eff1f5;">}
+</span></code></pre>
+<p>The problem here is fairly clear - whoever attacks first, wins. If the attack
+code on one game object is always executed first, then it will <em>always</em> win the
+combat. (In our ECS, this would mean older entities would always win combat as
+they are at the top of the list).</p>
+<p>To fix this, we could add a second MonoBehaviour, a <code>Death</code> component which
+separately removes dead enemies. Our implementation now looks like:</p>
+<pre data-lang="cs" style="background-color:#2b303b;color:#c0c5ce;" class="language-cs "><code class="language-cs" data-lang="cs"><span style="color:#b48ead;">public class </span><span style="color:#ebcb8b;">Attack </span><span style="color:#eff1f5;">: </span><span style="color:#a3be8c;">MonoBehaviour
+</span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">  </span><span style="color:#b48ead;">private void </span><span style="color:#8fa1b3;">Update</span><span style="color:#eff1f5;">()
+</span><span style="color:#eff1f5;">  {
+</span><span style="color:#eff1f5;">    </span><span style="color:#bf616a;">enemy</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">GetComponent</span><span style="color:#eff1f5;">&lt;Death&gt;().</span><span style="color:#bf616a;">IsDead </span><span>= </span><span style="color:#d08770;">true</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">  }
+</span><span style="color:#eff1f5;">}
+</span><span>
+</span><span style="color:#b48ead;">public class </span><span style="color:#ebcb8b;">Death </span><span style="color:#eff1f5;">: </span><span style="color:#a3be8c;">MonoBehaviour
+</span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">  </span><span style="color:#b48ead;">public bool </span><span style="color:#bf616a;">IsDead </span><span style="color:#eff1f5;">{</span><span style="color:#b48ead;">get</span><span style="color:#eff1f5;">; </span><span style="color:#b48ead;">set</span><span style="color:#eff1f5;">;}
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">  </span><span style="color:#b48ead;">private void </span><span style="color:#8fa1b3;">Update</span><span style="color:#eff1f5;">()
+</span><span style="color:#eff1f5;">  {
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">if </span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">IsDead</span><span style="color:#eff1f5;">) </span><span style="color:#bf616a;">Destroy</span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">gameObject</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">  }
+</span><span style="color:#eff1f5;">}
+</span></code></pre>
+<p>However, under this approach, the outcome still depends on the order the scripts
+are called in. Consider what happens if the execution order is the following:</p>
+<pre data-lang="txt" style="background-color:#2b303b;color:#c0c5ce;" class="language-txt "><code class="language-txt" data-lang="txt"><span>Object A &gt;&gt; Attack
+</span><span>Object A &gt;&gt; Death
+</span><span>Object B &gt;&gt; Attack
+</span><span>Object B &gt;&gt; Death
+</span></code></pre>
+<p>This should result in both of the objects dying as they attack, then check for
+death. But what happens if the following occurs:</p>
+<pre data-lang="txt" style="background-color:#2b303b;color:#c0c5ce;" class="language-txt "><code class="language-txt" data-lang="txt"><span>Object A &gt;&gt; Attack
+</span><span>Object A &gt;&gt; Death
+</span><span>*Object B &gt;&gt; Death
+</span><span>*Object B &gt;&gt; Attack
+</span></code></pre>
+<p>Note the order the Components are Updated on Object B is now switched. Now
+Object B dies before it can attack! Object A always wins and Object B always
+dies, and once again there is a benefit in being higher in the game object
+execution priority.</p>
+<p>But can this ever happen? What does Unity actually do where we don’t specify a
+script execution order? What order are components called in, and how does Unity
+work out which GameObject to Update first?</p>
+<h2 id="mapping-unity-s-execution-order">Mapping Unity’s Execution Order</h2>
+<p>Lets do a little digging. If I open up Unity and Visual Studio, I can make a
+simple script to find out what Unity does under the hood:</p>
+<pre data-lang="cs" style="background-color:#2b303b;color:#c0c5ce;" class="language-cs "><code class="language-cs" data-lang="cs"><span style="color:#b48ead;">public class </span><span style="color:#ebcb8b;">TestA </span><span style="color:#eff1f5;">: </span><span style="color:#a3be8c;">MonoBehaviour
+</span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">private static int </span><span style="color:#bf616a;">InstanceCount </span><span>= </span><span style="color:#d08770;">0</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">private int </span><span style="color:#bf616a;">instanceId</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">private void </span><span style="color:#8fa1b3;">Awake</span><span style="color:#eff1f5;">()
+</span><span style="color:#eff1f5;">    {
+</span><span style="color:#eff1f5;">        </span><span style="color:#bf616a;">instanceId </span><span>= </span><span style="color:#bf616a;">InstanceCount</span><span>++</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">private void </span><span style="color:#8fa1b3;">Update</span><span style="color:#eff1f5;">()
+</span><span style="color:#eff1f5;">    {
+</span><span style="color:#eff1f5;">        </span><span style="color:#bf616a;">Debug</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">Log</span><span style="color:#eff1f5;">(
+</span><span style="color:#eff1f5;">            </span><span>&quot;</span><span style="color:#a3be8c;">FRAME </span><span>&quot; + </span><span style="color:#bf616a;">Time</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">frameCount </span><span>+
+</span><span style="color:#eff1f5;">            </span><span>&quot;</span><span style="color:#a3be8c;"> INSTANCE </span><span>&quot; + </span><span style="color:#bf616a;">instanceId </span><span>+
+</span><span style="color:#eff1f5;">            </span><span>&quot; &quot; + </span><span style="color:#bf616a;">GetType</span><span style="color:#eff1f5;">()
+</span><span style="color:#eff1f5;">        );
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">}
+</span></code></pre>
+<p>This script just increments a counter each time we add a new instance of the
+class, then logs the frame number, instance number and class name in the
+<code>Update</code> method.</p>
+<p>I made a duplicate of this script, called <code>TestB</code>. In an empty scene, I created
+a prefab from an empty game object with the <code>TestA</code> and <code>TestB</code> scripts attached
+(<code>TestA</code> was above <code>TestB</code> in the hierarchy), and left one instance in the
+scene. When I hit play, I got the following logs:</p>
+<pre data-lang="txt" style="background-color:#2b303b;color:#c0c5ce;" class="language-txt "><code class="language-txt" data-lang="txt"><span>FRAME 1 INSTANCE 0 TestA
+</span><span>FRAME 1 INSTANCE 0 TestB
+</span><span>FRAME 2 INSTANCE 0 TestA
+</span><span>FRAME 2 INSTANCE 0 TestB
+</span><span>...
+</span></code></pre>
+<p>This is fairly straightforward. The execution order is the same every frame.</p>
+<p>What if we duplicate the game object, so we now have two objects, each with the
+two scripts attached?</p>
+<pre data-lang="txt" style="background-color:#2b303b;color:#c0c5ce;" class="language-txt "><code class="language-txt" data-lang="txt"><span>FRAME 1 INSTANCE 0 TestA
+</span><span>FRAME 1 INSTANCE 0 TestB
+</span><span>FRAME 1 INSTANCE 1 TestB
+</span><span>FRAME 1 INSTANCE 1 TestA
+</span><span>FRAME 1 INSTANCE 2 TestA
+</span><span>FRAME 1 INSTANCE 2 TestB
+</span><span>FRAME 1 INSTANCE 3 TestB
+</span><span>FRAME 1 INSTANCE 3 TestA
+</span></code></pre>
+<p><em>Ruh roh</em>… the order of execution on the second game object is switched - B,A
+versus A,B on the first object! Maybe Unity just wanted me to spell out ABBA? In
+fact, adding more game objects seems to repeat this pattern (ABBA ABBA ABBA),
+although once I got (BAAB BAAB BAAB). So… um - what are the rules here? To be
+honest, I have no idea, so I guess we just move on?</p>
+<p>Lets set the difficulty level to <em>Ultra Nightmare</em> by Instantiating a new prefab
+every frame. I had to hit play and pause again really quickly to prevent too
+much console spam… but now the log looks like this:</p>
+<pre data-lang="txt" style="background-color:#2b303b;color:#c0c5ce;" class="language-txt "><code class="language-txt" data-lang="txt"><span>FRAME 8 INSTANCE 0 TestB
+</span><span>FRAME 8 INSTANCE 0 TestA
+</span><span>FRAME 8 INSTANCE 1 TestA
+</span><span>FRAME 8 INSTANCE 1 TestB
+</span><span>FRAME 8 INSTANCE 2 TestA
+</span><span>FRAME 8 INSTANCE 2 TestB
+</span><span>... many more lines
+</span><span>FRAME 8 INSTANCE 7 TestA
+</span><span>FRAME 8 INSTANCE 7 TestB
+</span></code></pre>
+<p>And a few frames later</p>
+<pre data-lang="txt" style="background-color:#2b303b;color:#c0c5ce;" class="language-txt "><code class="language-txt" data-lang="txt"><span>FRAME 20 INSTANCE 0 TestB
+</span><span>FRAME 20 INSTANCE 0 TestA
+</span><span>FRAME 20 INSTANCE 1 TestA
+</span><span>FRAME 20 INSTANCE 1 TestB
+</span><span>FRAME 20 INSTANCE 2 TestA
+</span><span>FRAME 20 INSTANCE 2 TestB
+</span><span>... many more lines
+</span><span>FRAME 20 INSTANCE 18 TestA
+</span><span>FRAME 20 INSTANCE 18 TestB
+</span><span>FRAME 20 INSTANCE 19 TestA
+</span><span>FRAME 20 INSTANCE 19 TestB
+</span></code></pre>
+<p>Something really strange has happened - the instantiated objects always follow
+the same pattern, A then B, while the editor placed game object executes B then
+A.</p>
+<p>Double ruh roh. I’m really confused now. I’m assuming something like this is
+happening:</p>
+<ol>
+<li>The execution order of MonoBehaviours attached to each game object is
+different depending on whether the GameObject was placed in the scene or
+Instantiated at run time</li>
+<li>The behaviour of execution order for editor placed objects is different from
+instantiated objects</li>
+<li>The game objects appear to be updated in the order in which they were
+instantiated</li>
+<li>The hierarchy has no impact on execution order (verify this by pausing the
+game and rearranging the hierarchy)</li>
+</ol>
+<p>I’m not even sure what to make of this - I think its best to just consider that
+by default Unity executes Update methods completely arbitrarily, but usually
+grouped by GameObject.</p>
+<h2 id="why-does-this-matter-and-can-it-be-fixed">Why does this matter, and can it be fixed?</h2>
+<p>If we execute all of the <code>Attack.Update()</code> calls, then all of the
+<code>Death.Update()</code> calls, then both game objects will die every time they fight -
+they both attack the other object in their <code>Attack</code> instance, then they both die
+in the <code>Death</code> instance.</p>
+<p>It definitely isn’t a terminal problem - we can achieve explicitly set Script
+Execution Order or perhaps do death removal check in <code>LateUpdate</code>. These
+solutions both work, and are relatively straightforward to implement, but the
+danger lies in the fact that the default Unity implementation relies on
+<em>implicit</em> and seemingly arbitrary execution order.</p>
+<p>There is the potential for a whole raft of insidious, unexpected and difficult
+to debug logic errors to crop up, way beyond the complexity of our contrived
+attack/die example here. This potential is made worse by the fact that the
+default Unity behaviour appears to vary based on factors such as instantiation
+order and instantiation method. To be absolutely certain of our execution order
+we may need to <strong>set script execution order on every single MonoBehaviour in our
+game</strong>, which seems to me to be a particular kind of hell.</p>
+<p>Anyway, I hope this post has in some way helped you avoid some insidious, hard
+to debug issues in your Unity Adventure!</p>
+</article>
+
+<div class="container col">
+  <h2>Comments</h2>
+  <blockquote>Comments are powered by github and <a href="https://giscus.app">giscus</a></blockquote>
+  <script src="https://giscus.app/client.js"
+        data-repo="will-hart/will-hart.github.io"
+        data-repo-id="MDEwOlJlcG9zaXRvcnkzMjQ2NjY3Mzg="
+        data-category="General"
+        data-category-id="DIC_kwDOE1oFcs4CtiK6"
+        data-mapping="og:title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+  </script>
+</div>
+</div>
+
+  <footer id="footer">
+    <div class="container col">
+      This website was hand-made using Zola and Tera.
+      All text and images are available under CC0 1.0 Universal and code under MIT unless otherwise specified. See <a href="https://github.com/will-hart/willhart.io/blob/main/LICENSE.md">LICENSE.md</a> for more.
+    </div>
+  </footer>
+</body>
+
+</html>

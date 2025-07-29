@@ -1,0 +1,315 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
+    <title>William Hart | willhart.io - phd</title>
+    <subtitle>My little internet home page, full of uninteresting musings and thinking out louds.</subtitle>
+    <link rel="self" type="application/atom+xml" href="https://willhart.io/tag/phd/atom.xml"/>
+    <link rel="alternate" type="text/html" href="https://willhart.io"/>
+    <generator uri="https://www.getzola.org/">Zola</generator>
+    <updated>2019-05-16T00:00:00+00:00</updated>
+    <id>https://willhart.io/tag/phd/atom.xml</id>
+    <entry xml:lang="en">
+        <title>Thesis writing in Markdown - pandemic and pandoc</title>
+        <published>2019-05-16T00:00:00+00:00</published>
+        <updated>2019-05-16T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              William Hart
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://willhart.io/post/thesis-writing-in-markdown-pandoc-and-pandemic/"/>
+        <id>https://willhart.io/post/thesis-writing-in-markdown-pandoc-and-pandemic/</id>
+        
+        <content type="html" xml:base="https://willhart.io/post/thesis-writing-in-markdown-pandoc-and-pandemic/">&lt;p&gt;I’m in the closing stages of my PhD (I hope), and beginning to write up some
+chapters. As my PhD is heavy on analysis, data and modelling, I’ve found writing
+in Word or LaTeX to have a lot of shortcomings that I’d really like to overcome.
+Word is simple to use but citations are a bit clunky and the typography isn’t
+particularly nice. On the other hand, LaTeX looks nicer but is a lot more work
+to get right. There are also some complications - for instance, what if I just
+want to build one chapter at a time?&lt;&#x2F;p&gt;
+&lt;p&gt;I guess I’ve been spoiled for choice in the Node &#x2F; Python &#x2F; C# worlds where you
+can usually just type yarn build or yarn start and out pops a functional web
+app. Is there a similar build system for academic documents? It turns out there
+isn’t, at least not a good one, but it isn’t too hard to cobble together a
+Frankenstein to do the job.&lt;&#x2F;p&gt;
+&lt;p&gt;What features would a build system have? The first step was to work out what
+sort of features a thesis build system would have. The core requirements are:&lt;&#x2F;p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;strong&gt;Citations and a bibliography&lt;&#x2F;strong&gt;,&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;strong&gt;Variable substitution&lt;&#x2F;strong&gt;, so that analysis results can be exported to JSON
+files and then the values automagically inserted in the correct location in
+the text,&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;strong&gt;Build up multi-part figures&lt;&#x2F;strong&gt;,&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;strong&gt;Automatic cross references&lt;&#x2F;strong&gt;, I don’t want to have to think about fixing
+&lt;code&gt;Figure 6.15&lt;&#x2F;code&gt; when I insert a figure in between, and I want to be able to
+reference between chapters even if they are in separate documents,&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;strong&gt;Single command build&lt;&#x2F;strong&gt;, being able to compile the document with one click
+or CLI command&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;p&gt;There are some nice to have features as well:&lt;&#x2F;p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;strong&gt;Write in a plain text language&lt;&#x2F;strong&gt;, i.e. Markdown? as much as possible&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;strong&gt;Build the entire document or single chapters&lt;&#x2F;strong&gt;, so I can send a chapter to
+a supervisor for review&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;strong&gt;Various export formats&lt;&#x2F;strong&gt;, so that I can send Word, Markdown, LaTeX or PDF
+formats as required&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;h2 id=&quot;wait-doesn-t-this-already-exist&quot;&gt;Wait, doesn’t this already exist?&lt;&#x2F;h2&gt;
+&lt;p&gt;Well, yes in a word, &lt;code&gt;pandoc&lt;&#x2F;code&gt; does a lot of these things already. In the list
+above there are only a few things that I don’t think pandoc can do out of the
+box - building multi-part figures and building entire document or single
+chapters (although this could probably be achieved with a batch file or
+similar). However managing the different commands required for all the export
+formats and options that I want to build would be a bit tricky.&lt;&#x2F;p&gt;
+&lt;p&gt;Luckily, I found &lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;lionel-rigoux&#x2F;pandemic&quot;&gt;&lt;code&gt;pandemic&lt;&#x2F;code&gt;&lt;&#x2F;a&gt; which
+is a &lt;code&gt;pandoc&lt;&#x2F;code&gt; CLI for building documents from “recipes”. pandemic &lt;code&gt;recipes&lt;&#x2F;code&gt;
+allow multiple export formats, and different filter combinations and so on per
+recipe. It also has &lt;code&gt;prehooks&lt;&#x2F;code&gt; which let you define CLI commands that should run
+before pandoc to either preprocess the document or run side effects.&lt;&#x2F;p&gt;
+&lt;p&gt;Once a recipe is defined, pandemic can be used to build up a chapter by running
+a single CLI command:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;bash&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-bash &quot;&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;pandemic&lt;&#x2F;span&gt;&lt;span&gt; publish manuscript.md
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Or if a particular recipe is required:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;bash&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-bash &quot;&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;pandemic&lt;&#x2F;span&gt;&lt;span&gt; publish&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt; -f&lt;&#x2F;span&gt;&lt;span&gt; tex manuscript.md
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;h2 id=&quot;cobbling-it-together&quot;&gt;Cobbling it together&lt;&#x2F;h2&gt;
+&lt;p&gt;At this point I got a bit medieval and cobbled together what can only be
+described as an abomination!&lt;&#x2F;p&gt;
+&lt;p&gt;Using PowerShell scripts, pandoc and pandemic I set up a document build system
+that converts the raw Markdown documents to LaTeX after running some filters,
+copies the files to a build directory, merges all the chapters into a single
+document and builds it several times with XeLaTeX. I used a &lt;code&gt;handlebars&lt;&#x2F;code&gt; prehook
+for &lt;code&gt;pandemic&lt;&#x2F;code&gt; to swap variables in the form &lt;code&gt;{{{variable_name}}}&lt;&#x2F;code&gt; in the text
+from files output by my Jupyter notebooks. I manually run commands for
+&lt;code&gt;it-figures&lt;&#x2F;code&gt;, my node library for building multi-part figures on each chapter.&lt;&#x2F;p&gt;
+&lt;p&gt;By running a separate command I can output a chapter in a standalone tex file. A
+single chapter is built like this:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;powershell&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-powershell &quot;&gt;&lt;code class=&quot;language-powershell&quot; data-lang=&quot;powershell&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;function &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;BuildChapter &lt;&#x2F;span&gt;&lt;span&gt;{
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;Param&lt;&#x2F;span&gt;&lt;span&gt;([&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;String&lt;&#x2F;span&gt;&lt;span&gt;]$&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;chap&lt;&#x2F;span&gt;&lt;span&gt;)
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;Write-Output &lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;Building Chapter &lt;&#x2F;span&gt;&lt;span&gt;$&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;chap&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;# build figures using `it-figures`
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;Set-Location&lt;&#x2F;span&gt;&lt;span&gt; .\$&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;chap&lt;&#x2F;span&gt;&lt;span&gt;\figures
+&lt;&#x2F;span&gt;&lt;span&gt;  figures b panels.json
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;# build the manuscript
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;Set-Location&lt;&#x2F;span&gt;&lt;span&gt; ..\
+&lt;&#x2F;span&gt;&lt;span&gt;  pandemic publish manuscript.md
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;Set-Location&lt;&#x2F;span&gt;&lt;span&gt; .\_public
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;# add a few newlines to the markdown to force a latex break
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;Add-Content &lt;&#x2F;span&gt;&lt;span&gt;-Path manuscript.build -Value &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;`r`n`r`n&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;Move-Item &lt;&#x2F;span&gt;&lt;span&gt;-Path manuscript.build -Destination ..\..\.build\$&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;chap.md &lt;&#x2F;span&gt;&lt;span&gt;-Force
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;New-Item &lt;&#x2F;span&gt;&lt;span&gt;-ItemType Directory -Force -Path ..\..\.build\.tex\$&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;chap&lt;&#x2F;span&gt;&lt;span&gt;\images
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;Copy-Item&lt;&#x2F;span&gt;&lt;span&gt; ..\images\* ..\..\.build\.tex\$&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;chap&lt;&#x2F;span&gt;&lt;span&gt;\images\ -Force -Recurse
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;New-Item &lt;&#x2F;span&gt;&lt;span&gt;-ItemType Directory -Force -Path ..\..\.build\.tex\$&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;chap&lt;&#x2F;span&gt;&lt;span&gt;\figures
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;Copy-Item&lt;&#x2F;span&gt;&lt;span&gt; ..\figures\* ..\..\.build\.tex\$&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;chap&lt;&#x2F;span&gt;&lt;span&gt;\figures\ -Force -Recurse
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;Set-Location&lt;&#x2F;span&gt;&lt;span&gt; ..\..\
+&lt;&#x2F;span&gt;&lt;span&gt;}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Then the document is built like this&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;powershell&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-powershell &quot;&gt;&lt;code class=&quot;language-powershell&quot; data-lang=&quot;powershell&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;function &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;BuildDocument &lt;&#x2F;span&gt;&lt;span&gt;{
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;Param&lt;&#x2F;span&gt;&lt;span&gt;([&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;String&lt;&#x2F;span&gt;&lt;span&gt;]$&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;chaps&lt;&#x2F;span&gt;&lt;span&gt;)
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;Set-Location&lt;&#x2F;span&gt;&lt;span&gt; .\.build
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;  cat $&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;chaps &lt;&#x2F;span&gt;&lt;span&gt;| pandoc -s --top-level-division=chapter --template ..\template\thesis.tex -f markdown -t latex -F pandoc-crossref -M &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;crossrefYaml=..\template\crossref_settings.yaml&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot; --natbib -o .\.tex\thesis.tex
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;Set-Location&lt;&#x2F;span&gt;&lt;span&gt; .\.tex
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;  xelatex -quiet thesis.tex
+&lt;&#x2F;span&gt;&lt;span&gt;  biber thesis.bcf
+&lt;&#x2F;span&gt;&lt;span&gt;  xelatex -quiet thesis.tex
+&lt;&#x2F;span&gt;&lt;span&gt;  xelatex thesis.tex
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;Move-Item &lt;&#x2F;span&gt;&lt;span&gt;-Path thesis.pdf -Destination ..\..\thesis.pdf -Force
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;Move-Item &lt;&#x2F;span&gt;&lt;span&gt;-Path thesis.tex -Destination ..\..\thesis.tex -Force
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;Set-Location&lt;&#x2F;span&gt;&lt;span&gt; ..\..\
+&lt;&#x2F;span&gt;&lt;span&gt;}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;I’m not sure if this overly complicated approach is a good one, but it lets me
+write in Markdown, and automatically update figures and variables in my text if
+the analysis changes, and then publish in LaTeX with only a single command. This
+is quite satisfying, although if something goes wrong it will probably take
+quite a while to sort out.&lt;&#x2F;p&gt;
+&lt;p&gt;I’m guessing that before I start getting serious feedback from my supervisors
+I’ll probably “eject” from the build system and go back to working in pure
+LaTeX. At that point it will be handy to be able to run diffs on the text I get
+back from my supervisors without having to convert to and from Markdown.&lt;&#x2F;p&gt;
+&lt;p&gt;In the meantime, at least I’m entertained?&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Replacing Electron with C# WebView (Windows Only)</title>
+        <published>2018-12-14T00:00:00+00:00</published>
+        <updated>2018-12-14T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              William Hart
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://willhart.io/post/replacing-electron-with-c-sharp-edge-webviews-on-windows/"/>
+        <id>https://willhart.io/post/replacing-electron-with-c-sharp-edge-webviews-on-windows/</id>
+        
+        <content type="html" xml:base="https://willhart.io/post/replacing-electron-with-c-sharp-edge-webviews-on-windows/">&lt;p&gt;For my PhD I keep notes in Markdown documents of the key papers I’ve read. I
+recently wrote a &lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;will-hart&#x2F;markdown-browser&#x2F;&quot;&gt;simple rust
+application&lt;&#x2F;a&gt; for searching and
+rendering these Markdown documents, which are often quite maths heavy. I find it
+very useful when writing things up.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;willhart.io&#x2F;post&#x2F;replacing-electron-with-c-sharp-edge-webviews-on-windows&#x2F;markdownbrowser.png&quot; alt=&quot;The markdown browser application used to search MD notes from papers (size: 1302x632px)&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;I originally thought about using electron, but was turned off by the large
+number of files an installation includes. I don’t really have an issue with the
+RAM or disk space electron requires, although its become a bit of a meme.
+Warning, personal preference: I also much prefer the &lt;em&gt;look and feel&lt;&#x2F;em&gt; of web
+based interfaces over most “native” interfaces.&lt;&#x2F;p&gt;
+&lt;p&gt;To write the application I used the &lt;code&gt;WebView&lt;&#x2F;code&gt; package for Rust, which
+unfortunately uses the IE version installed on the computer (IE11 I think).
+Writing code for IE and debugging was… challenging? The great thing about Rust
+was that it allowed me to build an application that is about 800kb and uses 50MB
+of RAM when holding about 300 documents in memory. Having a single application
+file was also very nice as it reduced the noise and let me just drop it into the
+folder with my notes. On the flip side, I wrote the application in Rust which
+was a good learning experience, but required (and requires!) a lot more effort
+for me to maintain than something written in JS or C#.&lt;&#x2F;p&gt;
+&lt;p&gt;I recently came across a &lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;https:&#x2F;&#x2F;docs.microsoft.com&#x2F;en-au&#x2F;windows&#x2F;communitytoolkit&#x2F;controls&#x2F;wpf-winforms&#x2F;webview&quot;&gt;blog
+post&lt;&#x2F;a&gt;
+talking about how Microsoft had made Edge available as a &lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;https:&#x2F;&#x2F;www.nuget.org&#x2F;packages&#x2F;Microsoft.Toolkit.Wpf.UI.Controls.WebView&quot;&gt;WebView in WPF &#x2F;
+WinForms
+apps&lt;&#x2F;a&gt;,
+where previously it was only available through UWP. Here I’ll describe how I
+went about creating, bundling and debugging the Markdown browser in a WPF app
+built as a single &lt;code&gt;.exe&lt;&#x2F;code&gt; file, and using an Edge based WebView (which as we now
+know will one day run on Chromium, and should be installed on every Win 10
+machine!).&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;installation&quot;&gt;Installation&lt;&#x2F;h2&gt;
+&lt;p&gt;I started with a fresh WPF project, and from the package manager console ran:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;bash&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-bash &quot;&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;Install-Package&lt;&#x2F;span&gt;&lt;span&gt; Microsoft.Toolkit.Wpf.UI.Controls.WebView&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt; -Version&lt;&#x2F;span&gt;&lt;span&gt; 5.0.1
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Then in my &lt;code&gt;MainWindow.xaml&lt;&#x2F;code&gt; I added the namespace&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;XML&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-XML &quot;&gt;&lt;code class=&quot;language-XML&quot; data-lang=&quot;XML&quot;&gt;&lt;span&gt;xmlns:WPF=&amp;quot;clr-namespace:Microsoft.Toolkit.Wpf.UI.Controls;assembly=Microsoft.Toolkit.Wpf.UI.Controls.WebView&amp;quot;
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;and added the control inside the default &lt;code&gt;Grid&lt;&#x2F;code&gt;&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;xml&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-xml &quot;&gt;&lt;code class=&quot;language-xml&quot; data-lang=&quot;xml&quot;&gt;&lt;span&gt;&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;WPF:WebView &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;x:Name&lt;&#x2F;span&gt;&lt;span&gt;=&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;WebView&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot; &#x2F;&amp;gt;
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;h2 id=&quot;loading-a-local-file&quot;&gt;Loading a local file&lt;&#x2F;h2&gt;
+&lt;p&gt;I added a simple &lt;code&gt;index.html&lt;&#x2F;code&gt; file to the project under &lt;code&gt;www&#x2F;index.html&lt;&#x2F;code&gt;. I set the build type to &lt;code&gt;EmbeddedResource&lt;&#x2F;code&gt;. I hooked up a &lt;code&gt;Window.Loaded&lt;&#x2F;code&gt; event which looked like the following:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;cs&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-cs &quot;&gt;&lt;code class=&quot;language-cs&quot; data-lang=&quot;cs&quot;&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; e.g.
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; using Microsoft.Toolkit.Win32.UI.Controls.Interop.WinRT;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; using System.Linq;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; using System.Reflection;
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;private void &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;Window_Loaded&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;object &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;sender&lt;&#x2F;span&gt;&lt;span&gt;, RoutedEventArgs &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;e&lt;&#x2F;span&gt;&lt;span&gt;)
+&lt;&#x2F;span&gt;&lt;span&gt;{
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;var &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;asm &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;Assembly&lt;&#x2F;span&gt;&lt;span&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;GetExecutingAssembly&lt;&#x2F;span&gt;&lt;span&gt;();
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;var &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;fileName &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;asm&lt;&#x2F;span&gt;&lt;span&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;GetManifestResourceNames&lt;&#x2F;span&gt;&lt;span&gt;().&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;Single&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;s &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;=&amp;gt; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;s&lt;&#x2F;span&gt;&lt;span&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;EndsWith&lt;&#x2F;span&gt;&lt;span&gt;(&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;index.html&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;));
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;string &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;index&lt;&#x2F;span&gt;&lt;span&gt;;
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;using &lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;var &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;stream &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;asm&lt;&#x2F;span&gt;&lt;span&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;GetManifestResourceStream&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;fileName&lt;&#x2F;span&gt;&lt;span&gt;))
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;using &lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;var &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;sr &lt;&#x2F;span&gt;&lt;span&gt;= new StreamReader(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;stream&lt;&#x2F;span&gt;&lt;span&gt;))
+&lt;&#x2F;span&gt;&lt;span&gt;    {
+&lt;&#x2F;span&gt;&lt;span&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;index &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;sr&lt;&#x2F;span&gt;&lt;span&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;ReadToEnd&lt;&#x2F;span&gt;&lt;span&gt;();
+&lt;&#x2F;span&gt;&lt;span&gt;    }
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;WebView&lt;&#x2F;span&gt;&lt;span&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;ScriptNotify &lt;&#x2F;span&gt;&lt;span&gt;+= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;WebView_ScriptNotify&lt;&#x2F;span&gt;&lt;span&gt;;
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;WebView&lt;&#x2F;span&gt;&lt;span&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;NavigateToString&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;index&lt;&#x2F;span&gt;&lt;span&gt;);
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;This waits until the &lt;code&gt;window&lt;&#x2F;code&gt; loads, then reads “index.html” from the embedded
+&lt;code&gt;index.html&lt;&#x2F;code&gt; file. It then uses the &lt;code&gt;WebView.NavigateToString&lt;&#x2F;code&gt; method to load
+the string into the embedded &lt;code&gt;WebView&lt;&#x2F;code&gt; browser.&lt;&#x2F;p&gt;
+&lt;p&gt;The line &lt;code&gt;WebView.ScriptNotify += WebView_ScriptNotify&lt;&#x2F;code&gt; adds an event handler so
+that the WebView can call into C# code through JavaScript, i.e.&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;javascript&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-javascript &quot;&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span&gt;window.external.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;notify&lt;&#x2F;span&gt;&lt;span&gt;(&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;the string to pass to the C# code&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;)
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;h2 id=&quot;bundling-as-a-single-file&quot;&gt;Bundling as a single file&lt;&#x2F;h2&gt;
+&lt;p&gt;The next task was to try to build a single executable file from the WPF
+application. This required a bit of googling, but the best method I came across
+was &lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;https:&#x2F;&#x2F;stackoverflow.com&#x2F;a&#x2F;4995039&#x2F;233608&quot;&gt;predictably on StackOverflow&lt;&#x2F;a&gt;.
+Firstly I closed the solution in VisualStudio and opened the &lt;code&gt;.csproj&lt;&#x2F;code&gt; file in
+VSCode. I added the following before the last closing tag:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;xml&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-xml &quot;&gt;&lt;code class=&quot;language-xml&quot; data-lang=&quot;xml&quot;&gt;&lt;span&gt;&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;Target &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;Name&lt;&#x2F;span&gt;&lt;span&gt;=&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;AfterResolveReferences&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;  &amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;ItemGroup&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;    &amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;EmbeddedResource &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;Include&lt;&#x2F;span&gt;&lt;span&gt;=&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;@(ReferenceCopyLocalPaths)&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;Condition&lt;&#x2F;span&gt;&lt;span&gt;=&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;&amp;#39;%(ReferenceCopyLocalPaths.Extension)&amp;#39; == &amp;#39;.dll&amp;#39;&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;      &amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;LogicalName&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;%(ReferenceCopyLocalPaths.DestinationSubDirectory)%(ReferenceCopyLocalPaths.Filename)%(ReferenceCopyLocalPaths.Extension)&amp;lt;&#x2F;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;LogicalName&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;    &amp;lt;&#x2F;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;EmbeddedResource&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;  &amp;lt;&#x2F;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;ItemGroup&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;&amp;lt;&#x2F;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;Target&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;I then added a new &lt;code&gt;Program.cs&lt;&#x2F;code&gt; file, and added the following code:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;cs&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-cs &quot;&gt;&lt;code class=&quot;language-cs&quot; data-lang=&quot;cs&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;public static class &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ebcb8b;&quot;&gt;Program
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;{
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;STAThread&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;public static void &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;Main&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;()
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;{
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;AppDomain&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;CurrentDomain&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;AssemblyResolve &lt;&#x2F;span&gt;&lt;span&gt;+= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;OnResolveAssembly&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;App&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;Main&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;();
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;}
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;private static &lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;Assembly &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;OnResolveAssembly&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;object &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;sender&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;, ResolveEventArgs &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;e&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;)
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;    {
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;var &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;thisAssembly &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;Assembly&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;GetExecutingAssembly&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;();
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;var &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;assemName &lt;&#x2F;span&gt;&lt;span&gt;= new &lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;AssemblyName(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;e&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;Name&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;);
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;var &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;dllName &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;assemName&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;Name &lt;&#x2F;span&gt;&lt;span&gt;+ &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;.dll&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;var &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;res &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;thisAssembly&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;GetManifestResourceNames&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;().&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;Where&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;s &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;=&amp;gt; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;s&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;EndsWith&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;dllName&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;));
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;if &lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;res&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;Any&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;())
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;        {
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;            &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;var &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;resName &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;res&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;First&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;();
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;            &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;using &lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;var &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;stream &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;thisAssembly&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;GetManifestResourceStream&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;resName&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;))
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;            {
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;                &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;if &lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;stream &lt;&#x2F;span&gt;&lt;span&gt;== &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;null&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;) &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;return &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;null&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;                &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;var &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;block &lt;&#x2F;span&gt;&lt;span&gt;= new &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;byte&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;stream&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;Length&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;];
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;                &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;stream&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;Read&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;block&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;0&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;block&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;Length&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;);
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;                &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;return &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;Assembly&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;Load&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;block&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;);
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;            }
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;        }
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;return &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;null&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;    }
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eff1f5;&quot;&gt;}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;Note&lt;&#x2F;strong&gt; you might want to do some try-catch blocks around the &lt;code&gt;Assembly.Load&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;After editing the project settings to use &lt;code&gt;Program.Main&lt;&#x2F;code&gt; as the entry point, the
+whole application was bundled inside the &lt;code&gt;.exe&lt;&#x2F;code&gt; file built by VisualStudio!&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;debugging-edge&quot;&gt;Debugging Edge&lt;&#x2F;h2&gt;
+&lt;p&gt;Finally, for debugging the JavaScript I followed &lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;https:&#x2F;&#x2F;pspdfkit.com&#x2F;blog&#x2F;2018&#x2F;edge-devtools-uwp&#x2F;&quot;&gt;another blog
+post&lt;&#x2F;a&gt; by James Swift. I
+downloaded &lt;code&gt;Microsoft Edge DevTools Preview&lt;&#x2F;code&gt; from the Microsoft Store, then in
+Internet Explorer I had to find &lt;code&gt;Internet Options &amp;gt; Advanced &amp;gt; Browser&lt;&#x2F;code&gt; and
+uncheck two options:&lt;&#x2F;p&gt;
+&lt;ol&gt;
+&lt;li&gt;Disable script debugging (Internet Explorer)&lt;&#x2F;li&gt;
+&lt;li&gt;Disable script debugging (Other)&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;Note&lt;&#x2F;strong&gt; that this is through IE11, not Edge (thanks Microsoft).&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;After doing this I could start up the DevTools preview and run the application
+in VS and use the DevTools to debug the embedded WebView.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+</feed>

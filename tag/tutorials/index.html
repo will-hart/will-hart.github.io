@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>William Hart | willhart.io</title>
+
+
+  <link rel="icon" type="image/x-icon" href="/icons/icon_light_32x32.png">
+
+  
+  <meta name="description"
+    content="The home page of Will Hart, scattered with a few random thoughts about code, electronics and other things.">
+  
+
+  <link rel="stylesheet" href="https://willhart.io/global.css?h=f83cd20cd0df26d72c2b" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sono:wght@200..800&display=swap" rel="stylesheet">
+
+  
+
+  <!-- Cloudflare Web Analytics -->
+  <script defer src='https://static.cloudflareinsights.com/beacon.min.js'
+    data-cf-beacon='{"token": "310f93cab66a42c5a328f246cc053025"}'></script>
+  <!-- End Cloudflare Web Analytics -->
+
+  <!-- Light/Dark theme toggling -->
+  <script type="text/javascript">
+    const storageKey = "websiteTheme";
+
+    // apply theme once we have a DOM
+    document.addEventListener("DOMContentLoaded", () => {
+      applyTheme();
+    })
+
+    // a function that toggles between light and dark theme
+    const toggleTheme = () => {
+      localStorage.setItem(storageKey, localStorage.getItem(storageKey) === "d" ? "l" : "d" );
+      applyTheme();
+    }
+
+    // a function that actually applies the theme
+    const applyTheme = () => {
+      const useDarkTheme = localStorage.getItem(storageKey) === "d";
+      document.getElementsByTagName("html")[0].className = useDarkTheme ? "dark" : "";
+      document.getElementById("theme-toggle").textContent = useDarkTheme ? "🔆" : "🌑";
+    }
+  </script>
+
+  <script type="speculationrules">
+  {
+    "prerender": [
+      { "where": { "selector_matches": "a" } }
+    ]
+  }
+  </script></head>
+
+<body>
+  <nav id="header">
+    <a href="/" aria-label="Website Logo and Link to Home Page">
+      <div id="logo" >&nbsp;</div>
+    </a>
+    <span>
+      <button type="button" id="theme-toggle" aria-label="Toggle Theme" onClick="toggleTheme()">🌑</button>
+      <a class="header-item" href="/post">POSTS</a>
+      <a class="header-item" href="/tag">TAGS</a>
+      <span class="header-item hide-when-slim">|</span>
+      <a class="header-item hide-when-slim" href="/tag/projects">PROJECTS</a>
+      <a class="header-item hide-when-slim" href="/tag/gamedev">GAMEDEV</a>
+      <a class="header-item hide-when-slim" href="/tag/electronics">ELECTRONICS</a>
+    </span>
+  </nav>
+
+  
+
+
+
+
+<article class="container col">
+  <h1>Posts tagged as "tutorials"</h1>
+
+  <div class="txtsm mb">
+    <a href="\tag">See all tags</a>
+    
+<nav>
+  
+  ᐊ Previous
+  
+
+  |
+
+  
+  <a href="https:&#x2F;&#x2F;willhart.io&#x2F;tag&#x2F;tutorials&#x2F;page&#x2F;2&#x2F;">Next ᐅ</a>
+  
+</nav>
+
+  </div>
+
+  
+  
+<div class="mb">
+  <div>
+      <h3>
+        <a title="View post: Tauri and Create React App Part 4 - Extending commands" href="https://willhart.io/post/tauri-create-react-app-tutorial-part4/">
+          Tauri and Create React App Part 4 - Extending commands
+        </a>
+      </h3>
+      <div class="row">
+        
+        <a class="txtsm mr" href="https://willhart.io/tag/tutorials/">#tutorials</a>
+        
+        <a class="txtsm mr" href="https://willhart.io/tag/code/">#code</a>
+        
+      </div>
+      <p>Part 4 of a tutorial for setting up Tauri (an electron alternative) and Create React App. Here we extend our hook and command to support multiple counters.</p>
+  </div>
+</div>
+
+  
+  
+<div class="mb">
+  <div>
+      <h3>
+        <a title="View post: Tauri and Create React App Part 3 - Commands as hooks" href="https://willhart.io/post/tauri-create-react-app-tutorial-part3/">
+          Tauri and Create React App Part 3 - Commands as hooks
+        </a>
+      </h3>
+      <div class="row">
+        
+        <a class="txtsm mr" href="https://willhart.io/tag/tutorials/">#tutorials</a>
+        
+        <a class="txtsm mr" href="https://willhart.io/tag/code/">#code</a>
+        
+      </div>
+      <p>Part 3 of a tutorial for setting up Tauri (an electron alternative) and Create React App. Here we create a hook for invoking &#x27;get&#x2F;set&#x27; commands using the `useSWR` package.</p>
+  </div>
+</div>
+
+  
+  
+<div class="mb">
+  <div>
+      <h3>
+        <a title="View post: Tauri and Create React App Part 2 - Commands" href="https://willhart.io/post/tauri-create-react-app-tutorial-part2/">
+          Tauri and Create React App Part 2 - Commands
+        </a>
+      </h3>
+      <div class="row">
+        
+        <a class="txtsm mr" href="https://willhart.io/tag/code/">#code</a>
+        
+        <a class="txtsm mr" href="https://willhart.io/tag/tutorials/">#tutorials</a>
+        
+      </div>
+      <p>Part 2 of a tutorial for setting up Tauri (an electron alternative) and Create React App. Here we run through setting up and invoking a command written in rust.</p>
+  </div>
+</div>
+
+  
+  
+<div class="mb">
+  <div>
+      <h3>
+        <a title="View post: Tauri and Create React App Part 1 - Setup" href="https://willhart.io/post/tauri-create-react-app-tutorial-part1/">
+          Tauri and Create React App Part 1 - Setup
+        </a>
+      </h3>
+      <div class="row">
+        
+        <a class="txtsm mr" href="https://willhart.io/tag/code/">#code</a>
+        
+        <a class="txtsm mr" href="https://willhart.io/tag/tutorials/">#tutorials</a>
+        
+      </div>
+      <p>Part 1 of a tutorial for setting up Tauri (an electron alternative) and Create React App. Here we set up tauri and CRA ready for dev.</p>
+  </div>
+</div>
+
+  
+  
+<div class="mb">
+  <div>
+      <h3>
+        <a title="View post: Thesis writing in Markdown - pandemic and pandoc" href="https://willhart.io/post/thesis-writing-in-markdown-pandoc-and-pandemic/">
+          Thesis writing in Markdown - pandemic and pandoc
+        </a>
+      </h3>
+      <div class="row">
+        
+        <a class="txtsm mr" href="https://willhart.io/tag/tutorials/">#tutorials</a>
+        
+        <a class="txtsm mr" href="https://willhart.io/tag/phd/">#phd</a>
+        
+      </div>
+      <p>A description of the build system I&#x27;m using to build my PhD thesis in markdown and LaTeX</p>
+  </div>
+</div>
+
+  
+  
+<div class="mb">
+  <div>
+      <h3>
+        <a title="View post: Replacing Electron with C# WebView (Windows Only)" href="https://willhart.io/post/replacing-electron-with-c-sharp-edge-webviews-on-windows/">
+          Replacing Electron with C# WebView (Windows Only)
+        </a>
+      </h3>
+      <div class="row">
+        
+        <a class="txtsm mr" href="https://willhart.io/tag/tutorials/">#tutorials</a>
+        
+        <a class="txtsm mr" href="https://willhart.io/tag/phd/">#phd</a>
+        
+      </div>
+      <p>A brief look at the WebView libraries coming to C# WPF</p>
+  </div>
+</div>
+
+  
+  
+<div class="mb">
+  <div>
+      <h3>
+        <a title="View post: Creating a REPL for hacking on a firestore backend" href="https://willhart.io/post/creating-a-repl-for-hacking-on-a-firestore-backend/">
+          Creating a REPL for hacking on a firestore backend
+        </a>
+      </h3>
+      <div class="row">
+        
+        <a class="txtsm mr" href="https://willhart.io/tag/code/">#code</a>
+        
+        <a class="txtsm mr" href="https://willhart.io/tag/tutorials/">#tutorials</a>
+        
+      </div>
+      <p>Using a node REPL to simplify playing around with a firestore backend.</p>
+  </div>
+</div>
+
+  
+  
+<div class="mb">
+  <div>
+      <h3>
+        <a title="View post: Making game assets using OpenSCAD" href="https://willhart.io/post/game-assets-using-openscad/">
+          Making game assets using OpenSCAD
+        </a>
+      </h3>
+      <div class="row">
+        
+        <a class="txtsm mr" href="https://willhart.io/tag/tutorials/">#tutorials</a>
+        
+        <a class="txtsm mr" href="https://willhart.io/tag/code/">#code</a>
+        
+        <a class="txtsm mr" href="https://willhart.io/tag/gamedev/">#gamedev</a>
+        
+      </div>
+      <p>Using a surprising tool to build game assets, based on some work I did building samples for experiments at the Australian Synchrotron</p>
+  </div>
+</div>
+
+  
+  
+<div class="mb">
+  <div>
+      <h3>
+        <a title="View post: A simple static site generator in Python" href="https://willhart.io/post/a-simple-static-site-generator-in-python/">
+          A simple static site generator in Python
+        </a>
+      </h3>
+      <div class="row">
+        
+        <a class="txtsm mr" href="https://willhart.io/tag/tutorials/">#tutorials</a>
+        
+        <a class="txtsm mr" href="https://willhart.io/tag/code/">#code</a>
+        
+      </div>
+      <p>A description of a simple static site generator I built in Python</p>
+  </div>
+</div>
+
+  
+  
+<div class="mb">
+  <div>
+      <h3>
+        <a title="View post: Reducing online abuse through sentiment analysis" href="https://willhart.io/post/reducing-online-abuse-through-sentiment-analysis/">
+          Reducing online abuse through sentiment analysis
+        </a>
+      </h3>
+      <div class="row">
+        
+        <a class="txtsm mr" href="https://willhart.io/tag/code/">#code</a>
+        
+        <a class="txtsm mr" href="https://willhart.io/tag/projects/">#projects</a>
+        
+        <a class="txtsm mr" href="https://willhart.io/tag/tutorials/">#tutorials</a>
+        
+      </div>
+      <p>A look at how to use Sentiment Analysis to detect &#x27;star wars tweets&#x27;, in the context of addressing abusive behaviour on social media platforms</p>
+  </div>
+</div>
+
+  
+
+  <div class="txtsm">
+    
+<nav>
+  
+  ᐊ Previous
+  
+
+  |
+
+  
+  <a href="https:&#x2F;&#x2F;willhart.io&#x2F;tag&#x2F;tutorials&#x2F;page&#x2F;2&#x2F;">Next ᐅ</a>
+  
+</nav>
+
+  </div>
+</article>
+</div>
+
+  <footer id="footer">
+    <div class="container col">
+      This website was hand-made using Zola and Tera.
+      All text and images are available under CC0 1.0 Universal and code under MIT unless otherwise specified. See <a href="https://github.com/will-hart/willhart.io/blob/main/LICENSE.md">LICENSE.md</a> for more.
+    </div>
+  </footer>
+</body>
+
+</html>

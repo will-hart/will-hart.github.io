@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Tauri and Create React App Part 4 - Extending commands | willhart.io</title>
+
+
+  <link rel="icon" type="image/x-icon" href="/icons/icon_light_32x32.png">
+
+  
+<meta name="description" content="Part 4 of a tutorial for setting up Tauri (an electron alternative) and Create React App. Here we extend our hook and command to support multiple counters.. Posted on https://willhart.io" />
+<meta property="og:description" content="Part 4 of a tutorial for setting up Tauri (an electron alternative) and Create React App. Here we extend our hook and command to support multiple counters." />
+<meta property="og:title" content="Tauri and Create React App Part 4 - Extending commands" />
+<meta property="og:url" content="https://willhart.io/post/tauri-create-react-app-tutorial-part4/">
+<meta property="og:type" content="article" />
+<meta property="og:locale" content="en_AU" />
+
+
+  <link rel="stylesheet" href="https://willhart.io/global.css?h=f83cd20cd0df26d72c2b" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sono:wght@200..800&display=swap" rel="stylesheet">
+
+  
+
+  <!-- Cloudflare Web Analytics -->
+  <script defer src='https://static.cloudflareinsights.com/beacon.min.js'
+    data-cf-beacon='{"token": "310f93cab66a42c5a328f246cc053025"}'></script>
+  <!-- End Cloudflare Web Analytics -->
+
+  <!-- Light/Dark theme toggling -->
+  <script type="text/javascript">
+    const storageKey = "websiteTheme";
+
+    // apply theme once we have a DOM
+    document.addEventListener("DOMContentLoaded", () => {
+      applyTheme();
+    })
+
+    // a function that toggles between light and dark theme
+    const toggleTheme = () => {
+      localStorage.setItem(storageKey, localStorage.getItem(storageKey) === "d" ? "l" : "d" );
+      applyTheme();
+    }
+
+    // a function that actually applies the theme
+    const applyTheme = () => {
+      const useDarkTheme = localStorage.getItem(storageKey) === "d";
+      document.getElementsByTagName("html")[0].className = useDarkTheme ? "dark" : "";
+      document.getElementById("theme-toggle").textContent = useDarkTheme ? "🔆" : "🌑";
+    }
+  </script>
+
+  <script type="speculationrules">
+  {
+    "prerender": [
+      { "where": { "selector_matches": "a" } }
+    ]
+  }
+  </script></head>
+
+<body>
+  <nav id="header">
+    <a href="/" aria-label="Website Logo and Link to Home Page">
+      <div id="logo" >&nbsp;</div>
+    </a>
+    <span>
+      <button type="button" id="theme-toggle" aria-label="Toggle Theme" onClick="toggleTheme()">🌑</button>
+      <a class="header-item" href="/post">POSTS</a>
+      <a class="header-item" href="/tag">TAGS</a>
+      <span class="header-item hide-when-slim">|</span>
+      <a class="header-item hide-when-slim" href="/tag/projects">PROJECTS</a>
+      <a class="header-item hide-when-slim" href="/tag/gamedev">GAMEDEV</a>
+      <a class="header-item hide-when-slim" href="/tag/electronics">ELECTRONICS</a>
+    </span>
+  </nav>
+
+  
+
+<div class="container col mb mt">
+  <h1>Tauri and Create React App Part 4 - Extending commands</h1>
+  <div class="col txtsm">
+    <span>Posted by Will Hart on 2021-08-29</span>
+    <div>
+      <span>See also:</span>
+      
+      <a class="txtsm mr" href="https://willhart.io/tag/tutorials/">#tutorials</a>
+      
+      <a class="txtsm mr" href="https://willhart.io/tag/code/">#code</a>
+      
+    </div>
+  </div>
+</div>
+
+
+
+<article class="container col mblg"><h2 id="recap">Recap</h2>
+<p>In <a href="/post/20210826_tauri_create_react_app_tutorial_part1">part 1</a> of this
+tutorial series we set up a Tauri and create-react-app app and added a basic
+non-functional counter. In <a href="/post/20210827_tauri_create_react_app_tutorial_part2">part
+2</a> we created and invoked
+a command for incrementing our counter. In <a href="/post/20210828_tauri_create_react_app_tutorial_part3">part
+3</a> we created and invoked
+a command for incrementing our counter.</p>
+<p>In this part, we will update our command and hooks to support multiple different
+counters indexed by ID.</p>
+<h2 id="basic-concept">Basic concept</h2>
+<p>If you recall from <a href="/post/20210830_tauri_create_react_app_tutorial_part3">part 3 of this
+series</a>, the <code>useSWR</code> uses
+the first argument as a <code>key</code> to cache queries. The key can be an array, and the
+key is passed to the <code>fetcher</code> function as arguments. We’re going to use the key
+to store a <code>counterId</code> variable that we can use to maintain separate counters.
+We’ll also need to update our commands in the rust code to support an ID.</p>
+<h2 id="update-our-hook-to-support-counter-ids">Update our hook to support counter Ids</h2>
+<p>We need to update our <code>useInvoke</code> hook in <code>useInvoke.tsx</code> to support this new
+requirement. We can start by updating the fetcher to take an <code>id</code> as an
+argument:</p>
+<pre data-lang="typescript" style="background-color:#2b303b;color:#c0c5ce;" class="language-typescript "><code class="language-typescript" data-lang="typescript"><span style="color:#b48ead;">export const </span><span style="color:#8fa1b3;">invokeFetcher </span><span>= </span><span style="color:#b48ead;">async </span><span>&lt;TArgs </span><span style="color:#b48ead;">extends </span><span>Record&lt;string, any&gt;, TResult&gt;(
+</span><span>  </span><span style="color:#bf616a;">command</span><span>: string,
+</span><span>  </span><span style="color:#bf616a;">id</span><span>: number,
+</span><span>  </span><span style="color:#bf616a;">args</span><span>: TArgs
+</span><span>): Promise&lt;TResult&gt; </span><span style="color:#b48ead;">=&gt; </span><span style="color:#8fa1b3;">invoke</span><span>&lt;TResult&gt;(</span><span style="color:#bf616a;">command</span><span>, { </span><span style="color:#bf616a;">id</span><span>, ...</span><span style="color:#bf616a;">args </span><span>})
+</span></code></pre>
+<p>The main change here is that we are now taking an <code>id</code> as a second argument, and
+spreading it into the args sent to the invoke command. We then need to update
+our <code>useInvoke</code> hook to:</p>
+<pre data-lang="typescript" style="background-color:#2b303b;color:#c0c5ce;" class="language-typescript "><code class="language-typescript" data-lang="typescript"><span style="color:#b48ead;">export const </span><span style="color:#8fa1b3;">useInvoke </span><span>= &lt;TResult&gt;(
+</span><span>  </span><span style="color:#bf616a;">id</span><span>: number,
+</span><span>  </span><span style="color:#bf616a;">getCommand</span><span>: string,
+</span><span>  </span><span style="color:#bf616a;">setCommand</span><span>: string
+</span><span>) </span><span style="color:#b48ead;">=&gt; </span><span>{
+</span><span>  </span><span style="color:#65737e;">// run the invoke command to get by ID
+</span><span>  </span><span style="color:#b48ead;">const </span><span>{ </span><span style="color:#bf616a;">data</span><span>, </span><span style="color:#bf616a;">error</span><span>, </span><span style="color:#bf616a;">mutate </span><span>} = </span><span style="color:#8fa1b3;">useSWR</span><span>&lt;TResult&gt;(
+</span><span>    [</span><span style="color:#bf616a;">getCommand</span><span>, </span><span style="color:#bf616a;">id</span><span>, </span><span style="color:#d08770;">null</span><span>],
+</span><span>    </span><span style="color:#bf616a;">invokeFetcher
+</span><span>  )
+</span><span>
+</span><span>  </span><span style="color:#65737e;">// create an update function
+</span><span>  </span><span style="color:#b48ead;">const </span><span style="color:#bf616a;">update </span><span>= </span><span style="color:#8fa1b3;">useCallback</span><span>(
+</span><span>    </span><span style="color:#b48ead;">async </span><span>(</span><span style="color:#bf616a;">newData</span><span>: TResult) </span><span style="color:#b48ead;">=&gt; </span><span>{
+</span><span>      </span><span style="color:#8fa1b3;">mutate</span><span>(</span><span style="color:#b48ead;">await </span><span style="color:#8fa1b3;">invoke</span><span>(
+</span><span>        </span><span style="color:#bf616a;">setCommand</span><span>,
+</span><span>        { </span><span style="color:#bf616a;">id</span><span>, ...</span><span style="color:#bf616a;">newData </span><span>}
+</span><span>      ), </span><span style="color:#d08770;">false</span><span>)
+</span><span>    },
+</span><span>    [</span><span style="color:#bf616a;">mutate</span><span>, </span><span style="color:#bf616a;">id</span><span>, </span><span style="color:#bf616a;">setCommand</span><span>]
+</span><span>  )
+</span><span>
+</span><span>  </span><span style="color:#65737e;">// unchanged
+</span><span>}
+</span></code></pre>
+<p>We now pass the <code>id</code> to the hook, which is used as part of the <code>key</code> in
+<code>useSWR</code>. In our <code>update</code> function we add the <code>id</code> into the data payload sent to
+<code>invoke</code>. Other than that, not a lot has changed.</p>
+<h2 id="updating-our-front-end">Updating our front end</h2>
+<p>It would be nice at this point to factor out the <code>Counter</code> into a new component.
+This lets us pass the <code>counterId</code> as a prop. Create a new file, <code>Counter.tsx</code>
+and add the following:</p>
+<pre data-lang="typescript" style="background-color:#2b303b;color:#c0c5ce;" class="language-typescript "><code class="language-typescript" data-lang="typescript"><span style="color:#b48ead;">import </span><span>{ </span><span style="color:#bf616a;">useInvoke </span><span>} </span><span style="color:#b48ead;">from </span><span>&quot;</span><span style="color:#a3be8c;">./useInvoke</span><span>&quot;;
+</span><span>
+</span><span style="color:#b48ead;">const </span><span style="color:#bf616a;">defaultArgs </span><span>= { delta: </span><span style="color:#d08770;">1 </span><span>}
+</span><span>
+</span><span style="color:#b48ead;">const </span><span style="color:#8fa1b3;">Counter </span><span>= ({ </span><span style="color:#bf616a;">counterId </span><span>}: { </span><span style="color:#bf616a;">counterId</span><span>: number }) </span><span style="color:#b48ead;">=&gt; </span><span>{
+</span><span>  </span><span style="color:#b48ead;">const </span><span>{ </span><span style="color:#bf616a;">data</span><span>: </span><span style="color:#bf616a;">counter</span><span>, </span><span style="color:#bf616a;">update </span><span>} = </span><span style="color:#8fa1b3;">useInvoke</span><span>(
+</span><span>    </span><span style="color:#bf616a;">counterId</span><span>,
+</span><span>    &#39;</span><span style="color:#a3be8c;">get_counter</span><span>&#39;,
+</span><span>    &#39;</span><span style="color:#a3be8c;">increment_counter</span><span>&#39;
+</span><span>  )
+</span><span>
+</span><span>  </span><span style="color:#b48ead;">return </span><span>(
+</span><span>    &lt;div&gt;
+</span><span>      &lt;</span><span style="color:#bf616a;">button onClick</span><span>={() =&gt; </span><span style="color:#8fa1b3;">update</span><span>(</span><span style="color:#bf616a;">defaultArgs</span><span>)}&gt;</span><span style="color:#bf616a;">increment</span><span>&lt;/</span><span style="color:#bf616a;">button</span><span>&gt;
+</span><span>      </span><span style="color:#bf616a;">Counter </span><span>{</span><span style="color:#bf616a;">counterId</span><span>}: {</span><span style="color:#bf616a;">counter</span><span>}
+</span><span>    &lt;/</span><span style="color:#bf616a;">div</span><span>&gt;
+</span><span>  )
+</span><span>}
+</span><span>
+</span><span style="color:#b48ead;">export default </span><span style="color:#bf616a;">Counter
+</span></code></pre>
+<p>This is basically copied over from our previous implementation inside <code>App.tsx</code>.
+Speaking of which, we can now use our <code>Counter</code> component inside <code>App.tsx</code>:</p>
+<pre data-lang="typescript" style="background-color:#2b303b;color:#c0c5ce;" class="language-typescript "><code class="language-typescript" data-lang="typescript"><span style="color:#b48ead;">import </span><span style="color:#bf616a;">Counter </span><span style="color:#b48ead;">from </span><span>&#39;</span><span style="color:#a3be8c;">./Counter</span><span>&#39;
+</span><span>
+</span><span style="color:#b48ead;">const </span><span style="color:#8fa1b3;">App </span><span>= () </span><span style="color:#b48ead;">=&gt; </span><span>{
+</span><span>  </span><span style="color:#b48ead;">return </span><span>(
+</span><span>    &lt;div&gt;
+</span><span>      &lt;</span><span style="color:#bf616a;">Counter counterId</span><span>={</span><span style="color:#d08770;">1</span><span>} /&gt;
+</span><span>      &lt;</span><span style="color:#bf616a;">Counter counterId</span><span>={</span><span style="color:#d08770;">1</span><span>} /&gt;
+</span><span>      &lt;</span><span style="color:#bf616a;">Counter counterId</span><span>={</span><span style="color:#d08770;">2</span><span>} /&gt;
+</span><span>    &lt;/</span><span style="color:#bf616a;">div</span><span>&gt;
+</span><span>  )
+</span><span>}
+</span><span>
+</span><span style="color:#b48ead;">export default </span><span style="color:#bf616a;">App</span><span>;
+</span></code></pre>
+<p>We’re using three counters here, but two of them point to <code>counterId == 1</code>. If
+we run the app now it kind of works, the counters with <code>id == 1</code> increment
+together and the counter with <code>id == 2</code> increments separately. However you can
+see that the two counters are linked, i.e. they’re modifying the same underlying
+counter, but only the counters with the same <code>id</code> visually update when the
+increment action is invoked.</p>
+<h2 id="updating-the-rust-command">Updating the rust command</h2>
+<p>To fix this, we need to extend our commands in <code>src-tauri/src/main.rs</code>. Here is
+the code:</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">use </span><span>tauri::{async_runtime::RwLock, State};
+</span><span>
+</span><span style="color:#b48ead;">type </span><span>InnerState = RwLock&lt;HashMap&lt;</span><span style="color:#b48ead;">i32</span><span>, </span><span style="color:#b48ead;">i32</span><span>&gt;&gt;;
+</span><span>
+</span><span>#[</span><span style="color:#bf616a;">tauri</span><span>::</span><span style="color:#bf616a;">command</span><span>]
+</span><span>async </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">increment_counter</span><span>(
+</span><span>  </span><span style="color:#bf616a;">state</span><span>: State&lt;&#39;_, InnerState&gt;,
+</span><span>  </span><span style="color:#bf616a;">id</span><span>: </span><span style="color:#b48ead;">i32</span><span>,
+</span><span>  </span><span style="color:#bf616a;">delta</span><span>: </span><span style="color:#b48ead;">i32</span><span>,
+</span><span>) -&gt; Result&lt;</span><span style="color:#b48ead;">i32</span><span>, String&gt; {
+</span><span>  println!(&quot;</span><span style="color:#a3be8c;">Incrementing counter </span><span style="color:#d08770;">{}</span><span style="color:#a3be8c;"> by </span><span style="color:#d08770;">{}</span><span>&quot;, id, delta);
+</span><span>
+</span><span>  </span><span style="color:#b48ead;">let mut</span><span> hashmap = state.</span><span style="color:#96b5b4;">write</span><span>().await;
+</span><span>  </span><span style="color:#b48ead;">let</span><span> next_value = *hashmap.</span><span style="color:#96b5b4;">get</span><span>(&amp;id).</span><span style="color:#96b5b4;">unwrap_or</span><span>(&amp;</span><span style="color:#d08770;">0</span><span>) + delta;
+</span><span>  hashmap.</span><span style="color:#96b5b4;">insert</span><span>(id, next_value);
+</span><span>
+</span><span>  Ok(next_value)
+</span><span>}
+</span><span>
+</span><span>#[</span><span style="color:#bf616a;">tauri</span><span>::</span><span style="color:#bf616a;">command</span><span>]
+</span><span>async </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">get_counter</span><span>(</span><span style="color:#bf616a;">state</span><span>: State&lt;&#39;_, InnerState&gt;, </span><span style="color:#bf616a;">id</span><span>: </span><span style="color:#b48ead;">i32</span><span>) -&gt; Result&lt;</span><span style="color:#b48ead;">i32</span><span>, String&gt; {
+</span><span>  println!(&quot;</span><span style="color:#a3be8c;">Getting counter value for counter </span><span style="color:#d08770;">{}</span><span>&quot;, id);
+</span><span>
+</span><span>  </span><span style="color:#b48ead;">let</span><span> hashmap = state.</span><span style="color:#96b5b4;">read</span><span>().await;
+</span><span>  Ok(*hashmap.</span><span style="color:#96b5b4;">get</span><span>(&amp;id).</span><span style="color:#96b5b4;">unwrap_or</span><span>(&amp;</span><span style="color:#d08770;">0</span><span>))
+</span><span>}
+</span></code></pre>
+<p>We’re doing quite a bit here. First of all we’ve removed the <code>AtomicI32</code> and
+replaced it with a <code>RwLock&lt;HashMap&lt;i32, i32&gt;&gt;</code>. The main condition here is that
+our <code>State</code> can be managed across threads. Here we’re using a read-write lock to
+make sure that there can be multiple reads but only one write at a time. We also
+added a bit more logging so we can see which <code>counterId</code> is being get or set in
+the logs.</p>
+<blockquote>
+<p>Note that we’ve used a <code>RwLock&lt;HashMap&gt;</code> here as our state, but in reality
+could use any <code>Send + Sync</code> type, i.e. one that supports threading. This might
+be a database, or a file store or something like that in a more complex app.
+In addition, the inner state type (currently <code>i32</code>) could be anything that
+supports <code>serde::Serialize</code>.</p>
+</blockquote>
+<p>We also need to update the way our state is created in the <code>main()</code> function.
+Change the line with <code>manage</code> to:</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span>  </span><span style="color:#65737e;">// tauri::Builder
+</span><span>    .</span><span style="color:#96b5b4;">manage</span><span>(RwLock::new(HashMap::&lt;</span><span style="color:#b48ead;">i32</span><span>, </span><span style="color:#b48ead;">i32</span><span>&gt;::new()))
+</span></code></pre>
+<p>At this point we can also remove a bunch of unused imports in the <code>main.rs</code>
+file. If we run the app we can see that the counters behave as we’d expect, each
+incrementing separately and the counters using the same ID updating at the same
+time.</p>
+<h2 id="building-the-app">Building the app</h2>
+<p>Now that we are done developing the app, lets build it and see how large the
+binary is and how much memory it uses. To build the app,</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">yarn</span><span> tauri build
+</span></code></pre>
+<p>The build can take a while as the CRA is built and the rust parts are compiled
+in release mode. Once it is built we can look in <code>src-tauri/target/release</code>. In
+the <code>bundle</code> folder there is an <code>msi</code> installer we can use, but there should be
+a <code>counter-app.exe</code> directly in the <code>release</code> folder. Mine is about 7MB.</p>
+<p><img src="https://willhart.io/post/tauri-create-react-app-tutorial-part4/tauri-step2-binary.png" alt="The binary size of the built Tauri app" /></p>
+<p>If I run the application I can check the memory footprint. (After first clicking
+the increment buttons a bunch of times to make sure everything is working!). Its
+a fairly slim application, but with basically no CPU and about 50MB of RAM its
+perfectly acceptible out of the box.</p>
+<p><img src="https://willhart.io/post/tauri-create-react-app-tutorial-part4/tauri-step2-resources.png" alt="The resource usage of the built Tauri app" /></p>
+<blockquote>
+<p>That’s it, our counter tutorial app is complete! In this part we extended our
+command here to support counters with different IDs. The code for this
+tutorial can be found <a rel="noopener nofollow noreferrer" target="_blank" href="https://github.com/will-hart/tauri-cra-tutorial/tree/0f664071e266d45c153efeabf43c09d588c5c907">here on
+github</a>.
+Part 3 of the tutorial <a href="/post/20210828_tauri_create_react_app_tutorial_part3">can be found
+here</a>.</p>
+</blockquote>
+</article>
+
+<div class="container col">
+  <h2>Comments</h2>
+  <blockquote>Comments are powered by github and <a href="https://giscus.app">giscus</a></blockquote>
+  <script src="https://giscus.app/client.js"
+        data-repo="will-hart/will-hart.github.io"
+        data-repo-id="MDEwOlJlcG9zaXRvcnkzMjQ2NjY3Mzg="
+        data-category="General"
+        data-category-id="DIC_kwDOE1oFcs4CtiK6"
+        data-mapping="og:title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+  </script>
+</div>
+</div>
+
+  <footer id="footer">
+    <div class="container col">
+      This website was hand-made using Zola and Tera.
+      All text and images are available under CC0 1.0 Universal and code under MIT unless otherwise specified. See <a href="https://github.com/will-hart/willhart.io/blob/main/LICENSE.md">LICENSE.md</a> for more.
+    </div>
+  </footer>
+</body>
+
+</html>

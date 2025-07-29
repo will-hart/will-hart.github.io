@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>William Hart | willhart.io</title>
+
+
+  <link rel="icon" type="image/x-icon" href="/icons/icon_light_32x32.png">
+
+  
+  <meta name="description"
+    content="The home page of Will Hart, scattered with a few random thoughts about code, electronics and other things.">
+  
+
+  <link rel="stylesheet" href="https://willhart.io/global.css?h=f83cd20cd0df26d72c2b" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sono:wght@200..800&display=swap" rel="stylesheet">
+
+  
+
+  <!-- Cloudflare Web Analytics -->
+  <script defer src='https://static.cloudflareinsights.com/beacon.min.js'
+    data-cf-beacon='{"token": "310f93cab66a42c5a328f246cc053025"}'></script>
+  <!-- End Cloudflare Web Analytics -->
+
+  <!-- Light/Dark theme toggling -->
+  <script type="text/javascript">
+    const storageKey = "websiteTheme";
+
+    // apply theme once we have a DOM
+    document.addEventListener("DOMContentLoaded", () => {
+      applyTheme();
+    })
+
+    // a function that toggles between light and dark theme
+    const toggleTheme = () => {
+      localStorage.setItem(storageKey, localStorage.getItem(storageKey) === "d" ? "l" : "d" );
+      applyTheme();
+    }
+
+    // a function that actually applies the theme
+    const applyTheme = () => {
+      const useDarkTheme = localStorage.getItem(storageKey) === "d";
+      document.getElementsByTagName("html")[0].className = useDarkTheme ? "dark" : "";
+      document.getElementById("theme-toggle").textContent = useDarkTheme ? "🔆" : "🌑";
+    }
+  </script>
+
+  <script type="speculationrules">
+  {
+    "prerender": [
+      { "where": { "selector_matches": "a" } }
+    ]
+  }
+  </script></head>
+
+<body>
+  <nav id="header">
+    <a href="/" aria-label="Website Logo and Link to Home Page">
+      <div id="logo" >&nbsp;</div>
+    </a>
+    <span>
+      <button type="button" id="theme-toggle" aria-label="Toggle Theme" onClick="toggleTheme()">🌑</button>
+      <a class="header-item" href="/post">POSTS</a>
+      <a class="header-item" href="/tag">TAGS</a>
+      <span class="header-item hide-when-slim">|</span>
+      <a class="header-item hide-when-slim" href="/tag/projects">PROJECTS</a>
+      <a class="header-item hide-when-slim" href="/tag/gamedev">GAMEDEV</a>
+      <a class="header-item hide-when-slim" href="/tag/electronics">ELECTRONICS</a>
+    </span>
+  </nav>
+
+  
+
+
+
+
+<article class="container col">
+  <h1>Posts tagged as "electronics"</h1>
+
+  <div class="txtsm mb">
+    <a href="\tag">See all tags</a>
+    
+<nav>
+  
+  ᐊ Previous
+  
+
+  |
+
+  
+  <a href="https:&#x2F;&#x2F;willhart.io&#x2F;tag&#x2F;electronics&#x2F;page&#x2F;2&#x2F;">Next ᐅ</a>
+  
+</nav>
+
+  </div>
+
+  
+  
+<div class="mb">
+  <div>
+      <h3>
+        <a title="View post: Morse Kodeboard - a Morse Code Keyboard" href="https://willhart.io/post/morse-kodeboard/">
+          Morse Kodeboard - a Morse Code Keyboard
+        </a>
+      </h3>
+      <div class="row">
+        
+        <a class="txtsm mr" href="https://willhart.io/tag/projects/">#projects</a>
+        
+        <a class="txtsm mr" href="https://willhart.io/tag/electronics/">#electronics</a>
+        
+      </div>
+      <p>The Morse Kodeboard is a custom USB-HID keyboard that turns morse code into keyboard inputs.</p>
+  </div>
+</div>
+
+  
+  
+<div class="mb">
+  <div>
+      <h3>
+        <a title="View post: Embedded rust - comparing RTIC and embassy" href="https://willhart.io/post/embedded-rust-options/">
+          Embedded rust - comparing RTIC and embassy
+        </a>
+      </h3>
+      <div class="row">
+        
+        <a class="txtsm mr" href="https://willhart.io/tag/code/">#code</a>
+        
+        <a class="txtsm mr" href="https://willhart.io/tag/electronics/">#electronics</a>
+        
+      </div>
+      <p>Looking at the pros and cons of different approaches for running rust on STM32 microcontrollers</p>
+  </div>
+</div>
+
+  
+  
+<div class="mb">
+  <div>
+      <h3>
+        <a title="View post: 3D printed flexure foot pedal" href="https://willhart.io/post/3d-printed-flexure-foot-pedal/">
+          3D printed flexure foot pedal
+        </a>
+      </h3>
+      <div class="row">
+        
+        <a class="txtsm mr" href="https://willhart.io/tag/projects/">#projects</a>
+        
+        <a class="txtsm mr" href="https://willhart.io/tag/electronics/">#electronics</a>
+        
+      </div>
+      <p>Designing a one-piece 3d printed foot pedal using mechanical flexures</p>
+  </div>
+</div>
+
+  
+  
+<div class="mb">
+  <div>
+      <h3>
+        <a title="View post: Custom gaming foot pedals" href="https://willhart.io/post/custom-gaming-foot-pedals/">
+          Custom gaming foot pedals
+        </a>
+      </h3>
+      <div class="row">
+        
+        <a class="txtsm mr" href="https://willhart.io/tag/projects/">#projects</a>
+        
+        <a class="txtsm mr" href="https://willhart.io/tag/electronics/">#electronics</a>
+        
+      </div>
+      <p>I created a set of custom gaming foot pedals, basically because I had nothing better to do while in Covid isolation!</p>
+  </div>
+</div>
+
+  
+  
+<div class="mb">
+  <div>
+      <h3>
+        <a title="View post: Diptrace Hierarchical Schematics" href="https://willhart.io/post/diptrace-hierarchical-schematics/">
+          Diptrace Hierarchical Schematics
+        </a>
+      </h3>
+      <div class="row">
+        
+        <a class="txtsm mr" href="https://willhart.io/tag/electronics/">#electronics</a>
+        
+        <a class="txtsm mr" href="https://willhart.io/tag/tutorials/">#tutorials</a>
+        
+      </div>
+      <p>A youtube tutorial on using hierarchical schematics in Diptrace</p>
+  </div>
+</div>
+
+  
+  
+<div class="mb">
+  <div>
+      <h3>
+        <a title="View post: Moving away from Arduino" href="https://willhart.io/post/moving-away-from-arduino/">
+          Moving away from Arduino
+        </a>
+      </h3>
+      <div class="row">
+        
+        <a class="txtsm mr" href="https://willhart.io/tag/electronics/">#electronics</a>
+        
+      </div>
+      <p>A quick checklist of things to know when considering moving from Arduino to a lower level microcontroller</p>
+  </div>
+</div>
+
+  
+  
+<div class="mb">
+  <div>
+      <h3>
+        <a title="View post: Diptrace Libraries and Patterns" href="https://willhart.io/post/diptrace-libraries-and-patterns/">
+          Diptrace Libraries and Patterns
+        </a>
+      </h3>
+      <div class="row">
+        
+        <a class="txtsm mr" href="https://willhart.io/tag/electronics/">#electronics</a>
+        
+      </div>
+      <p>A youtube tutorial on using libraries and patterns in Diptrace</p>
+  </div>
+</div>
+
+  
+  
+<div class="mb">
+  <div>
+      <h3>
+        <a title="View post: SMD Prototype PCB" href="https://willhart.io/post/smd-prototype-pcb/">
+          SMD Prototype PCB
+        </a>
+      </h3>
+      <div class="row">
+        
+        <a class="txtsm mr" href="https://willhart.io/tag/projects/">#projects</a>
+        
+        <a class="txtsm mr" href="https://willhart.io/tag/electronics/">#electronics</a>
+        
+      </div>
+      <p>Describes a custom SMD prototype PCB I designed to jump start projects using SMD electronics</p>
+  </div>
+</div>
+
+  
+  
+<div class="mb">
+  <div>
+      <h3>
+        <a title="View post: Chez D&#x27;Alert: PIC Countdown Alarm" href="https://willhart.io/post/chez-dalert-pic-countdown-alarm/">
+          Chez D&#x27;Alert: PIC Countdown Alarm
+        </a>
+      </h3>
+      <div class="row">
+        
+        <a class="txtsm mr" href="https://willhart.io/tag/projects/">#projects</a>
+        
+        <a class="txtsm mr" href="https://willhart.io/tag/electronics/">#electronics</a>
+        
+      </div>
+      <p>A summary of a project I build for my Dad&#x27;s birthday.</p>
+  </div>
+</div>
+
+  
+  
+<div class="mb">
+  <div>
+      <h3>
+        <a title="View post: PIC16F628A TMR0 Interrupts" href="https://willhart.io/post/pic16f628a-tmr0-interrupts/">
+          PIC16F628A TMR0 Interrupts
+        </a>
+      </h3>
+      <div class="row">
+        
+        <a class="txtsm mr" href="https://willhart.io/tag/tutorials/">#tutorials</a>
+        
+        <a class="txtsm mr" href="https://willhart.io/tag/electronics/">#electronics</a>
+        
+      </div>
+      <p>A quick tutorial on how to use interrupts on a PIC16F628A microcontroller</p>
+  </div>
+</div>
+
+  
+
+  <div class="txtsm">
+    
+<nav>
+  
+  ᐊ Previous
+  
+
+  |
+
+  
+  <a href="https:&#x2F;&#x2F;willhart.io&#x2F;tag&#x2F;electronics&#x2F;page&#x2F;2&#x2F;">Next ᐅ</a>
+  
+</nav>
+
+  </div>
+</article>
+</div>
+
+  <footer id="footer">
+    <div class="container col">
+      This website was hand-made using Zola and Tera.
+      All text and images are available under CC0 1.0 Universal and code under MIT unless otherwise specified. See <a href="https://github.com/will-hart/willhart.io/blob/main/LICENSE.md">LICENSE.md</a> for more.
+    </div>
+  </footer>
+</body>
+
+</html>

@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Charlieplexing LEDs with Arduino | willhart.io</title>
+
+
+  <link rel="icon" type="image/x-icon" href="/icons/icon_light_32x32.png">
+
+  
+<meta name="description" content="A tutorial on how to use the charlieplexing technique to illuminate a bunch of LEDs from a limited number of microcontroller pins. Posted on https://willhart.io" />
+<meta property="og:description" content="A tutorial on how to use the charlieplexing technique to illuminate a bunch of LEDs from a limited number of microcontroller pins" />
+<meta property="og:title" content="Charlieplexing LEDs with Arduino" />
+<meta property="og:url" content="https://willhart.io/post/charlieplexing-leds-with-arduino/">
+<meta property="og:type" content="article" />
+<meta property="og:locale" content="en_AU" />
+
+
+  <link rel="stylesheet" href="https://willhart.io/global.css?h=f83cd20cd0df26d72c2b" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sono:wght@200..800&display=swap" rel="stylesheet">
+
+  
+
+  <!-- Cloudflare Web Analytics -->
+  <script defer src='https://static.cloudflareinsights.com/beacon.min.js'
+    data-cf-beacon='{"token": "310f93cab66a42c5a328f246cc053025"}'></script>
+  <!-- End Cloudflare Web Analytics -->
+
+  <!-- Light/Dark theme toggling -->
+  <script type="text/javascript">
+    const storageKey = "websiteTheme";
+
+    // apply theme once we have a DOM
+    document.addEventListener("DOMContentLoaded", () => {
+      applyTheme();
+    })
+
+    // a function that toggles between light and dark theme
+    const toggleTheme = () => {
+      localStorage.setItem(storageKey, localStorage.getItem(storageKey) === "d" ? "l" : "d" );
+      applyTheme();
+    }
+
+    // a function that actually applies the theme
+    const applyTheme = () => {
+      const useDarkTheme = localStorage.getItem(storageKey) === "d";
+      document.getElementsByTagName("html")[0].className = useDarkTheme ? "dark" : "";
+      document.getElementById("theme-toggle").textContent = useDarkTheme ? "🔆" : "🌑";
+    }
+  </script>
+
+  <script type="speculationrules">
+  {
+    "prerender": [
+      { "where": { "selector_matches": "a" } }
+    ]
+  }
+  </script></head>
+
+<body>
+  <nav id="header">
+    <a href="/" aria-label="Website Logo and Link to Home Page">
+      <div id="logo" >&nbsp;</div>
+    </a>
+    <span>
+      <button type="button" id="theme-toggle" aria-label="Toggle Theme" onClick="toggleTheme()">🌑</button>
+      <a class="header-item" href="/post">POSTS</a>
+      <a class="header-item" href="/tag">TAGS</a>
+      <span class="header-item hide-when-slim">|</span>
+      <a class="header-item hide-when-slim" href="/tag/projects">PROJECTS</a>
+      <a class="header-item hide-when-slim" href="/tag/gamedev">GAMEDEV</a>
+      <a class="header-item hide-when-slim" href="/tag/electronics">ELECTRONICS</a>
+    </span>
+  </nav>
+
+  
+
+<div class="container col mb mt">
+  <h1>Charlieplexing LEDs with Arduino</h1>
+  <div class="col txtsm">
+    <span>Posted by Will Hart on 2011-12-13</span>
+    <div>
+      <span>See also:</span>
+      
+      <a class="txtsm mr" href="https://willhart.io/tag/tutorials/">#tutorials</a>
+      
+      <a class="txtsm mr" href="https://willhart.io/tag/electronics/">#electronics</a>
+      
+    </div>
+  </div>
+</div>
+
+
+
+<article class="container col mblg"><p>You can never have enough pins on your micro-controller, right? Plug in an LCD
+display, a couple of status LEDs and a few sensors and you are already up to
+more pins than most entry level micros. Sure, you can plug in a <a rel="noopener nofollow noreferrer" target="_blank" href="http://en.wikipedia.org/wiki/Shift_register">shift
+register</a> like the 8-bit
+<a rel="noopener nofollow noreferrer" target="_blank" href="http://www.ti.com/lit/ds/symlink/sn74hc595.pdf">74HC595</a>, but is that the only
+way?</p>
+<p>One less common way is to use a technique called
+<a rel="noopener nofollow noreferrer" target="_blank" href="http://en.wikipedia.org/wiki/Charlieplex">Charlieplexing</a>. You can Charlieplex
+a bunch of LEDs from a few Arduino ports, and save those precious ports for
+something exciting! In the following tutorial, I’m going to show you how to use
+an Arduino and this charlieplexing technique to use 3 output pins to control 6
+LEDs.</p>
+<h2 id="what-is-charlieplexing">What is Charlieplexing?</h2>
+<p>If you have a quick scan of the charlieplex Wiki entry, you can see that this
+technique allows you to drive $n^2 - n$ LEDs using only n Arduino pins. What
+does that mean? Well in our case we have 3 pins, which will allow us to drive
+$3^2 - 3 = 6$ LEDs. This simple technique basically uses the properties of LEDs
+being diodes, and therefore only allowing current (within limits of course) to
+pass in one direction.</p>
+<h2 id="how-do-i-charlieplex">How do I Charlieplex?</h2>
+<p>A simple LED charlieplex circuit can be setup using my Arduino Uno like the
+circuit diagram below.</p>
+<p><img src="https://willhart.io/post/charlieplexing-leds-with-arduino/charlieplex_schematic.png" alt="Charlieplex Eagle Schematic" /></p>
+<p>Plugging into my breadboard gives the following physical circuit - its a bit
+messy but take your time and you should see the pattern!</p>
+<p><img src="https://willhart.io/post/charlieplexing-leds-with-arduino/charlieplex_breadboard.png" alt="Fritzing Circuit, Charlieplex LEDs on an Arduino" /></p>
+<p>Basically, the circuit involves setting up three Arduino pins. For each pair of
+pins we put two LEDs between them, with on LED being placed in each direction.
+(Remember LEDs have an anode and a cathode, usually the longer leg being the +
+leg or the anode). The clever bit about the charlieplex technique is recognising
+that we can set pins (on the Arduino as well) to one of three states:</p>
+<ol>
+<li>HIGH - usually +5v</li>
+<li>LOW - usually 0v</li>
+<li>High Impedence - disconnected</li>
+</ol>
+<p>Lets use an example. Have a look at the circuit diagram above. First we set the
+Arduino pin 5 to HIGH, pin 6 to High Impedance and pin 7 to LOW (more on how we
+do this later). Now, lets follow the current through from pin 5 (note we are
+talking about conventional current, not electron flow). We can see that there
+are four LEDs connected to this pin - the first two linked to pin 6 and the last
+two linked to pin 7. We can ignore two of these LEDs as they are the “wrong way
+around” and blocking current flow.</p>
+<p>Now recall that we set pin 6 to this high impedance state, which means it is in
+effect disconnected. As pin 7 is set to low, we can see that current will flow
+along from pin 5, then through the LED connected between pin 5 and pin 7. (This
+is the 5th LED along). In this same fashion we can then set one of each of the
+three pins to high, low and high impedance to control which LED is switched on.</p>
+<p>I have provided some sample Arduino code below to show this in action. Note that
+the <a rel="noopener nofollow noreferrer" target="_blank" href="http://www.arduino.cc/en/Reference/Constants">Arduino reference</a> says</p>
+<blockquote>
+<p>Arduino (Atmega) pins configured as <code>INPUT</code> with <code>pinMode()</code> are said to be in
+a high-impedance state.</p>
+</blockquote>
+<p>This means we can just set a pin to input mode using <code>pinMode(pin_number, INPUT);</code> and it will count as disconnected.</p>
+<p>I used a form of Charlieplexing on my PIC Countdown Timer to light up three sets
+of two LEDs using only four pins. You can see the schematic and some photos
+through the link.</p>
+<pre data-lang="c" style="background-color:#2b303b;color:#c0c5ce;" class="language-c "><code class="language-c" data-lang="c"><span style="color:#65737e;">/**************************************/
+</span><span style="color:#65737e;">/* Charlieplexing 6 LEDs with 3 Pins  */
+</span><span style="color:#65737e;">/*                                    */
+</span><span style="color:#65737e;">/* Code written by William Hart, 2011 */
+</span><span style="color:#65737e;">/* http://www.williamhart.info        */
+</span><span style="color:#65737e;">/*                                    */
+</span><span style="color:#65737e;">/* Uses 3 pins to power a network of  */
+</span><span style="color:#65737e;">/* 6 LEDs using the charlieplexing    */
+</span><span style="color:#65737e;">/* technique.                         */ 
+</span><span style="color:#65737e;">/**************************************/
+</span><span>
+</span><span style="color:#b48ead;">#define </span><span>LED_A </span><span style="color:#d08770;">5
+</span><span style="color:#b48ead;">#define </span><span>LED_B </span><span style="color:#d08770;">6
+</span><span style="color:#b48ead;">#define </span><span>LED_C </span><span style="color:#d08770;">7
+</span><span> 
+</span><span style="color:#b48ead;">void </span><span style="color:#8fa1b3;">setup</span><span>()
+</span><span>{
+</span><span>  </span><span style="color:#65737e;">// first set all pins to input, or high impedance
+</span><span>  </span><span style="color:#65737e;">// (not strictly necessary as all pins are inputs by default)
+</span><span>  </span><span style="color:#bf616a;">pinMode</span><span>(LED_A, INPUT);
+</span><span>  </span><span style="color:#bf616a;">pinMode</span><span>(LED_B, INPUT);
+</span><span>  </span><span style="color:#bf616a;">pinMode</span><span>(LED_C, INPUT);
+</span><span>}
+</span><span> 
+</span><span style="color:#b48ead;">void </span><span style="color:#8fa1b3;">loop</span><span>()
+</span><span>{
+</span><span>  </span><span style="color:#65737e;">// run through a sample loop, lighting each LED
+</span><span> 
+</span><span>  </span><span style="color:#65737e;">// in turn and holding for half a second.
+</span><span>  </span><span style="color:#bf616a;">set_pins</span><span>(LED_A, LED_B);
+</span><span>  </span><span style="color:#bf616a;">delay</span><span>(</span><span style="color:#d08770;">100</span><span>);
+</span><span>
+</span><span>  </span><span style="color:#bf616a;">set_pins</span><span>(LED_B, LED_A);
+</span><span>  </span><span style="color:#bf616a;">delay</span><span>(</span><span style="color:#d08770;">100</span><span>);
+</span><span> 
+</span><span>  </span><span style="color:#bf616a;">set_pins</span><span>(LED_C, LED_A); 
+</span><span>  </span><span style="color:#bf616a;">delay</span><span>(</span><span style="color:#d08770;">100</span><span>);
+</span><span> 
+</span><span>  </span><span style="color:#bf616a;">set_pins</span><span>(LED_A, LED_C);
+</span><span>  </span><span style="color:#bf616a;">delay</span><span>(</span><span style="color:#d08770;">100</span><span>);
+</span><span>
+</span><span>  </span><span style="color:#bf616a;">set_pins</span><span>(LED_B, LED_C);
+</span><span>  </span><span style="color:#bf616a;">delay</span><span>(</span><span style="color:#d08770;">100</span><span>);
+</span><span> 
+</span><span>  </span><span style="color:#bf616a;">set_pins</span><span>(LED_C, LED_B);
+</span><span>  </span><span style="color:#bf616a;">delay</span><span>(</span><span style="color:#d08770;">100</span><span>); 
+</span><span>}
+</span><span>
+</span><span style="color:#b48ead;">void </span><span style="color:#8fa1b3;">set_pins</span><span>(</span><span style="color:#b48ead;">int </span><span style="color:#bf616a;">high_pin</span><span>, </span><span style="color:#b48ead;">int </span><span style="color:#bf616a;">low_pin</span><span>)
+</span><span>{
+</span><span>  </span><span style="color:#65737e;">// reset all the pins
+</span><span>  </span><span style="color:#bf616a;">reset_pins</span><span>();
+</span><span> 
+</span><span>  </span><span style="color:#65737e;">// set the high and low pins to output
+</span><span>  </span><span style="color:#bf616a;">pinMode</span><span>(high_pin, OUTPUT);
+</span><span>  </span><span style="color:#bf616a;">pinMode</span><span>(low_pin, OUTPUT);
+</span><span> 
+</span><span>  </span><span style="color:#65737e;">// set high pin to logic high, low to logic low
+</span><span>  </span><span style="color:#bf616a;">digitalWrite</span><span>(high_pin, HIGH);
+</span><span>  </span><span style="color:#bf616a;">digitalWrite</span><span>(low_pin,LOW);
+</span><span>}
+</span><span>
+</span><span style="color:#b48ead;">void </span><span style="color:#8fa1b3;">reset_pins</span><span>()
+</span><span>{
+</span><span>  </span><span style="color:#65737e;">// start by ensuring all pins are at input and low
+</span><span>  </span><span style="color:#bf616a;">pinMode</span><span>(LED_A, INPUT); 
+</span><span>  </span><span style="color:#bf616a;">pinMode</span><span>(LED_B, INPUT);
+</span><span>  </span><span style="color:#bf616a;">pinMode</span><span>(LED_C, INPUT);
+</span><span>
+</span><span>  </span><span style="color:#bf616a;">digitalWrite</span><span>(LED_A, LOW);
+</span><span>  </span><span style="color:#bf616a;">digitalWrite</span><span>(LED_B, LOW);
+</span><span>  </span><span style="color:#bf616a;">digitalWrite</span><span>(LED_C, LOW);
+</span><span>}
+</span></code></pre>
+</article>
+
+<div class="container col">
+  <h2>Comments</h2>
+  <blockquote>Comments are powered by github and <a href="https://giscus.app">giscus</a></blockquote>
+  <script src="https://giscus.app/client.js"
+        data-repo="will-hart/will-hart.github.io"
+        data-repo-id="MDEwOlJlcG9zaXRvcnkzMjQ2NjY3Mzg="
+        data-category="General"
+        data-category-id="DIC_kwDOE1oFcs4CtiK6"
+        data-mapping="og:title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+  </script>
+</div>
+</div>
+
+  <footer id="footer">
+    <div class="container col">
+      This website was hand-made using Zola and Tera.
+      All text and images are available under CC0 1.0 Universal and code under MIT unless otherwise specified. See <a href="https://github.com/will-hart/willhart.io/blob/main/LICENSE.md">LICENSE.md</a> for more.
+    </div>
+  </footer>
+</body>
+
+</html>

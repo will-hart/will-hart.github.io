@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>A simple static site generator in Python | willhart.io</title>
+
+
+  <link rel="icon" type="image/x-icon" href="/icons/icon_light_32x32.png">
+
+  
+<meta name="description" content="A description of a simple static site generator I built in Python. Posted on https://willhart.io" />
+<meta property="og:description" content="A description of a simple static site generator I built in Python" />
+<meta property="og:title" content="A simple static site generator in Python" />
+<meta property="og:url" content="https://willhart.io/post/a-simple-static-site-generator-in-python/">
+<meta property="og:type" content="article" />
+<meta property="og:locale" content="en_AU" />
+
+
+  <link rel="stylesheet" href="https://willhart.io/global.css?h=f83cd20cd0df26d72c2b" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sono:wght@200..800&display=swap" rel="stylesheet">
+
+  
+
+  <!-- Cloudflare Web Analytics -->
+  <script defer src='https://static.cloudflareinsights.com/beacon.min.js'
+    data-cf-beacon='{"token": "310f93cab66a42c5a328f246cc053025"}'></script>
+  <!-- End Cloudflare Web Analytics -->
+
+  <!-- Light/Dark theme toggling -->
+  <script type="text/javascript">
+    const storageKey = "websiteTheme";
+
+    // apply theme once we have a DOM
+    document.addEventListener("DOMContentLoaded", () => {
+      applyTheme();
+    })
+
+    // a function that toggles between light and dark theme
+    const toggleTheme = () => {
+      localStorage.setItem(storageKey, localStorage.getItem(storageKey) === "d" ? "l" : "d" );
+      applyTheme();
+    }
+
+    // a function that actually applies the theme
+    const applyTheme = () => {
+      const useDarkTheme = localStorage.getItem(storageKey) === "d";
+      document.getElementsByTagName("html")[0].className = useDarkTheme ? "dark" : "";
+      document.getElementById("theme-toggle").textContent = useDarkTheme ? "🔆" : "🌑";
+    }
+  </script>
+
+  <script type="speculationrules">
+  {
+    "prerender": [
+      { "where": { "selector_matches": "a" } }
+    ]
+  }
+  </script></head>
+
+<body>
+  <nav id="header">
+    <a href="/" aria-label="Website Logo and Link to Home Page">
+      <div id="logo" >&nbsp;</div>
+    </a>
+    <span>
+      <button type="button" id="theme-toggle" aria-label="Toggle Theme" onClick="toggleTheme()">🌑</button>
+      <a class="header-item" href="/post">POSTS</a>
+      <a class="header-item" href="/tag">TAGS</a>
+      <span class="header-item hide-when-slim">|</span>
+      <a class="header-item hide-when-slim" href="/tag/projects">PROJECTS</a>
+      <a class="header-item hide-when-slim" href="/tag/gamedev">GAMEDEV</a>
+      <a class="header-item hide-when-slim" href="/tag/electronics">ELECTRONICS</a>
+    </span>
+  </nav>
+
+  
+
+<div class="container col mb mt">
+  <h1>A simple static site generator in Python</h1>
+  <div class="col txtsm">
+    <span>Posted by Will Hart on 2014-03-18</span>
+    <div>
+      <span>See also:</span>
+      
+      <a class="txtsm mr" href="https://willhart.io/tag/tutorials/">#tutorials</a>
+      
+      <a class="txtsm mr" href="https://willhart.io/tag/code/">#code</a>
+      
+    </div>
+  </div>
+</div>
+
+
+
+<article class="container col mblg"><h2 id="what-is-a-static-site-generator">What is a static site generator?</h2>
+<p>A static site generator is a bit of code which takes input files, for instance
+from Markdown files or from another source on the web, and builds a website from
+it. For it to be static, the website is usually just plain HTML. Static site
+generators are handy because they remove a lot of the complexity of using a
+server based site such as Wordpress or a custom Django blog, and instead let you
+just focus on the content. They are better than traditional HTML web pages
+because they let you apply templates to style your HTML pages just like any
+other server based site.</p>
+<p>When I needed to make a manual for the data acquisition system I have been
+building, I decided I wanted to write the content in Markdown and use a static
+site generator to build the web pages for me. These pages (when ready) can then
+be dropped onto a web server or github pages.</p>
+<h2 id="why-make-my-own">Why make my own?</h2>
+<p>I’ve used <a rel="noopener nofollow noreferrer" target="_blank" href="http://www.getpelican.com/">Pelican</a> on a number of sites including
+the one you are browsing at the minute, and have found it to be pretty good. Yet
+as the software matures they are splintering the code base, putting plugins in
+one repository, themes in another and the core site generator in a third. This
+means I have to install and maintain three different repositories and bits of
+software on my computer to generate a static site. This is a pain. It also means
+that since I got it working on my Linux install and haven’t really been bothered
+to get it working on my Windows machine, every time I want to update the site I
+have to reboot into Linux.</p>
+<p>So for the manual I looked around and there are <a rel="noopener nofollow noreferrer" target="_blank" href="http://staticsitegenerators.net/">a lot of different site
+generator options</a> - over 230 to be exact. A
+lot of the more popular ones have all the bells and whistles, plugins, command
+line tools, test servers, different input formats, you name it. At the end of
+the day all I want to do is to take a bunch of Markdown files, convert them into
+HTML and spit out a website with the same directory structure as my input files.
+Rather than download 230 tools until I found one that worked I just decided to
+bake my own.</p>
+<h2 id="how-it-works">How it works</h2>
+<blockquote>
+<p>The source code is available (MIT licensed) <a rel="noopener nofollow noreferrer" target="_blank" href="https://gist.github.com/will-hart/9609188">in this
+gist</a> or <a href="/python-static-site-generator">on my
+website</a></p>
+</blockquote>
+<p>The generator uses <code>Jinja2</code> for templates and <code>Markdown2</code> for rendering
+Markdown. It uses the <code>metadata</code> Markdown extra so that you can specify the
+template and any context variables for the template in your Markdown. A Markdown
+document with metadata could look like:</p>
+<pre data-lang="markdown" style="background-color:#2b303b;color:#c0c5ce;" class="language-markdown "><code class="language-markdown" data-lang="markdown"><span style="background-color:#4f5b66;color:#c0c5ce;">---
+</span><span>title: My cool article
+</span><span>keywords: article, cool, my, python, ftw
+</span><span>template: index.html
+</span><span style="color:#8fa1b3;">---
+</span><span>
+</span><span style="color:#8fa1b3;"># This is a Markdown document
+</span><span>
+</span><span>There are many like it but this is mine
+</span></code></pre>
+<p>Thats it - normal Markdown for the most part. If you don’t specify a template in
+the metadata then <code>index.html</code> will be used and if you haven’t got an
+<code>index.html</code> in your templates folder the script gives up and dies. The
+generator relies on a set directory structure:</p>
+<pre data-lang="txt" style="background-color:#2b303b;color:#c0c5ce;" class="language-txt "><code class="language-txt" data-lang="txt"><span>root
+</span><span> |----src
+</span><span> |     |---- # your markdown files in here in any directory structure you like
+</span><span> | 
+</span><span> |----templates
+</span><span> |     |---- # your Jinja2 templates go here
+</span><span> |     |----static
+</span><span> |     |    |---- # CSS files, javascript, etc go in the static folder
+</span></code></pre>
+<p>When you run the generator it converts all the Markdown files in the <code>src</code>
+directory into HTML, applies the correct template from the templates folder and
+puts it all in the <code>output</code> folder. It copies the <code>static</code> directory to build as
+well so you have your CSS and javascript.</p>
+<p>This approach makes it really easy to link between files or insert images. All
+you have to do is write the Markdown as you normally would. I add an images
+folder to the src folder and throw all my images in there. By setting the
+<code>STATIC_DIRS</code> variable in the script I can ensure the images get copied over to
+the build directory.</p>
+<p>To build a site, assuming you have downloaded the script as <code>build.py</code> you just
+run</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">$</span><span> python build.py
+</span></code></pre>
+</article>
+
+<div class="container col">
+  <h2>Comments</h2>
+  <blockquote>Comments are powered by github and <a href="https://giscus.app">giscus</a></blockquote>
+  <script src="https://giscus.app/client.js"
+        data-repo="will-hart/will-hart.github.io"
+        data-repo-id="MDEwOlJlcG9zaXRvcnkzMjQ2NjY3Mzg="
+        data-category="General"
+        data-category-id="DIC_kwDOE1oFcs4CtiK6"
+        data-mapping="og:title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+  </script>
+</div>
+</div>
+
+  <footer id="footer">
+    <div class="container col">
+      This website was hand-made using Zola and Tera.
+      All text and images are available under CC0 1.0 Universal and code under MIT unless otherwise specified. See <a href="https://github.com/will-hart/willhart.io/blob/main/LICENSE.md">LICENSE.md</a> for more.
+    </div>
+  </footer>
+</body>
+
+</html>

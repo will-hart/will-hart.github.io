@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Tauri and Create React App Part 2 - Commands | willhart.io</title>
+
+
+  <link rel="icon" type="image/x-icon" href="/icons/icon_light_32x32.png">
+
+  
+<meta name="description" content="Part 2 of a tutorial for setting up Tauri (an electron alternative) and Create React App. Here we run through setting up and invoking a command written in rust.. Posted on https://willhart.io" />
+<meta property="og:description" content="Part 2 of a tutorial for setting up Tauri (an electron alternative) and Create React App. Here we run through setting up and invoking a command written in rust." />
+<meta property="og:title" content="Tauri and Create React App Part 2 - Commands" />
+<meta property="og:url" content="https://willhart.io/post/tauri-create-react-app-tutorial-part2/">
+<meta property="og:type" content="article" />
+<meta property="og:locale" content="en_AU" />
+
+
+  <link rel="stylesheet" href="https://willhart.io/global.css?h=f83cd20cd0df26d72c2b" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sono:wght@200..800&display=swap" rel="stylesheet">
+
+  
+
+  <!-- Cloudflare Web Analytics -->
+  <script defer src='https://static.cloudflareinsights.com/beacon.min.js'
+    data-cf-beacon='{"token": "310f93cab66a42c5a328f246cc053025"}'></script>
+  <!-- End Cloudflare Web Analytics -->
+
+  <!-- Light/Dark theme toggling -->
+  <script type="text/javascript">
+    const storageKey = "websiteTheme";
+
+    // apply theme once we have a DOM
+    document.addEventListener("DOMContentLoaded", () => {
+      applyTheme();
+    })
+
+    // a function that toggles between light and dark theme
+    const toggleTheme = () => {
+      localStorage.setItem(storageKey, localStorage.getItem(storageKey) === "d" ? "l" : "d" );
+      applyTheme();
+    }
+
+    // a function that actually applies the theme
+    const applyTheme = () => {
+      const useDarkTheme = localStorage.getItem(storageKey) === "d";
+      document.getElementsByTagName("html")[0].className = useDarkTheme ? "dark" : "";
+      document.getElementById("theme-toggle").textContent = useDarkTheme ? "🔆" : "🌑";
+    }
+  </script>
+
+  <script type="speculationrules">
+  {
+    "prerender": [
+      { "where": { "selector_matches": "a" } }
+    ]
+  }
+  </script></head>
+
+<body>
+  <nav id="header">
+    <a href="/" aria-label="Website Logo and Link to Home Page">
+      <div id="logo" >&nbsp;</div>
+    </a>
+    <span>
+      <button type="button" id="theme-toggle" aria-label="Toggle Theme" onClick="toggleTheme()">🌑</button>
+      <a class="header-item" href="/post">POSTS</a>
+      <a class="header-item" href="/tag">TAGS</a>
+      <span class="header-item hide-when-slim">|</span>
+      <a class="header-item hide-when-slim" href="/tag/projects">PROJECTS</a>
+      <a class="header-item hide-when-slim" href="/tag/gamedev">GAMEDEV</a>
+      <a class="header-item hide-when-slim" href="/tag/electronics">ELECTRONICS</a>
+    </span>
+  </nav>
+
+  
+
+<div class="container col mb mt">
+  <h1>Tauri and Create React App Part 2 - Commands</h1>
+  <div class="col txtsm">
+    <span>Posted by Will Hart on 2021-08-27</span>
+    <div>
+      <span>See also:</span>
+      
+      <a class="txtsm mr" href="https://willhart.io/tag/code/">#code</a>
+      
+      <a class="txtsm mr" href="https://willhart.io/tag/tutorials/">#tutorials</a>
+      
+    </div>
+  </div>
+</div>
+
+
+
+<article class="container col mblg"><h2 id="recap">Recap</h2>
+<p>In <a href="/post/20210826_tauri_create_react_app_tutorial_part1">part 1</a> of this
+tutorial series we set up a Tauri and create-react-app app and added a basic
+non-functional counter. We worked out how to run the app with one command and
+use the built-in hot reloading to reload the app.</p>
+<p>In this part, we will write a basic rust command and invoke it from the client
+side to update our counter in the app.</p>
+<h2 id="what-are-commands">What are commands</h2>
+<p>Commands are the way that Tauri supports exchanging data and actions between the
+web and rust parts of the code base. Tauri provides a JavaScript API for
+“invoking” commands in the rust code.</p>
+<blockquote>
+<p>Commands are just rust functions that are registered when the Tauri app is
+built.</p>
+</blockquote>
+<h2 id="writing-a-command">Writing a command</h2>
+<p>Lets start by writing a simple rust command. Open up <code>src-tauri/src/main.rs</code>,
+and above the <code>main()</code> function add the following:</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">use </span><span>std::sync::atomic::{AtomicI32, Ordering};
+</span><span style="color:#b48ead;">use </span><span>tauri::State;
+</span><span>
+</span><span>#[</span><span style="color:#bf616a;">tauri</span><span>::</span><span style="color:#bf616a;">command</span><span>]
+</span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">increment_counter</span><span>(</span><span style="color:#bf616a;">state</span><span>: State&lt;AtomicI32&gt;, </span><span style="color:#bf616a;">delta</span><span>: </span><span style="color:#b48ead;">i32</span><span>) -&gt; Result&lt;</span><span style="color:#b48ead;">i32</span><span>, String&gt; {
+</span><span>  println!(&quot;</span><span style="color:#a3be8c;">Incrementing counter by </span><span style="color:#d08770;">{}</span><span>&quot;, delta);
+</span><span>  Ok(state.</span><span style="color:#96b5b4;">fetch_add</span><span>(delta, Ordering::SeqCst) + delta)
+</span><span>}
+</span></code></pre>
+<p>We’ve imported a few things to store a thread-safe number, and we’ve created a
+function that takes a <code>tauri::State</code> which contains an <code>AtomicI32</code> and a second
+argument is a delta which we use to increment our counter. The function is a one
+liner which uses <code>fetch_add</code> to update our atomic integer. We then return the
+previous value (returned by <code>fetch_add</code> plus the delta).</p>
+<p>We then need to update our tauri <code>main()</code> function to insert our state and
+register the commands. Update the main function to look like this:</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span>  tauri::Builder::default()
+</span><span>    .</span><span style="color:#96b5b4;">manage</span><span>(AtomicI32::from(</span><span style="color:#d08770;">0</span><span>))
+</span><span>    .</span><span style="color:#96b5b4;">invoke_handler</span><span>(tauri::generate_handler![increment_counter])
+</span><span>    .</span><span style="color:#96b5b4;">run</span><span>(tauri::generate_context!())
+</span><span>    .</span><span style="color:#96b5b4;">expect</span><span>(&quot;</span><span style="color:#a3be8c;">error while running tauri application</span><span>&quot;);
+</span></code></pre>
+<p>The two new lines are the <code>manage</code> and <code>invoke_handler</code> lines. The first line
+tells Tauri to “manage” our state, in this case our atomic integer. The second
+line <code>invoke_handler</code> registers our handlers. If we want multiple handlers we
+can do:</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span>tauri::generate_handler![my_command, another_command, a_third_command]
+</span></code></pre>
+<p>If you look back at your terminal now you should see some activity as the Tauri
+app reloads in response to the changes. This is all we need to do to set up the
+commands in the backend.</p>
+<h2 id="invoking-the-command-on-the-front-end">Invoking the command on the front end</h2>
+<p>Now we can return to the <code>App.tsx</code> to use (or invoke) our command. We want to
+invoke the command when the app first loads to get the current value of the
+counter. We can do this with a <code>useEffect</code> before the <code>return</code> in <code>App.tsx</code>. It
+should look something like this:</p>
+<pre data-lang="typescript" style="background-color:#2b303b;color:#c0c5ce;" class="language-typescript "><code class="language-typescript" data-lang="typescript"><span style="color:#b48ead;">import </span><span>{ </span><span style="color:#bf616a;">useEffect</span><span>, </span><span style="color:#bf616a;">useState </span><span>} </span><span style="color:#b48ead;">from </span><span>&quot;</span><span style="color:#a3be8c;">react</span><span>&quot;;
+</span><span style="color:#b48ead;">import </span><span>{ </span><span style="color:#bf616a;">invoke </span><span>} </span><span style="color:#b48ead;">from </span><span>&#39;</span><span style="color:#a3be8c;">@tauri-apps/api</span><span>&#39;
+</span><span>
+</span><span style="color:#b48ead;">const </span><span style="color:#8fa1b3;">App </span><span>= () </span><span style="color:#b48ead;">=&gt; </span><span>{
+</span><span>  </span><span style="color:#b48ead;">const </span><span>[</span><span style="color:#bf616a;">counter</span><span>, </span><span style="color:#bf616a;">setCounter</span><span>] = </span><span style="color:#8fa1b3;">useState</span><span>(-</span><span style="color:#d08770;">1</span><span>)
+</span><span>
+</span><span>  </span><span style="color:#8fa1b3;">useEffect</span><span>(() </span><span style="color:#b48ead;">=&gt; </span><span>{
+</span><span>    </span><span style="color:#8fa1b3;">invoke</span><span>(&#39;</span><span style="color:#a3be8c;">increment_counter</span><span>&#39;, { delta: </span><span style="color:#d08770;">0 </span><span>}).</span><span style="color:#96b5b4;">then</span><span>((</span><span style="color:#bf616a;">result</span><span>) </span><span style="color:#b48ead;">=&gt; </span><span style="color:#8fa1b3;">setCounter</span><span>(</span><span style="color:#bf616a;">result </span><span style="color:#b48ead;">as </span><span>number))
+</span><span>  }, [</span><span style="color:#bf616a;">setCounter</span><span>])
+</span><span>
+</span><span>  </span><span style="color:#b48ead;">return </span><span>(
+</span><span>    &lt;div&gt;
+</span><span>      &lt;button&gt;</span><span style="color:#bf616a;">Increment</span><span>&lt;/</span><span style="color:#bf616a;">button</span><span>&gt; {</span><span style="color:#bf616a;">counter</span><span>}
+</span><span>    &lt;/</span><span style="color:#bf616a;">div</span><span>&gt;
+</span><span>  )
+</span><span>}
+</span></code></pre>
+<p>When the app reloads you should see a message in the terminal:</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">Incrementing</span><span> counter by 0
+</span></code></pre>
+<p>The counter next to the button should also say <code>0</code>, which is the value we set in
+the server. We can verify that this number does come from the rust code by
+changing line 18 in <code>main.rs</code> from <code>.manage(AtomicI32::from(0))</code> to
+<code>.manage(AtomicI32::from(5))</code>. When the app reloads the counter should start on
+5.</p>
+<p>We now want the counter to update when we hit the “increment” button. We can
+create a callback for this:</p>
+<pre data-lang="typescript" style="background-color:#2b303b;color:#c0c5ce;" class="language-typescript "><code class="language-typescript" data-lang="typescript"><span style="color:#b48ead;">const </span><span style="color:#bf616a;">increment </span><span>= </span><span style="color:#8fa1b3;">useCallback</span><span>(</span><span style="color:#b48ead;">async </span><span>() </span><span style="color:#b48ead;">=&gt; </span><span>{
+</span><span>  </span><span style="color:#b48ead;">const </span><span style="color:#bf616a;">result </span><span>= </span><span style="color:#b48ead;">await </span><span style="color:#8fa1b3;">invoke</span><span>(&#39;</span><span style="color:#a3be8c;">increment_counter</span><span>&#39;, { delta: </span><span style="color:#d08770;">1 </span><span>}) </span><span style="color:#b48ead;">as </span><span>number
+</span><span>  </span><span style="color:#8fa1b3;">setCounter</span><span>(</span><span style="color:#bf616a;">result</span><span>)
+</span><span>}, [</span><span style="color:#bf616a;">setCounter</span><span>])
+</span></code></pre>
+<p>We can then update the button to:</p>
+<pre data-lang="html" style="background-color:#2b303b;color:#c0c5ce;" class="language-html "><code class="language-html" data-lang="html"><span>&lt;</span><span style="color:#bf616a;">button </span><span style="color:#d08770;">onClick</span><span>=</span><span style="color:#a3be8c;">{increment}</span><span>&gt;increment&lt;/</span><span style="color:#bf616a;">button</span><span>&gt;
+</span></code></pre>
+<p>After reloading click the button. The console should print:</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">Incrementing</span><span> counter by 1
+</span></code></pre>
+<p>and the counter should increment by 1 for each click!</p>
+<h2 id="handling-errors">Handling errors</h2>
+<p>If the rust function returns an <code>Err(some_string)</code> then this is passed through
+to the invoke function on the web side. As <code>invoke</code> is just a promise, this
+means we could do something like:</p>
+<pre data-lang="typescript" style="background-color:#2b303b;color:#c0c5ce;" class="language-typescript "><code class="language-typescript" data-lang="typescript"><span style="color:#8fa1b3;">invoke</span><span>(...).</span><span style="color:#96b5b4;">then</span><span>(</span><span style="color:#bf616a;">result </span><span style="color:#b48ead;">=&gt; </span><span>...).</span><span style="color:#96b5b4;">catch</span><span>(</span><span style="color:#ebcb8b;">console</span><span>.</span><span style="color:#96b5b4;">error</span><span>)
+</span></code></pre>
+<blockquote>
+<p>We now have commands invoked from the web side executing rust code and
+handling the result. The code for this tutorial can be found <a rel="noopener nofollow noreferrer" target="_blank" href="https://github.com/will-hart/tauri-cra-tutorial/tree/f373bf1dbe9a21101e1a2b1cd6b8d8969e94e0b4">here on
+github</a>.
+Part 1 of the tutorial <a href="/post/20210826_tauri_create_react_app_tutorial_part1">can be found
+here</a> and part 3 of the
+tutorial <a href="/post/20210828_tauri_create_react_app_tutorial_part3">can be found
+here</a>.</p>
+</blockquote>
+</article>
+
+<div class="container col">
+  <h2>Comments</h2>
+  <blockquote>Comments are powered by github and <a href="https://giscus.app">giscus</a></blockquote>
+  <script src="https://giscus.app/client.js"
+        data-repo="will-hart/will-hart.github.io"
+        data-repo-id="MDEwOlJlcG9zaXRvcnkzMjQ2NjY3Mzg="
+        data-category="General"
+        data-category-id="DIC_kwDOE1oFcs4CtiK6"
+        data-mapping="og:title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+  </script>
+</div>
+</div>
+
+  <footer id="footer">
+    <div class="container col">
+      This website was hand-made using Zola and Tera.
+      All text and images are available under CC0 1.0 Universal and code under MIT unless otherwise specified. See <a href="https://github.com/will-hart/willhart.io/blob/main/LICENSE.md">LICENSE.md</a> for more.
+    </div>
+  </footer>
+</body>
+
+</html>

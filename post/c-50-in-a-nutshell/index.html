@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>C# 5.0 In A Nutshell - Review | willhart.io</title>
+
+
+  <link rel="icon" type="image/x-icon" href="/icons/icon_light_32x32.png">
+
+  
+<meta name="description" content="A review of a book by Joseph Albahari &amp; Ben Albahari, O&#x27;Reilly Media. Posted on https://willhart.io" />
+<meta property="og:description" content="A review of a book by Joseph Albahari &amp; Ben Albahari, O&#x27;Reilly Media" />
+<meta property="og:title" content="C# 5.0 In A Nutshell - Review" />
+<meta property="og:url" content="https://willhart.io/post/c-50-in-a-nutshell/">
+<meta property="og:type" content="article" />
+<meta property="og:locale" content="en_AU" />
+
+
+  <link rel="stylesheet" href="https://willhart.io/global.css?h=f83cd20cd0df26d72c2b" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sono:wght@200..800&display=swap" rel="stylesheet">
+
+  
+
+  <!-- Cloudflare Web Analytics -->
+  <script defer src='https://static.cloudflareinsights.com/beacon.min.js'
+    data-cf-beacon='{"token": "310f93cab66a42c5a328f246cc053025"}'></script>
+  <!-- End Cloudflare Web Analytics -->
+
+  <!-- Light/Dark theme toggling -->
+  <script type="text/javascript">
+    const storageKey = "websiteTheme";
+
+    // apply theme once we have a DOM
+    document.addEventListener("DOMContentLoaded", () => {
+      applyTheme();
+    })
+
+    // a function that toggles between light and dark theme
+    const toggleTheme = () => {
+      localStorage.setItem(storageKey, localStorage.getItem(storageKey) === "d" ? "l" : "d" );
+      applyTheme();
+    }
+
+    // a function that actually applies the theme
+    const applyTheme = () => {
+      const useDarkTheme = localStorage.getItem(storageKey) === "d";
+      document.getElementsByTagName("html")[0].className = useDarkTheme ? "dark" : "";
+      document.getElementById("theme-toggle").textContent = useDarkTheme ? "🔆" : "🌑";
+    }
+  </script>
+
+  <script type="speculationrules">
+  {
+    "prerender": [
+      { "where": { "selector_matches": "a" } }
+    ]
+  }
+  </script></head>
+
+<body>
+  <nav id="header">
+    <a href="/" aria-label="Website Logo and Link to Home Page">
+      <div id="logo" >&nbsp;</div>
+    </a>
+    <span>
+      <button type="button" id="theme-toggle" aria-label="Toggle Theme" onClick="toggleTheme()">🌑</button>
+      <a class="header-item" href="/post">POSTS</a>
+      <a class="header-item" href="/tag">TAGS</a>
+      <span class="header-item hide-when-slim">|</span>
+      <a class="header-item hide-when-slim" href="/tag/projects">PROJECTS</a>
+      <a class="header-item hide-when-slim" href="/tag/gamedev">GAMEDEV</a>
+      <a class="header-item hide-when-slim" href="/tag/electronics">ELECTRONICS</a>
+    </span>
+  </nav>
+
+  
+
+<div class="container col mb mt">
+  <h1>C# 5.0 In A Nutshell - Review</h1>
+  <div class="col txtsm">
+    <span>Posted by Will Hart on 2013-08-28</span>
+    <div>
+      <span>See also:</span>
+      
+      <a class="txtsm mr" href="https://willhart.io/tag/random/">#random</a>
+      
+    </div>
+  </div>
+</div>
+
+
+
+<article class="container col mblg"><blockquote>
+<p>DISCLAIMER: I received this book for free as part of the O’Reilly blogger
+review program. I promise this hasn’t changed my opinion :)</p>
+</blockquote>
+<p>I’ve been coding a lot more in C# recently as a result of doing it at work and
+mocking up some tests for Blitz Logger. Whilst I’m comfortable with the basics
+of C#, I came to it from a combination of VB and C and never really had a formal
+education in the language.</p>
+<p>I therefore decided to have a look at C# 5.0 In a Nutshell as a “desktop”
+reference - In effect a digital copy on my phone or PC I can flick through when
+I want to know about a specific language feature.</p>
+<p>The first thing I did when I got the book was have a flick through the contents.
+The book seemed fairly comprehensive with most of the language features I knew
+about and a couple I didn’t. You’d probably expect this as the book weighs in at
+about 1000 pages!</p>
+<p>I browsed through the chapter on <code>LINQ to SQL</code> and the one on <code>Reflection</code> and
+<code>Metadata</code>. They seemed pretty well written in clear language with lots of short
+examples. In the PDF the table of contents is all hyperlinked so you can click
+on an item and go directly to the section.</p>
+<blockquote>
+<p>“Great,” I thought, “this will be handy!”</p>
+</blockquote>
+<p>Then I put the book down and forgot about it for a few months.</p>
+<p>You see I had stumbled upon one of the fundamental problems with reference books
+in the internet age - what presumably keeps publishing executives up at night -
+a book is much harder to use than the internet! When I have a problem its
+normally a very specific one. For instance, something along the lines of:</p>
+<blockquote>
+<p>How do I use <code>BeginInvoke</code> again?</p>
+</blockquote>
+<p>Sure I know vaguely what I’m meant to do and how it works but for some reason
+the exact syntax never stays in my head. In the time it takes to find the PDF of
+the book, open it and somehow search the for <code>BeginInvoke</code> (which I can’t do on my
+phone by the way) I could have found three or four possible solutions on
+StackOverflow. Books are just so inefficient!</p>
+<p>Perhaps things would be different if I had splashed out for a paper copy, but
+then again I can’t really see myself putting down the keyboard and mouse and
+thumbing through such a weighty tome. If i have a specific question, I want the
+answer NOW! (Plus, 1000 pages!! Think of the trees!)</p>
+<p>Maybe 10 years ago, this book would have been the bees knees. Its comprehensive,
+well written and has a solid index and table of contents which makes searching
+relatively easy. I just couldn’t work out how to fit it into my workflow.</p>
+</article>
+
+<div class="container col">
+  <h2>Comments</h2>
+  <blockquote>Comments are powered by github and <a href="https://giscus.app">giscus</a></blockquote>
+  <script src="https://giscus.app/client.js"
+        data-repo="will-hart/will-hart.github.io"
+        data-repo-id="MDEwOlJlcG9zaXRvcnkzMjQ2NjY3Mzg="
+        data-category="General"
+        data-category-id="DIC_kwDOE1oFcs4CtiK6"
+        data-mapping="og:title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+  </script>
+</div>
+</div>
+
+  <footer id="footer">
+    <div class="container col">
+      This website was hand-made using Zola and Tera.
+      All text and images are available under CC0 1.0 Universal and code under MIT unless otherwise specified. See <a href="https://github.com/will-hart/willhart.io/blob/main/LICENSE.md">LICENSE.md</a> for more.
+    </div>
+  </footer>
+</body>
+
+</html>

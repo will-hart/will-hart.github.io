@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>An Ember.js beginners tutorial | willhart.io</title>
+
+
+  <link rel="icon" type="image/x-icon" href="/icons/icon_light_32x32.png">
+
+  
+<meta name="description" content="A very out of date beginners tutorial for Ember JS. Posted on https://willhart.io" />
+<meta property="og:description" content="A very out of date beginners tutorial for Ember JS" />
+<meta property="og:title" content="An Ember.js beginners tutorial" />
+<meta property="og:url" content="https://willhart.io/post/an-emberjs-beginners-tutorial/">
+<meta property="og:type" content="article" />
+<meta property="og:locale" content="en_AU" />
+
+
+  <link rel="stylesheet" href="https://willhart.io/global.css?h=f83cd20cd0df26d72c2b" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sono:wght@200..800&display=swap" rel="stylesheet">
+
+  
+
+  <!-- Cloudflare Web Analytics -->
+  <script defer src='https://static.cloudflareinsights.com/beacon.min.js'
+    data-cf-beacon='{"token": "310f93cab66a42c5a328f246cc053025"}'></script>
+  <!-- End Cloudflare Web Analytics -->
+
+  <!-- Light/Dark theme toggling -->
+  <script type="text/javascript">
+    const storageKey = "websiteTheme";
+
+    // apply theme once we have a DOM
+    document.addEventListener("DOMContentLoaded", () => {
+      applyTheme();
+    })
+
+    // a function that toggles between light and dark theme
+    const toggleTheme = () => {
+      localStorage.setItem(storageKey, localStorage.getItem(storageKey) === "d" ? "l" : "d" );
+      applyTheme();
+    }
+
+    // a function that actually applies the theme
+    const applyTheme = () => {
+      const useDarkTheme = localStorage.getItem(storageKey) === "d";
+      document.getElementsByTagName("html")[0].className = useDarkTheme ? "dark" : "";
+      document.getElementById("theme-toggle").textContent = useDarkTheme ? "🔆" : "🌑";
+    }
+  </script>
+
+  <script type="speculationrules">
+  {
+    "prerender": [
+      { "where": { "selector_matches": "a" } }
+    ]
+  }
+  </script></head>
+
+<body>
+  <nav id="header">
+    <a href="/" aria-label="Website Logo and Link to Home Page">
+      <div id="logo" >&nbsp;</div>
+    </a>
+    <span>
+      <button type="button" id="theme-toggle" aria-label="Toggle Theme" onClick="toggleTheme()">🌑</button>
+      <a class="header-item" href="/post">POSTS</a>
+      <a class="header-item" href="/tag">TAGS</a>
+      <span class="header-item hide-when-slim">|</span>
+      <a class="header-item hide-when-slim" href="/tag/projects">PROJECTS</a>
+      <a class="header-item hide-when-slim" href="/tag/gamedev">GAMEDEV</a>
+      <a class="header-item hide-when-slim" href="/tag/electronics">ELECTRONICS</a>
+    </span>
+  </nav>
+
+  
+
+<div class="container col mb mt">
+  <h1>An Ember.js beginners tutorial</h1>
+  <div class="col txtsm">
+    <span>Posted by Will Hart on 2013-09-14</span>
+    <div>
+      <span>See also:</span>
+      
+      <a class="txtsm mr" href="https://willhart.io/tag/code/">#code</a>
+      
+      <a class="txtsm mr" href="https://willhart.io/tag/tutorials/">#tutorials</a>
+      
+    </div>
+  </div>
+</div>
+
+
+
+<article class="container col mblg"><blockquote>
+<p><strong>Warning</strong> This is a pretty long tutorial! If you just want to see the
+finished product you can browse the source code or have a look at a live demo</p>
+<p><strong>Warning 2</strong> - this tutorial was written for Ember 1.0, and is therefore well
+out of date.</p>
+</blockquote>
+<h2 id="how-about-we-start-with-some-questions">How about we start with some questions</h2>
+<h3 id="what-is-ember-js">What is Ember.js?</h3>
+<p>Ember.js is a client side javascript library which has been in development for
+quite a while. It recently hit the spotlight as the first stable version (1.0.0)
+was released.</p>
+<p>In a nutshell, Ember helps you create web applications where a lot of the logic
+runs in the browser and doesn’t necessarily require server requests to function.
+You may also have heard of it in the same breath as javascript libraries like
+backbone or angular.</p>
+<p>When the user interacts with things like buttons and text boxes on the browser
+page, Ember updates the DOM directly and (almost) instantly, showing changes
+directly to the user without refreshing the page. If any server requests are
+required this can be carried out asynchronously in the background. In effect,
+Ember takes over the ‘application’ side of the web, leaving the server to act as
+an API engine, serving and saving data.</p>
+<h3 id="why-ember-js">Why Ember.js?</h3>
+<p>There are an increasing number of client side javascript libraries out there, a
+few of which I mentioned above. There is also a lot of debate into which one you
+should use and whether you should even be using one. Its fair to say that some
+of the debates I’ve read recently are a well over the top.</p>
+<p>I’m going to avoid this whole issue and simply say that in the past year I’ve
+tried a bunch of libraries out there and found that I enjoyed using Ember the
+most. It suits my requirements, is relatively easy to use and seems to have a
+very structured approach to development within the core team. I think if you
+want an application which is easy to write and maintain, responds snappily to
+user input and works using data from a REST API you can do a lot worse than
+something like Ember. In no way am I trying to claim its the only way to go!</p>
+<p>In the end, I suggest you have a go at Ember to see how it works and see if you
+like it.</p>
+<h3 id="how-are-ember-applications-structured">How are Ember applications structured?</h3>
+<p>Ember.js applications use an MVC type structure. In this approach you have</p>
+<ul>
+<li><strong>Models</strong> which define the data that is used in an application,</li>
+<li><strong>Controllers</strong> which modify, query and edit the data and provide user
+interactions, and</li>
+<li><strong>Views</strong> which display the data and capture user actions</li>
+</ul>
+<p>In addition, Ember uses templates to define how views should look in the
+browser.</p>
+<h2 id="today-s-application">Today’s application</h2>
+<p>There are a lot of TODO tutorials out in the wild, and I’m certainly not going
+to write up another one. What we’re going to build today is something altogether
+more exciting, something never before seen in the world of introductory
+tutorials. Wait for it… today we are going to build a <strong>DICE ROLLER</strong>.</p>
+<p>Hopefully our Dice Roller is going to show a couple of the interesting Ember
+features in an application which does not require a server backend.</p>
+<blockquote>
+<p>For consuming REST APIs, Ember has a data backend known as <code>ember-data</code>. I’ve
+never found that this quite matches my requirements so I’ve always rolled my
+own. I am unlikely to spend much time discussing this approach as <a rel="noopener nofollow noreferrer" target="_blank" href="http://eviltrout.com/2013/03/23/ember-without-data.html">Evil
+Trout</a> has already
+done a pretty good job.</p>
+</blockquote>
+<p>So our application needs a few features…</p>
+<ul>
+<li>Input the number of dice and the number of sides into a text box (e.g. 3d6)</li>
+<li>“Roll” the dice and record the number of results</li>
+<li>Draw a pretty (or otherwise) HTML chart of the results</li>
+</ul>
+<p>Simple right? Well this is a beginners tutorial after all! :) This means lots of
+things aren’t going to be covered in this tutorial… some of the major Ember
+features left out are:</p>
+<ul>
+<li>How to structure the files for a complex or large application</li>
+<li>How to use ember-data</li>
+<li>How to roll your own data access</li>
+<li>Anything not covered below :)</li>
+</ul>
+<p>Despite this I think we are going to cover enough to get somebody new to Ember
+on the right track. Enough talk, lets get coding!</p>
+<h2 id="getting-started">Getting Started</h2>
+<h3 id="building-the-html">Building the HTML</h3>
+<p>The first thing that needs to be done is to build an HTML file to serve the
+application. For starters, this is just a matter of building a basic HTML
+document with the jQuery, <a rel="noopener nofollow noreferrer" target="_blank" href="http://www.emberjs.com/">Ember</a> and
+<a rel="noopener nofollow noreferrer" target="_blank" href="http://handlebarsjs.com/">handlebars</a> scripts included. Handlebars is a
+templating language which lets you write out data bound templates that are
+rendered into the browser. Create an index.html file and enter the following:</p>
+<pre data-lang="html" style="background-color:#2b303b;color:#c0c5ce;" class="language-html "><code class="language-html" data-lang="html"><span>&lt;!</span><span style="color:#b48ead;">DOCTYPE </span><span style="color:#d08770;">html</span><span>&gt;
+</span><span>&lt;</span><span style="color:#bf616a;">html</span><span>&gt;
+</span><span>    &lt;</span><span style="color:#bf616a;">head</span><span>&gt;
+</span><span>        &lt;</span><span style="color:#bf616a;">title</span><span>&gt;An Ember dice roller&lt;/</span><span style="color:#bf616a;">title</span><span>&gt;
+</span><span>    &lt;/</span><span style="color:#bf616a;">head</span><span>&gt;
+</span><span>    
+</span><span>    &lt;</span><span style="color:#bf616a;">body</span><span>&gt;
+</span><span>    
+</span><span>    
+</span><span>        &lt;</span><span style="color:#bf616a;">script </span><span style="color:#d08770;">type</span><span>=&quot;</span><span style="color:#a3be8c;">text/javascript</span><span>&quot; </span><span style="color:#d08770;">src</span><span>=&quot;</span><span style="color:#a3be8c;">//cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.js</span><span>&quot;&gt;&lt;/</span><span style="color:#bf616a;">script</span><span>&gt;
+</span><span>        &lt;</span><span style="color:#bf616a;">script </span><span style="color:#d08770;">type</span><span>=&quot;</span><span style="color:#a3be8c;">text/javascript</span><span>&quot; </span><span style="color:#d08770;">src</span><span>=&quot;</span><span style="color:#a3be8c;">//cdnjs.cloudflare.com/ajax/libs/handlebars.js/1.0.0/handlebars.js</span><span>&quot;&gt;&lt;/</span><span style="color:#bf616a;">script</span><span>&gt;
+</span><span>        &lt;</span><span style="color:#bf616a;">script </span><span style="color:#d08770;">type</span><span>=&quot;</span><span style="color:#a3be8c;">text/javascript</span><span>&quot; </span><span style="color:#d08770;">src</span><span>=&quot;</span><span style="color:#a3be8c;">//cdnjs.cloudflare.com/ajax/libs/ember.js/1.0.0/ember.prod.js</span><span>&quot;&gt;&lt;/</span><span style="color:#bf616a;">script</span><span>&gt;
+</span><span>    &lt;/</span><span style="color:#bf616a;">body</span><span>&gt;
+</span><span>&lt;/</span><span style="color:#bf616a;">html</span><span>&gt;
+</span></code></pre>
+<p>There shouldn’t be anything too exciting here - we are simply setting up a
+single HTML file with the standard <code>head</code> and <code>body</code> sections and including some
+scripts. Its important that the scripts appear in this order; Ember requires
+jQuery and handlebars and will give you errors if the scripts have not been
+included before the Ember script.</p>
+<blockquote>
+<p>If you are running the web page on your hard drive using a file:/// url, you
+may need to put an http: in front of the cdnjs URLs above.</p>
+</blockquote>
+<h3 id="create-an-application">Create an application</h3>
+<p>So far so good. Now we need to create and load our Ember application. Lets start
+by creating a new file, <code>app.js</code> and including it in our HTML document below the
+other script tags:</p>
+<pre data-lang="html" style="background-color:#2b303b;color:#c0c5ce;" class="language-html "><code class="language-html" data-lang="html"><span>&lt;</span><span style="color:#bf616a;">script </span><span style="color:#d08770;">type</span><span>=&quot;</span><span style="color:#a3be8c;">text/javascript</span><span>&quot; </span><span style="color:#d08770;">src</span><span>=&quot;</span><span style="color:#a3be8c;">app.js</span><span>&quot;&gt;&lt;/</span><span style="color:#bf616a;">script</span><span>&gt;
+</span></code></pre>
+<p>Inside app.js, write the following:</p>
+<pre data-lang="javascript" style="background-color:#2b303b;color:#c0c5ce;" class="language-javascript "><code class="language-javascript" data-lang="javascript"><span style="color:#b48ead;">var </span><span style="color:#bf616a;">Roller </span><span>= </span><span style="color:#bf616a;">Ember</span><span>.</span><span style="color:#bf616a;">Application</span><span>.</span><span style="color:#8fa1b3;">create</span><span>({
+</span><span>    LOG_TRANSITIONS: </span><span style="color:#d08770;">true</span><span>,
+</span><span>    LOG_BINDINGS: </span><span style="color:#d08770;">true</span><span>,
+</span><span>    LOG_VIEW_LOOKUPS: </span><span style="color:#d08770;">true</span><span>,
+</span><span>    LOG_STACKTRACE_ON_DEPRECATION: </span><span style="color:#d08770;">true</span><span>,
+</span><span>    LOG_VERSION: </span><span style="color:#d08770;">true</span><span>,
+</span><span>    debugMode: </span><span style="color:#d08770;">true
+</span><span>});
+</span></code></pre>
+<p>This code creates a brand new application using <code>Ember.Application.create()</code>,
+calls it Roller and passes it a bunch of variables inside the <code>{}</code>. These
+variables are all about debugging information and should probably be set to
+<code>false</code> for a production application. However, as we are just getting started with
+Ember lets leave them on for now as their output is quite useful.</p>
+<p>If you open up <code>index.html</code> in your browser and go to the developer console
+(<code>F12</code> in chrome) you should see some messages on the console:</p>
+<pre data-lang="txt" style="background-color:#2b303b;color:#c0c5ce;" class="language-txt "><code class="language-txt" data-lang="txt"><span>Could not find &quot;application&quot; template or view. Nothing will be rendered Object {fullName: &quot;template:application&quot;}
+</span><span>Could not find &quot;index&quot; template or view. Nothing will be rendered Object {fullName: &quot;template:index&quot;}
+</span><span>Transitioned into &#39;index&#39;
+</span></code></pre>
+<p>These are debug messages that we asked for in our <code>Application.create</code> call
+above. We can see that something is not quite right - Ember can’t find a couple
+of templates or views. Its not all bad news though, as Ember has transitioned
+into ‘index’. In this case <code>index</code> refers to a <code>Route</code> which we will talk about
+more later.</p>
+<p>Ok, lets start by fixing some of these log messages.</p>
+<h3 id="the-application-template">The application template</h3>
+<p>Ember uses a lot of convention over configuration. This basically means that
+when it goes to a URL, it expects a number of objects to exist with very
+specific names. If it doesn’t find these objects, it can often create default
+ones.</p>
+<p>In this case when we load our application, Ember looks for a handlebars template
+called <code>application</code>. This template is loaded for every url or request and wraps
+up and displays the entire application. For now, this template can be quite
+simple, but when you build a more complex application it can include things like
+menus, headers and footers.</p>
+<p>Lets write a simple one now. In the body of your index.html file, above the
+script tags enter the following:</p>
+<pre data-lang="handlebars" style="background-color:#2b303b;color:#c0c5ce;" class="language-handlebars "><code class="language-handlebars" data-lang="handlebars"><span>&lt;</span><span style="color:#bf616a;">script </span><span style="color:#d08770;">type</span><span>=</span><span style="color:#a3be8c;">&quot;text/x-handlebars&quot; </span><span style="color:#8fa1b3;">id</span><span>=&quot;</span><span style="color:#a3be8c;">application</span><span>&quot;&gt;
+</span><span>    &lt;</span><span style="color:#bf616a;">h1</span><span>&gt;Dice Roller&lt;/</span><span style="color:#bf616a;">h1</span><span>&gt;
+</span><span>    {{</span><span style="color:#bf616a;">outlet</span><span>}}
+</span><span>&lt;/</span><span style="color:#bf616a;">script</span><span>&gt;
+</span></code></pre>
+<p>This looks a lot like HTML, and it basically is. The important things are that
+we have specified <code>type="text/x-handlebars"</code> on our script tag, which tells
+handlebars that it should compile everything inside the script tags as a
+handlebars template. Ember then looks for the attribute <code>id="application"</code> and
+realises that we want this template to be the application template.</p>
+<p>Refreshing the page, you should see that the first log message we saw before
+should have changed from <code>Could not find "application"</code> to <code>Rendering application with default view</code>, and you should see the heading “Dice Roller” in
+your browser window. So we haven’t quite removed any log messages but this new
+message is just Ember saying to us “I see you have an application template, but
+since you don’t have an application view I’m going to make one for you.” No big
+deal, right?</p>
+<blockquote>
+<p><strong>NOTE</strong> When you make changes to Ember applications make sure you refresh the
+page entirely… sounds obvious but if you click on a link in the Ember
+application the application itself doesn’t get updated from the server.</p>
+</blockquote>
+<p>The only strange thing in this template is the <code>{{outlet}}</code> written after our
+heading. This is a handlebars tag - the curly braces tell handlebars to do
+something with whatever is inside. In this case, an <code>outlet</code> is where our
+application can put other views or templates. We can see the effect of this by
+creating another template below the application template in our <code>index.html</code>:</p>
+<pre data-lang="handlebars" style="background-color:#2b303b;color:#c0c5ce;" class="language-handlebars "><code class="language-handlebars" data-lang="handlebars"><span>&lt;</span><span style="color:#bf616a;">script </span><span style="color:#d08770;">type</span><span>=</span><span style="color:#a3be8c;">&quot;text/x-handlebars&quot; </span><span style="color:#8fa1b3;">id</span><span>=&quot;</span><span style="color:#a3be8c;">index</span><span>&quot;&gt;
+</span><span>    &lt;</span><span style="color:#bf616a;">p</span><span>&gt;
+</span><span>        Our content goes here
+</span><span>    &lt;/</span><span style="color:#bf616a;">p</span><span>&gt;
+</span><span>&lt;/</span><span style="color:#bf616a;">script</span><span>&gt;
+</span></code></pre>
+<p>Save and refresh and you should see that below our heading there is now the text
+“our content goes here”. What has just happened?</p>
+<p>This is convention over configuration working overtime. Ember has loaded up,
+looked for the default application template and rendered it. It has then checked
+the URL and realised that its in the <code>index</code> resource (no further URL has been
+provided - more on this later) and has looked for the <code>index</code> template. Finding
+it, Ember has put the output from this template into the <code>{{outlet}}</code> of the
+application template. Simple, right!?</p>
+<h3 id="defining-urls-or-resources">Defining URLs (or resources)</h3>
+<p>You’ll notice that we haven’t actually told Ember about any URLs to provide
+yet… its simply guessed that we want an “index” route when we visit
+<code>index.html</code> directly and as we haven’t defined one, it has generated one for
+us.</p>
+<p>“But Will,” I hear you say, “hardly any applications simply use one URL”. How
+right you are! Luckily for us, Ember provides a mechanism where complex, nested
+and dynamic URLs can be provided. This system is handled by the <code>Router</code> object.
+By default Ember generates an index route, and so no further work is required if
+we just want a simple resource. In our case we don’t want anything too complex</p>
+<blockquote>
+<p>In Ember you can think of a resource as kind of like the a “page” in static
+HTML websites.</p>
+</blockquote>
+<p>Configuring a router is dead simple. At the bottom of your <code>app.js</code> add the
+following:</p>
+<pre data-lang="javascript" style="background-color:#2b303b;color:#c0c5ce;" class="language-javascript "><code class="language-javascript" data-lang="javascript"><span style="color:#bf616a;">Roller</span><span>.</span><span style="color:#bf616a;">Router</span><span>.</span><span style="color:#8fa1b3;">map</span><span>(</span><span style="color:#b48ead;">function </span><span>() { 
+</span><span>    </span><span style="color:#bf616a;">this</span><span>.</span><span style="color:#8fa1b3;">resource</span><span>(&quot;</span><span style="color:#a3be8c;">roll</span><span>&quot;);
+</span><span>});
+</span></code></pre>
+<p>Thats it! Refresh your page… errr, nothing has changed. Well behind the
+scenes, Ember now knows about our <code>roll</code> URL and if we ask for it will try to
+find the <code>roll</code> template. Lets link up this resource in our index view. Where we
+previously wrote “Our content goes here” in the index template, replace it with
+the following:</p>
+<pre data-lang="handlebars" style="background-color:#2b303b;color:#c0c5ce;" class="language-handlebars "><code class="language-handlebars" data-lang="handlebars"><span>{{#linkTo &quot;</span><span style="color:#a3be8c;">roll</span><span>&quot;}}Start rolling dice!{{/linkTo}}
+</span></code></pre>
+<p>The curly braces tell us that this is another handlebars “command”, but what
+does it do? Hopefully <code>linkTo</code> is a bit of a give away. This command generates a
+link (using an HTML <code>&lt;a&gt;</code> tag to the resource we have called roll, and puts
+everything between the <code>{{#linkTo ... }}</code> and <code>{{/linkTo}}</code> tags inside the
+link. Refresh it and see what happens.</p>
+<p>A link appears in the index and we can click it to go to the roll template.
+Notice that our address bar now has <code>index.html#/roll</code>. This is how Ember knows
+which resource to load. Everything after the <code>#/</code> is a resource name and we can
+see here it is roll which we defined in our resources! For more complex or
+nestted resources you may see a link like <code>index.html#/roll/1/my-roll</code>. As long
+as you have correctly configured your <code>Router</code>, Ember will know how to handle
+this.</p>
+<p>You can define custom behaviour for <code>Routes</code> such as <code>roll</code> or <code>index</code> which
+lets you load specific data or add some complex redirect behaviour (for instance
+you could check if the user is logged in and if required redirect to a login
+page).</p>
+<p>In our Dice Roller application at the moment, its silly that users have to
+navigate to the application then click on a link to start rolling dice. Sure, in
+a real world application we might just merge everything in the roll route into
+the index route and leave it at that. For the sake of a highly contrived routing
+example, lets instead <code>redirect</code> any visits to the <code>index</code> route to the <code>roll</code>
+route.</p>
+<p>Below your <code>Router.map</code> call in the <code>app.js</code> file, add the following:</p>
+<pre data-lang="javascript" style="background-color:#2b303b;color:#c0c5ce;" class="language-javascript "><code class="language-javascript" data-lang="javascript"><span style="color:#bf616a;">Roller</span><span>.</span><span style="color:#bf616a;">IndexRoute </span><span>= </span><span style="color:#bf616a;">Ember</span><span>.</span><span style="color:#bf616a;">Route</span><span>.</span><span style="color:#8fa1b3;">extend</span><span>({
+</span><span>    </span><span style="color:#8fa1b3;">redirect</span><span>: </span><span style="color:#b48ead;">function </span><span>() {
+</span><span>        </span><span style="color:#bf616a;">this</span><span>.</span><span style="color:#8fa1b3;">transitionTo</span><span>(&quot;</span><span style="color:#a3be8c;">roll</span><span>&quot;);
+</span><span>    }
+</span><span>});
+</span></code></pre>
+<p>The <code>extend</code> part of <code>Ember.Route.extend</code> simply tells Ember we want to create a
+new version of the pre-defined <code>Ember.Route</code> object and add some of our own
+logic to it. This is akin to basic class inheritance in languages such as
+Python, for instance you may view this as something like:</p>
+<pre data-lang="python" style="background-color:#2b303b;color:#c0c5ce;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#b48ead;">class </span><span style="color:#ebcb8b;">MyNewRouteClass</span><span style="color:#eff1f5;">(</span><span style="color:#a3be8c;">Ember.Route</span><span style="color:#eff1f5;">):
+</span><span>    </span><span style="color:#65737e;">&quot;&quot;&quot;my new route methods follow&quot;&quot;&quot;
+</span></code></pre>
+<p>If you remove the <code>#/roll</code> from the URL and refresh, you shoud see that the roll
+route is automagically navigated to whenever we try to go to the index. Sweet!
+We’ll come back to routes a bit later on.</p>
+<h2 id="add-some-user-controls">Add some user controls</h2>
+<p>If you looked at the console when we first created our roll <code>linkTo</code> you would
+have noticed that Ember <code>could not find "roll" template or view</code> which is
+expected as we haven’t defined one. Lets add one now below the index template in
+our <code>index.html</code> file.</p>
+<pre data-lang="handlebars" style="background-color:#2b303b;color:#c0c5ce;" class="language-handlebars "><code class="language-handlebars" data-lang="handlebars"><span>&lt;</span><span style="color:#bf616a;">script </span><span style="color:#d08770;">type</span><span>=</span><span style="color:#a3be8c;">&quot;text/x-handlebars&quot; </span><span style="color:#8fa1b3;">id</span><span>=&quot;</span><span style="color:#a3be8c;">roll</span><span>&quot;&gt;
+</span><span>    &lt;</span><span style="color:#bf616a;">p</span><span>&gt;
+</span><span>        Enter your required dice roll below, for instance &quot;3d6&quot; will roll three six sided dice.
+</span><span>    &lt;/</span><span style="color:#bf616a;">p</span><span>&gt;
+</span><span>    
+</span><span>    {{</span><span style="color:#bf616a;">input valueBinding</span><span style="color:#d08770;">=</span><span>&quot;</span><span style="color:#a3be8c;">rollString</span><span>&quot; </span><span style="color:#bf616a;">placeholder</span><span style="color:#d08770;">=</span><span>&quot;</span><span style="color:#a3be8c;">Enter your dice roll, e.g. &#39;3d6&#39; here</span><span>&quot;}}
+</span><span>    
+</span><span>    &lt;</span><span style="color:#bf616a;">hr</span><span>&gt;
+</span><span>    
+</span><span>    &lt;</span><span style="color:#bf616a;">h2</span><span>&gt;Results&lt;/</span><span style="color:#bf616a;">h2</span><span>&gt;
+</span><span>    
+</span><span>    {{#each </span><span style="color:#bf616a;">roll </span><span>in </span><span style="color:#bf616a;">content</span><span>}}
+</span><span>        I rolled a dice 
+</span><span>    {{else}}
+</span><span>        No results yet
+</span><span>    {{/each}}
+</span><span>&lt;/</span><span style="color:#bf616a;">script</span><span>&gt;
+</span></code></pre>
+<p>There are a few new things here - the <code>{{input}}</code> and <code>{{#each}}</code> tags.</p>
+<p>The input tag is a handlebars <code>helper</code> that Ember provides. This renders an
+input tag of type text with the given placeholder. It also uses <code>valueBinding</code>
+to let the controller know that it should ensure that the controller property
+<code>rollString</code> matches whatever is in the text box at all times. The HTML code
+generated by this may look a little like:</p>
+<pre data-lang="html" style="background-color:#2b303b;color:#c0c5ce;" class="language-html "><code class="language-html" data-lang="html"><span>&lt;</span><span style="color:#bf616a;">input </span><span style="color:#8fa1b3;">id</span><span>=&quot;</span><span style="color:#a3be8c;">dice_roll</span><span>&quot; 
+</span><span>       </span><span style="color:#d08770;">class</span><span>=&quot;</span><span style="color:#a3be8c;">ember-view ember-text-field</span><span>&quot;
+</span><span>       </span><span style="color:#d08770;">placeholder</span><span>=&quot;</span><span style="color:#a3be8c;">Enter your dice roll, e.g. &#39;3d6&#39; here</span><span>&quot;
+</span><span>       </span><span style="color:#d08770;">type</span><span>=&quot;</span><span style="color:#a3be8c;">text</span><span>&quot; /&gt;
+</span></code></pre>
+<p>Great, so what? Well you are right, so far not particularly exciting but stay
+tuned!</p>
+<p>The <code>{{#each}}</code> tag does a forEach on the list or array it is provided. In other
+words it does whatever is between the <code>{{#each}}</code> and <code>{{else}}</code> once per object
+in the given array.</p>
+<p>In this case we have a list of some sort called <code>content</code> and for each item in
+that list it prints out <code>I rolled a dice</code>. We can access properties of each of
+the items in the block by using <code>roll</code>. We also provide an <code>{{else}}</code> block.
+This tells handlebars what to show if there are no items in the <code>content</code> list.</p>
+<p>If you refresh the page you will see the input box and text rendered but not
+much else. Thats because we haven’t hooked up any logic or models to the
+application yet. Lets do this now.</p>
+<h2 id="adding-some-models">Adding some models</h2>
+<p>Our model is going to be very simple, and just define a dice result and a count.
+In your <code>app.js</code> file, add the following up near the top, but just after the <code>var Roller</code> declaration:</p>
+<pre data-lang="javascript" style="background-color:#2b303b;color:#c0c5ce;" class="language-javascript "><code class="language-javascript" data-lang="javascript"><span style="color:#bf616a;">Roller</span><span>.</span><span style="color:#bf616a;">Roll </span><span>= </span><span style="color:#bf616a;">Ember</span><span>.</span><span style="color:#bf616a;">Object</span><span>.</span><span style="color:#8fa1b3;">extend</span><span>({
+</span><span>    diceNumber: </span><span style="color:#d08770;">0</span><span>,
+</span><span>    totalRolls: </span><span style="color:#d08770;">0</span><span>,
+</span><span>    numberOfRolls: </span><span style="color:#d08770;">0</span><span>,
+</span><span>    
+</span><span>    </span><span style="color:#8fa1b3;">proportion</span><span>: </span><span style="color:#b48ead;">function</span><span>() {
+</span><span>        </span><span style="color:#b48ead;">var </span><span style="color:#bf616a;">width </span><span>= </span><span style="color:#d08770;">50 </span><span>+ </span><span style="color:#96b5b4;">parseInt</span><span>(</span><span style="color:#d08770;">400 </span><span>* </span><span style="color:#bf616a;">this</span><span>.</span><span style="color:#96b5b4;">get</span><span>(&quot;</span><span style="color:#a3be8c;">numberOfRolls</span><span>&quot;) / 
+</span><span>            </span><span style="color:#bf616a;">this</span><span>.</span><span style="color:#96b5b4;">get</span><span>(&quot;</span><span style="color:#a3be8c;">totalRolls</span><span>&quot;));
+</span><span>        </span><span style="color:#b48ead;">return </span><span>&quot;</span><span style="color:#a3be8c;">width: </span><span>&quot; + </span><span style="color:#bf616a;">width </span><span>+ &quot;</span><span style="color:#a3be8c;">px;</span><span>&quot;;
+</span><span>    }.</span><span style="color:#8fa1b3;">property</span><span>(&quot;</span><span style="color:#a3be8c;">totalRolls</span><span>&quot;, &quot;</span><span style="color:#a3be8c;">numberOfRolls</span><span>&quot;)
+</span><span>});
+</span></code></pre>
+<p>This is a bit of a javascript mouthful but really quite straight forward. Once
+again we are calling <code>extend</code> on something Emberish - here the base <code>Object</code> -
+and providing some additional information inside the <code>{}</code>. The first three are
+simple properties, just some variables that we are storing against this model.</p>
+<p>The last declaration - the <code>proportion</code> property - is a bit more complicated but
+is where the magic of Ember starts to really show through. Ember <code>properties</code>
+are a neat feature that can be used to automatically update the contents of a
+model when some other attribute changes. Properties aren’t stored in a database,
+but are <em>derived</em> from other attributes of the model itself. In this case, we
+can see that after our function we have written</p>
+<pre data-lang="javascript" style="background-color:#2b303b;color:#c0c5ce;" class="language-javascript "><code class="language-javascript" data-lang="javascript"><span>.</span><span style="color:#8fa1b3;">property</span><span>(&quot;</span><span style="color:#a3be8c;">totalRolls</span><span>&quot;, &quot;</span><span style="color:#a3be8c;">numberOfRolls</span><span>&quot;)
+</span></code></pre>
+<p>This means that if on a given model the value of either of <code>totalRolls</code> or
+<code>numberOfRolls</code> changes, then the <code>proportion</code> property will be updated. Any
+user interface elements which depend on the <code>proportion</code> property (we’ll see how
+to manage this later) will be automatically updated!</p>
+<p>For added confusion we’ve created a property here that returns a bit of CSS that
+we will later <code>bind</code> to our DOM element. In this case it returns a width based
+on the percentage of total rolls that this dice number represents.</p>
+<blockquote>
+<p><strong>NOTE</strong> The property above uses <code>this.get("variableName");</code> to retrieve
+properties from the model. In Ember applications we generally need to use this
+approach for accessing properties rather than simply <code>this.variableName</code>.</p>
+<p>Similarly for setting values we use <code>this.set("variableName", value)</code> instead
+of <code>this.variableName = value</code></p>
+</blockquote>
+<h2 id="loading-models-into-a-route">Loading models into a route</h2>
+<p>By itself, just declaring a model doesn’t actually do anything. We need to tell
+our route how to gather together the required models. This is done by
+<code>extend</code>ing the <code>RollRoute</code> in a similar fashion as we did before when we
+extended the <code>IndexRoute</code>.</p>
+<p>Below your <code>IndexRoute</code> declaration in <code>app.js</code>, add the following:</p>
+<pre data-lang="javascript" style="background-color:#2b303b;color:#c0c5ce;" class="language-javascript "><code class="language-javascript" data-lang="javascript"><span style="color:#bf616a;">Roller</span><span>.</span><span style="color:#bf616a;">RollRoute </span><span>= </span><span style="color:#bf616a;">Ember</span><span>.</span><span style="color:#bf616a;">Route</span><span>.</span><span style="color:#8fa1b3;">extend</span><span>({
+</span><span>    </span><span style="color:#8fa1b3;">model</span><span>: </span><span style="color:#b48ead;">function </span><span>() {
+</span><span>        </span><span style="color:#65737e;">// in a data driven application this could be used 
+</span><span>        </span><span style="color:#65737e;">// to get information from a server.  Here we just 
+</span><span>        </span><span style="color:#65737e;">// declare an empty array in memory
+</span><span>        </span><span style="color:#b48ead;">return </span><span>[];
+</span><span>    },
+</span><span>    
+</span><span>    </span><span style="color:#8fa1b3;">setupController</span><span>: </span><span style="color:#b48ead;">function</span><span>(</span><span style="color:#bf616a;">controller</span><span>, </span><span style="color:#bf616a;">model</span><span>) {
+</span><span>        </span><span style="color:#bf616a;">controller</span><span>.</span><span style="color:#96b5b4;">set</span><span>(&quot;</span><span style="color:#a3be8c;">content</span><span>&quot;, </span><span style="color:#bf616a;">model</span><span>);
+</span><span>    }
+</span><span>});
+</span></code></pre>
+<p>We provide two additional methods to the <code>RollRoute</code>, firstly <code>model()</code> which
+retrieves (or in this case generates in memory) some models, and a
+<code>setupController()</code> method which stores the model information in the controller.
+(At the moment our <code>RollController</code> is auto-generated by Ember as we haven’t
+defined one).</p>
+<p>Notice we have used the <code>controller.set()</code> method. Here Ember calls
+<code>setupController</code> with a reference to the currently loaded controller - in this
+case the autogenerated <code>RollController</code> - as well as the model that was loaded
+using the <code>model()</code> method defined earlier. The observant amongst you will no
+doubt notice that in our <code>roll</code> template above we used <code>{{each roll in content}}</code> which should hopefully start to set a few light bulbs glowing!</p>
+<p>Refreshing the page again should show that once again nothing above the surface
+has changed. Our text box is still sitting there dumbly and we should be seeing
+a “No results yet” output. Just for kicks, lets change our <code>model</code> function from
+returning</p>
+<pre data-lang="javascript" style="background-color:#2b303b;color:#c0c5ce;" class="language-javascript "><code class="language-javascript" data-lang="javascript"><span style="color:#b48ead;">return </span><span>[];
+</span></code></pre>
+<p>to returning</p>
+<pre data-lang="javascript" style="background-color:#2b303b;color:#c0c5ce;" class="language-javascript "><code class="language-javascript" data-lang="javascript"><span style="color:#b48ead;">return </span><span>[
+</span><span>  </span><span style="color:#bf616a;">Roller</span><span>.</span><span style="color:#bf616a;">Roll</span><span>.</span><span style="color:#8fa1b3;">create</span><span>(),
+</span><span>  </span><span style="color:#bf616a;">Roller</span><span>.</span><span style="color:#bf616a;">Roll</span><span>.</span><span style="color:#8fa1b3;">create</span><span>(),
+</span><span>  </span><span style="color:#bf616a;">Roller</span><span>.</span><span style="color:#bf616a;">Roll</span><span>.</span><span style="color:#8fa1b3;">create</span><span>()
+</span><span>];
+</span></code></pre>
+<p>Refreshing the page and you should see the output change from “No results yet”
+to “I rolled a dice I rolled a dice I rolled a dice”. We’ve used
+<code>Roller.Roll.create()</code> to create three instances of our model and passed them to
+the controller in an array. Ember has then taken the <code>content</code> property we set
+on the controller and used it in our view. <strong>Eureka!</strong></p>
+<p>If you get this then you have followed along correctly so far! Ok, quickly
+change it back before somebody gets blinded by Ember’s magnificence.</p>
+<h2 id="connecting-up-actions">Connecting up actions</h2>
+<p>In the last section we accomplished something pretty wonderful. With a few lines
+of code we set up a route that loads models into memory and displays them in the
+user interface. Lets take it one step further now and generate models on the fly
+based on user input.</p>
+<p>Coming to the rescue here are Embers <code>actions</code>. These are kind of like event
+handlers, in that they link up things like click events on buttons or links to
+functions in your controller. Ember does also provide a way to directly handle
+DOM events (such as <code>onClick</code>) in views, we’ll cover those right at the end.</p>
+<p>To see how this works, we need to actually define a controller. Firstly, however
+lets add a little bit to our roll template in <code>index.html</code>. Replace the current
+template with the following:</p>
+<pre data-lang="handlebars" style="background-color:#2b303b;color:#c0c5ce;" class="language-handlebars "><code class="language-handlebars" data-lang="handlebars"><span>&lt;</span><span style="color:#bf616a;">script </span><span style="color:#d08770;">type</span><span>=</span><span style="color:#a3be8c;">&quot;text/x-handlebars&quot; </span><span style="color:#8fa1b3;">id</span><span>=&quot;</span><span style="color:#a3be8c;">roll</span><span>&quot;&gt;
+</span><span>    &lt;</span><span style="color:#bf616a;">p</span><span>&gt;
+</span><span>        Enter your required dice roll below, for instance &quot;3d6&quot; will roll three six sided dice.
+</span><span>    &lt;/</span><span style="color:#bf616a;">p</span><span>&gt;
+</span><span>    
+</span><span>    {{</span><span style="color:#bf616a;">input valueBinding</span><span style="color:#d08770;">=</span><span>&quot;</span><span style="color:#a3be8c;">rollString</span><span>&quot; </span><span style="color:#bf616a;">placeholder</span><span style="color:#d08770;">=</span><span>&quot;</span><span style="color:#a3be8c;">Enter your dice roll, e.g. &#39;3d6&#39; here</span><span>&quot;}}
+</span><span>    &lt;</span><span style="color:#bf616a;">button </span><span>{{</span><span style="color:#bf616a;">action </span><span>&quot;</span><span style="color:#a3be8c;">rollDice</span><span>&quot;}}&gt;Roll Dice&lt;/</span><span style="color:#bf616a;">button</span><span>&gt;
+</span><span>            
+</span><span>    {{#if </span><span style="color:#bf616a;">errors</span><span>}}
+</span><span>        &lt;</span><span style="color:#bf616a;">div </span><span style="color:#d08770;">class=</span><span>&quot;</span><span style="color:#a3be8c;">errors</span><span>&quot;&gt;
+</span><span>            {{</span><span style="color:#bf616a;">errors</span><span>}}
+</span><span>        &lt;/</span><span style="color:#bf616a;">div</span><span>&gt;
+</span><span>    {{/if}}
+</span><span>    
+</span><span>    &lt;</span><span style="color:#bf616a;">hr</span><span>&gt;
+</span><span>    
+</span><span>    &lt;</span><span style="color:#bf616a;">h2</span><span>&gt;Results&lt;/</span><span style="color:#bf616a;">h2</span><span>&gt;
+</span><span>    {{#each </span><span style="color:#bf616a;">roll </span><span>in </span><span style="color:#bf616a;">content</span><span>}}
+</span><span>        &lt;</span><span style="color:#bf616a;">div </span><span style="color:#d08770;">class=</span><span>&quot;</span><span style="color:#a3be8c;">roll</span><span>&quot;&gt;
+</span><span>            &lt;</span><span style="color:#bf616a;">span </span><span style="color:#d08770;">class=</span><span>&quot;</span><span style="color:#a3be8c;">roll-number</span><span>&quot;&gt;{{</span><span style="color:#bf616a;">roll.diceNumber</span><span>}}&lt;/</span><span style="color:#bf616a;">span</span><span>&gt;
+</span><span>            &lt;</span><span style="color:#bf616a;">span </span><span style="color:#d08770;">class=</span><span>&quot;</span><span style="color:#a3be8c;">roll-result</span><span>&quot; {{</span><span style="color:#bf616a;">bindAttr style</span><span style="color:#d08770;">=</span><span>&quot;</span><span style="color:#a3be8c;">roll.proportion</span><span>&quot;}}&gt;{{</span><span style="color:#bf616a;">roll.numberOfRolls</span><span>}}&lt;/</span><span style="color:#bf616a;">span</span><span>&gt;
+</span><span>        &lt;/</span><span style="color:#bf616a;">div</span><span>&gt;
+</span><span>    {{else}}
+</span><span>        No results yet
+</span><span>    {{/each}}
+</span><span>&lt;/</span><span style="color:#bf616a;">script</span><span>&gt;
+</span></code></pre>
+<p>You can see we’ve used an <code>{{#if}}</code> tag (which does exactly what we would
+expect) to show errors if any were found - we’ll use this in our controller.
+We’ve also improved our output for rolls in the <code>{{#each}}</code> block. We added a
+<code>div</code> and two <code>spans</code> to show our values.</p>
+<p>We’ve also used a tag <code>{{bindAttr ...}}</code>. This tag lets us bind an attribute of
+an HTML tag directly to a property of our model. Here we are using it to set the
+width of the <code>&lt;span&gt;</code> element based on the <code>proportion</code> property, which is in
+turn based on the percentage of total rolls this number represents. Because
+Ember automatically updates the rendered templates whenever the underlying data
+changes, if we make changes to <code>content</code> on our controller then the width of
+this span will update automatically. Thats neat!</p>
+<p>Ok, enough messing about, lets get on to our controller. This will take quite a
+bit more code so bear with me for a moment or two. At the bottom of the <code>app.js</code>
+file, add the following:</p>
+<pre data-lang="javascript" style="background-color:#2b303b;color:#c0c5ce;" class="language-javascript "><code class="language-javascript" data-lang="javascript"><span style="color:#bf616a;">Roller</span><span>.</span><span style="color:#bf616a;">RollController </span><span>= </span><span style="color:#bf616a;">Ember</span><span>.</span><span style="color:#bf616a;">Controller</span><span>.</span><span style="color:#8fa1b3;">extend</span><span>({
+</span><span>    </span><span style="color:#8fa1b3;">rollDice</span><span>: </span><span style="color:#b48ead;">function </span><span>() {
+</span><span>        </span><span style="color:#b48ead;">var </span><span style="color:#bf616a;">roll </span><span>= </span><span style="color:#bf616a;">this</span><span>.</span><span style="color:#96b5b4;">get</span><span>(&quot;</span><span style="color:#a3be8c;">rollString</span><span>&quot;),
+</span><span>            </span><span style="color:#bf616a;">content </span><span>= [],
+</span><span>            </span><span style="color:#bf616a;">rolls </span><span>= </span><span style="color:#d08770;">0</span><span>, 
+</span><span>            </span><span style="color:#bf616a;">sides </span><span>= </span><span style="color:#d08770;">0</span><span>,
+</span><span>            </span><span style="color:#bf616a;">errors </span><span>= &quot;&quot;,
+</span><span>            </span><span style="color:#bf616a;">i</span><span>, </span><span style="color:#bf616a;">rnd</span><span>, </span><span style="color:#bf616a;">roll_parts</span><span>;
+</span><span>
+</span><span>        </span><span style="color:#65737e;">// check if anything was typed in the text box
+</span><span>        </span><span style="color:#b48ead;">if </span><span>(</span><span style="color:#bf616a;">roll </span><span>=== </span><span style="color:#d08770;">undefined</span><span>) {
+</span><span>            </span><span style="color:#bf616a;">this</span><span>.</span><span style="color:#96b5b4;">set</span><span>(&quot;</span><span style="color:#a3be8c;">errors</span><span>&quot;, &quot;</span><span style="color:#a3be8c;">Please fill out the text box!</span><span>&quot;);
+</span><span>            </span><span style="color:#b48ead;">return
+</span><span>        }
+</span><span>
+</span><span>        </span><span style="color:#65737e;">// split up the string around the &#39;d&#39; 
+</span><span>        </span><span style="color:#bf616a;">roll_parts </span><span>= </span><span style="color:#bf616a;">roll</span><span>.</span><span style="color:#96b5b4;">split</span><span>(&quot;</span><span style="color:#a3be8c;">d</span><span>&quot;);
+</span><span>
+</span><span>        </span><span style="color:#b48ead;">if </span><span>(</span><span style="color:#bf616a;">roll_parts</span><span>.length !== </span><span style="color:#d08770;">2</span><span>) {
+</span><span>            </span><span style="color:#65737e;">// check if we had a &quot;d&quot; in our text (i.e. its correctly formatted)
+</span><span>            </span><span style="color:#bf616a;">errors </span><span>+= &quot;</span><span style="color:#a3be8c;">You need to enter a value in the format &#39;xdy&#39;.  </span><span>&quot;;
+</span><span>        } </span><span style="color:#b48ead;">else </span><span>{
+</span><span>            </span><span style="color:#65737e;">// then split up and parse the required numbers
+</span><span>            </span><span style="color:#bf616a;">rolls </span><span>= </span><span style="color:#96b5b4;">parseInt</span><span>(</span><span style="color:#bf616a;">roll_parts</span><span>[</span><span style="color:#d08770;">0</span><span>]);
+</span><span>            </span><span style="color:#bf616a;">sides </span><span>= </span><span style="color:#96b5b4;">parseInt</span><span>(</span><span style="color:#bf616a;">roll_parts</span><span>[</span><span style="color:#d08770;">1</span><span>]);
+</span><span>            
+</span><span>            </span><span style="color:#b48ead;">if </span><span>(</span><span style="color:#96b5b4;">isNaN</span><span>(</span><span style="color:#bf616a;">rolls</span><span>) || </span><span style="color:#96b5b4;">isNaN</span><span>(</span><span style="color:#bf616a;">sides</span><span>)) {
+</span><span>                </span><span style="color:#bf616a;">errors </span><span>+= &quot;</span><span style="color:#a3be8c;">Rolls and sides must be numbers.  </span><span>&quot;;
+</span><span>            }
+</span><span>            
+</span><span>            </span><span style="color:#65737e;">// generate the dice rolls if we haven&#39;t found any errors
+</span><span>            </span><span style="color:#b48ead;">if </span><span>(</span><span style="color:#bf616a;">errors</span><span>.length === </span><span style="color:#d08770;">0</span><span>) {
+</span><span>                </span><span style="color:#65737e;">// generate all the models
+</span><span>                </span><span style="color:#b48ead;">for </span><span>(</span><span style="color:#bf616a;">i </span><span>= </span><span style="color:#d08770;">0</span><span>; </span><span style="color:#bf616a;">i </span><span>&lt; </span><span style="color:#bf616a;">sides</span><span>; </span><span style="color:#bf616a;">i</span><span>++) {
+</span><span>                    </span><span style="color:#bf616a;">content</span><span>.</span><span style="color:#96b5b4;">push</span><span>(</span><span style="color:#bf616a;">Roller</span><span>.</span><span style="color:#bf616a;">Roll</span><span>.</span><span style="color:#8fa1b3;">create</span><span>({
+</span><span>                        diceNumber: </span><span style="color:#bf616a;">i </span><span>+ </span><span style="color:#d08770;">1</span><span>,
+</span><span>                        totalRolls: </span><span style="color:#bf616a;">rolls
+</span><span>                    }));
+</span><span>                }
+</span><span>                
+</span><span>                </span><span style="color:#65737e;">// now roll all the dice
+</span><span>                </span><span style="color:#b48ead;">for </span><span>(</span><span style="color:#bf616a;">i </span><span>= </span><span style="color:#d08770;">0</span><span>; </span><span style="color:#bf616a;">i </span><span>&lt; </span><span style="color:#bf616a;">rolls</span><span>; </span><span style="color:#bf616a;">i</span><span>++) {
+</span><span>                    </span><span style="color:#65737e;">// roll a dice
+</span><span>                    </span><span style="color:#bf616a;">rnd </span><span>= Math.</span><span style="color:#96b5b4;">floor</span><span>(Math.</span><span style="color:#96b5b4;">random</span><span>() * </span><span style="color:#bf616a;">sides</span><span>);
+</span><span>                    
+</span><span>                    </span><span style="color:#65737e;">// increment the required model
+</span><span>                    </span><span style="color:#bf616a;">content</span><span>[</span><span style="color:#bf616a;">rnd</span><span>].</span><span style="color:#8fa1b3;">incrementProperty</span><span>(&quot;</span><span style="color:#a3be8c;">numberOfRolls</span><span>&quot;);
+</span><span>                }
+</span><span>            }
+</span><span>        }
+</span><span>        
+</span><span>        </span><span style="color:#65737e;">// update the content
+</span><span>        </span><span style="color:#bf616a;">this</span><span>.</span><span style="color:#96b5b4;">set</span><span>(&quot;</span><span style="color:#a3be8c;">content</span><span>&quot;, </span><span style="color:#bf616a;">content</span><span>);
+</span><span>        
+</span><span>        </span><span style="color:#65737e;">// display any errors
+</span><span>        </span><span style="color:#bf616a;">this</span><span>.</span><span style="color:#96b5b4;">set</span><span>(&quot;</span><span style="color:#a3be8c;">errors</span><span>&quot;, </span><span style="color:#bf616a;">errors</span><span>);
+</span><span>    }
+</span><span>});
+</span></code></pre>
+<p>By now we should be starting to become familiar with Embers <code>extend</code> syntax, but
+there is a lot more code here than we’ve seen before. This is our application’s
+logic, and most of it is to do with error checking.</p>
+<p>I’m not going to go into too much detail as its just plain javascript for the
+most part, but basically it does the following:</p>
+<ol>
+<li>Gets the input from the text box and checks it is in the right format</li>
+<li>Builds a model for each side of the dice</li>
+<li>Randomly rolls dice and increments the numberOfRolls attribute for the
+correct model by one using the model.incrementProperty(‘property’) method</li>
+<li>Sets the content of the controller to our new models and saves any errors
+encountered</li>
+</ol>
+<p>Now when you type a valid dice roll into the text box and click the Roll Dice
+button, you should see some (unformatted) results appearing below. The key
+things to note are that we have used <code>this.get()</code> and <code>this.set()</code> to access
+properties on the controller. At the end, we have set the <code>content</code> and <code>errors</code>
+properties on the controller and these are the same <code>content</code> and <code>errors</code>
+properties we reference in our template. Similarly, in our template we set the
+<code>id</code> attribute of our <code>{{input}}</code> to <code>rollString</code> and as a result this is
+available in our controller using <code>this.get("rollString")</code>.</p>
+<p>You can now refresh the page. Try typing the following into the text box and see
+what you get:</p>
+<ul>
+<li>1</li>
+<li>1d</li>
+<li>1d6</li>
+<li>2da</li>
+<li>adb</li>
+<li>$#dfgk34j6</li>
+<li>ddd</li>
+</ul>
+<p>Thats it! We now have a fully functioning - if a little plain - dice rolling
+application using Ember. By my count we’ve written about 150 lines of javascript
+and HTML, which is not too shabby, although we could cut out a bit by merging
+our roll and index controllers as we discussed above.</p>
+<h2 id="styling-the-application">Styling the application</h2>
+<p>Until now we have just gone on using the default, ugly HTML styles. We can
+easily provide a bit of beauty to our application by just adding a sprinkle of
+CSS in the usual way. Into the <code>head</code> tag of your <code>index.html</code>, link up a
+stylesheet:</p>
+<pre data-lang="html" style="background-color:#2b303b;color:#c0c5ce;" class="language-html "><code class="language-html" data-lang="html"><span>&lt;</span><span style="color:#bf616a;">link </span><span style="color:#d08770;">rel</span><span>=&quot;</span><span style="color:#a3be8c;">stylesheet</span><span>&quot; </span><span style="color:#d08770;">type</span><span>=&quot;</span><span style="color:#a3be8c;">text/css</span><span>&quot; </span><span style="color:#d08770;">href</span><span>=&quot;</span><span style="color:#a3be8c;">styles.css</span><span>&quot;&gt;
+</span></code></pre>
+<p>Create styles.css and paste in the following:</p>
+<pre data-lang="css" style="background-color:#2b303b;color:#c0c5ce;" class="language-css "><code class="language-css" data-lang="css"><span style="color:#8fa1b3;">.</span><span style="color:#d08770;">errors </span><span>{
+</span><span>    margin: </span><span style="color:#d08770;">2em</span><span>; 
+</span><span>    padding: </span><span style="color:#d08770;">1em</span><span>;
+</span><span>    border: </span><span style="color:#d08770;">1px </span><span>solid </span><span style="color:#96b5b4;">#A22</span><span>;
+</span><span>    color: </span><span style="color:#96b5b4;">#A22</span><span>;
+</span><span>    background: </span><span style="color:#96b5b4;">#FDD</span><span>;
+</span><span>}
+</span><span>
+</span><span style="color:#8fa1b3;">.</span><span style="color:#d08770;">roll-result</span><span style="color:#b48ead;">, </span><span style="color:#8fa1b3;">.</span><span style="color:#d08770;">roll-number </span><span>{
+</span><span>    display: inline-block;
+</span><span>    margin: </span><span style="color:#d08770;">0.2em</span><span>;
+</span><span>    padding: </span><span style="color:#d08770;">0.5em</span><span>;
+</span><span>}
+</span><span>
+</span><span style="color:#8fa1b3;">.</span><span style="color:#d08770;">roll-number </span><span>{
+</span><span>    font-weight: bolder;
+</span><span>    min-width: </span><span style="color:#d08770;">50px</span><span>;
+</span><span>}
+</span><span>
+</span><span style="color:#8fa1b3;">.</span><span style="color:#d08770;">roll-result </span><span>{
+</span><span>    background: </span><span style="color:#96b5b4;">#03C</span><span>;
+</span><span>    color: white;
+</span><span>    text-align: right;
+</span><span>}
+</span><span>
+</span><span style="color:#bf616a;">input</span><span style="color:#b48ead;">, </span><span style="color:#bf616a;">button </span><span>{
+</span><span>    padding: </span><span style="color:#d08770;">0.5em</span><span>;
+</span><span>    font-size: </span><span style="color:#d08770;">1.1em</span><span>;
+</span><span>    border: none;
+</span><span>    outline: none;
+</span><span>}
+</span><span>
+</span><span style="color:#bf616a;">input </span><span>{
+</span><span>    background: </span><span style="color:#96b5b4;">#EEE</span><span>;
+</span><span>    min-width: </span><span style="color:#d08770;">350px</span><span>;
+</span><span>}
+</span><span>
+</span><span style="color:#bf616a;">button </span><span>{
+</span><span>    cursor:pointer;
+</span><span>    background: </span><span style="color:#96b5b4;">#03C</span><span>;
+</span><span>    color: white;
+</span><span>}
+</span></code></pre>
+<p>Now our errors are styled, and when we click “Roll Dice” a nice bar graph will
+be drawn showing the results. You should see something like the following:</p>
+<p><img src="https://willhart.io/post/an-emberjs-beginners-tutorial/dice_roller_screenshot.png" alt="Ember.js Dice Roller Screenshot" /></p>
+<h2 id="further-improvements">Further Improvements</h2>
+<p>One annoying “feature” of this application is that when we want to roll some
+dice we have to click “Roll Dice” every time. It would be much nicer if we could
+just hit enter when we are happy.</p>
+<p>To do this, lets use a custom view which extends Ember’s <code>TextView</code>. At the very
+end of our <code>app.js</code> file, insert the following:</p>
+<pre data-lang="javascript" style="background-color:#2b303b;color:#c0c5ce;" class="language-javascript "><code class="language-javascript" data-lang="javascript"><span style="color:#bf616a;">Roller</span><span>.</span><span style="color:#bf616a;">DiceInputField </span><span>= </span><span style="color:#bf616a;">Ember</span><span>.</span><span style="color:#bf616a;">TextField</span><span>.</span><span style="color:#8fa1b3;">extend</span><span>({
+</span><span>    </span><span style="color:#8fa1b3;">keyDown</span><span>: </span><span style="color:#b48ead;">function </span><span>(</span><span style="color:#bf616a;">event</span><span>) {
+</span><span>        </span><span style="color:#b48ead;">var </span><span style="color:#bf616a;">controller</span><span>, </span><span style="color:#bf616a;">action</span><span>;
+</span><span>        
+</span><span>        </span><span style="color:#65737e;">// check if we pressed the enter key
+</span><span>        </span><span style="color:#b48ead;">if </span><span>(event.</span><span style="color:#bf616a;">keyCode </span><span>!== </span><span style="color:#d08770;">13</span><span>) {
+</span><span>            </span><span style="color:#b48ead;">return</span><span>;
+</span><span>        }
+</span><span>        
+</span><span>        </span><span style="color:#65737e;">// call the controllers &#39;rollDice&#39; function
+</span><span>        </span><span style="color:#bf616a;">controller </span><span>= </span><span style="color:#bf616a;">this</span><span>.</span><span style="color:#96b5b4;">get</span><span>(&quot;</span><span style="color:#a3be8c;">controller</span><span>&quot;);
+</span><span>        </span><span style="color:#bf616a;">action </span><span>= </span><span style="color:#bf616a;">this</span><span>.</span><span style="color:#96b5b4;">get</span><span>(&quot;</span><span style="color:#a3be8c;">action</span><span>&quot;);
+</span><span>        </span><span style="color:#bf616a;">controller</span><span>.</span><span style="color:#96b5b4;">send</span><span>(</span><span style="color:#bf616a;">action</span><span>, </span><span style="color:#bf616a;">this</span><span>.</span><span style="color:#96b5b4;">get</span><span>(&quot;</span><span style="color:#a3be8c;">rollString</span><span>&quot;), </span><span style="color:#bf616a;">this</span><span>);
+</span><span>    }
+</span><span>});
+</span></code></pre>
+<p>This extends the Ember.TextField (which was already being used by the
+<code>{{input}}</code> tag). We have also defined a <code>keyDown</code> function, which Ember
+automatically binds to the <code>keyDown</code> event of the field. Inside the function it
+checks whether we have hit the enter key (key code 13) and if we have it sends
+the <code>rollDice</code> action to the controller.</p>
+<p>We have to update our template so that it uses this new view. Simply change the
+following line:</p>
+<pre data-lang="handlebars" style="background-color:#2b303b;color:#c0c5ce;" class="language-handlebars "><code class="language-handlebars" data-lang="handlebars"><span>{{</span><span style="color:#bf616a;">input valueBinding</span><span style="color:#d08770;">=</span><span>&quot;</span><span style="color:#a3be8c;">rollString</span><span>&quot; </span><span style="color:#bf616a;">placeholder</span><span style="color:#d08770;">=</span><span>&quot;</span><span style="color:#a3be8c;">Enter your dice roll, e.g. &#39;3d6&#39; here</span><span>&quot;}}
+</span></code></pre>
+<p>to</p>
+<pre data-lang="handlebars" style="background-color:#2b303b;color:#c0c5ce;" class="language-handlebars "><code class="language-handlebars" data-lang="handlebars"><span>{{</span><span style="color:#bf616a;">view Roller.DiceInputField valueBinding</span><span style="color:#d08770;">=</span><span>&quot;</span><span style="color:#a3be8c;">rollString</span><span>&quot; </span><span style="color:#bf616a;">action</span><span style="color:#d08770;">=</span><span>&quot;</span><span style="color:#a3be8c;">rollDice</span><span>&quot; </span><span style="color:#bf616a;">placeholder</span><span style="color:#d08770;">=</span><span>&quot;</span><span style="color:#a3be8c;">Enter your dice roll, e.g. &#39;3d6&#39; here</span><span>&quot;}}
+</span></code></pre>
+<h2 id="conclusion">Conclusion</h2>
+<p>Thats it! Hopefully this has given you a fair idea of what is possible in Ember
+applications. If you have any comments, corrections or suggestions then feel
+free to comment below. Otherwise, get Embering!</p>
+</article>
+
+<div class="container col">
+  <h2>Comments</h2>
+  <blockquote>Comments are powered by github and <a href="https://giscus.app">giscus</a></blockquote>
+  <script src="https://giscus.app/client.js"
+        data-repo="will-hart/will-hart.github.io"
+        data-repo-id="MDEwOlJlcG9zaXRvcnkzMjQ2NjY3Mzg="
+        data-category="General"
+        data-category-id="DIC_kwDOE1oFcs4CtiK6"
+        data-mapping="og:title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+  </script>
+</div>
+</div>
+
+  <footer id="footer">
+    <div class="container col">
+      This website was hand-made using Zola and Tera.
+      All text and images are available under CC0 1.0 Universal and code under MIT unless otherwise specified. See <a href="https://github.com/will-hart/willhart.io/blob/main/LICENSE.md">LICENSE.md</a> for more.
+    </div>
+  </footer>
+</body>
+
+</html>

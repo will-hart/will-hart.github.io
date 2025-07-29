@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Tauri and Create React App Part 1 - Setup | willhart.io</title>
+
+
+  <link rel="icon" type="image/x-icon" href="/icons/icon_light_32x32.png">
+
+  
+<meta name="description" content="Part 1 of a tutorial for setting up Tauri (an electron alternative) and Create React App. Here we set up tauri and CRA ready for dev.. Posted on https://willhart.io" />
+<meta property="og:description" content="Part 1 of a tutorial for setting up Tauri (an electron alternative) and Create React App. Here we set up tauri and CRA ready for dev." />
+<meta property="og:title" content="Tauri and Create React App Part 1 - Setup" />
+<meta property="og:url" content="https://willhart.io/post/tauri-create-react-app-tutorial-part1/">
+<meta property="og:type" content="article" />
+<meta property="og:locale" content="en_AU" />
+
+
+  <link rel="stylesheet" href="https://willhart.io/global.css?h=f83cd20cd0df26d72c2b" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sono:wght@200..800&display=swap" rel="stylesheet">
+
+  
+
+  <!-- Cloudflare Web Analytics -->
+  <script defer src='https://static.cloudflareinsights.com/beacon.min.js'
+    data-cf-beacon='{"token": "310f93cab66a42c5a328f246cc053025"}'></script>
+  <!-- End Cloudflare Web Analytics -->
+
+  <!-- Light/Dark theme toggling -->
+  <script type="text/javascript">
+    const storageKey = "websiteTheme";
+
+    // apply theme once we have a DOM
+    document.addEventListener("DOMContentLoaded", () => {
+      applyTheme();
+    })
+
+    // a function that toggles between light and dark theme
+    const toggleTheme = () => {
+      localStorage.setItem(storageKey, localStorage.getItem(storageKey) === "d" ? "l" : "d" );
+      applyTheme();
+    }
+
+    // a function that actually applies the theme
+    const applyTheme = () => {
+      const useDarkTheme = localStorage.getItem(storageKey) === "d";
+      document.getElementsByTagName("html")[0].className = useDarkTheme ? "dark" : "";
+      document.getElementById("theme-toggle").textContent = useDarkTheme ? "🔆" : "🌑";
+    }
+  </script>
+
+  <script type="speculationrules">
+  {
+    "prerender": [
+      { "where": { "selector_matches": "a" } }
+    ]
+  }
+  </script></head>
+
+<body>
+  <nav id="header">
+    <a href="/" aria-label="Website Logo and Link to Home Page">
+      <div id="logo" >&nbsp;</div>
+    </a>
+    <span>
+      <button type="button" id="theme-toggle" aria-label="Toggle Theme" onClick="toggleTheme()">🌑</button>
+      <a class="header-item" href="/post">POSTS</a>
+      <a class="header-item" href="/tag">TAGS</a>
+      <span class="header-item hide-when-slim">|</span>
+      <a class="header-item hide-when-slim" href="/tag/projects">PROJECTS</a>
+      <a class="header-item hide-when-slim" href="/tag/gamedev">GAMEDEV</a>
+      <a class="header-item hide-when-slim" href="/tag/electronics">ELECTRONICS</a>
+    </span>
+  </nav>
+
+  
+
+<div class="container col mb mt">
+  <h1>Tauri and Create React App Part 1 - Setup</h1>
+  <div class="col txtsm">
+    <span>Posted by Will Hart on 2021-08-26</span>
+    <div>
+      <span>See also:</span>
+      
+      <a class="txtsm mr" href="https://willhart.io/tag/code/">#code</a>
+      
+      <a class="txtsm mr" href="https://willhart.io/tag/tutorials/">#tutorials</a>
+      
+    </div>
+  </div>
+</div>
+
+
+
+<article class="container col mblg"><h2 id="why-tauri">Why Tauri</h2>
+<p><a rel="noopener nofollow noreferrer" target="_blank" href="https://tauri.studio">Tauri</a> is a new cross-platform toolset for creating GUI
+applications using web technologies. Its a lighter weight alternative to
+electron, with low memory usage (a few MB), small binary size (as small as
+600kB) and built on newer web stacks than some alternative approaches (i.e.
+WebView2 not MSHTML).</p>
+<p>Another key advantage for me is that tauri is built in rust, so you can write
+your “server-side” logic in rust, and use a simple “command” API to communicate
+between the rust backend and the web front end.</p>
+<blockquote>
+<p>At the time of writing this, tauri is at version <code>1.0.0-beta</code>, rapidly
+approaching its first “official” release. The documentation is still a little
+sparse in some respects, so I’m writing this tutorial to share some of my
+experiences in setting up a tauri and React app.</p>
+</blockquote>
+<h2 id="sample-app">Sample App</h2>
+<p>This project is going to demonstrate a small sample App built on a tauri and
+React stack. We’re going to build a traditional “counter” app, but this time the
+logic will be run in the tauri backend and the front end will just display the
+data.</p>
+<blockquote>
+<p>The tutorial assumes a basic knowledge of rust and React.</p>
+</blockquote>
+<p>This tutorial will be broken into a few parts:</p>
+<ol>
+<li>this part, getting set up with <a rel="noopener nofollow noreferrer" target="_blank" href="https://tauri.studio/">tauri</a> and
+<a rel="noopener nofollow noreferrer" target="_blank" href="https://create-react-app.dev/">create-react-app</a> (CRA),</li>
+<li>setting up a simple command that we can call from the front end
+[<a href="/post/20210827_tauri_create_react_app_tutorial_part2">link</a>]</li>
+<li>wrapping the command in <code>useSWR</code> to make a generic “invoke” hook,
+[<a href="/post/20210828_tauri_create_react_app_tutorial_part3">link</a>]</li>
+<li>extending our hook to support multiple counters,
+[<a href="/post/20210829_tauri_create_react_app_tutorial_part4">link</a>]</li>
+</ol>
+<h2 id="getting-ready-for-tauri">Getting ready for tauri</h2>
+<p>To start with, we need to install the required dependencies. You’ll need <code>node</code>
+and <code>yarn</code> or <code>npm</code> installed, as well as <code>rust</code>. If you aren’t set up already
+then tauri provides <a rel="noopener nofollow noreferrer" target="_blank" href="https://tauri.studio/en/docs/getting-started/setup-linux">some pretty good platform specific
+instructions</a>.</p>
+<p>If you are on Windows, make sure you have
+<a rel="noopener nofollow noreferrer" target="_blank" href="https://tauri.studio/en/docs/getting-started/setup-windows#4-install-webview2">WebView2</a>
+installed.</p>
+<h2 id="starting-with-a-cra-base">Starting with a CRA base</h2>
+<p>We’re going to start by setting up a CRA app in the usual way.</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">yarn</span><span> create react-app counter-app</span><span style="color:#bf616a;"> --template</span><span> typescript
+</span></code></pre>
+<p>Once the packages are installed and the process finishes, open up the folder in
+your IDE of choice.</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#96b5b4;">cd</span><span> counter-app
+</span><span style="color:#bf616a;">code</span><span> .
+</span></code></pre>
+<p>I like to start with a clean slate, so feel free to delete everything
+non-essential from the repo. In this case I deleted:</p>
+<ul>
+<li><code>App.css</code>,</li>
+<li><code>App.test.tsx</code>, and</li>
+<li><code>logo.svg</code></li>
+</ul>
+<p>I also replaced the contents of <code>App.tsx</code> with the following.</p>
+<pre data-lang="typescript" style="background-color:#2b303b;color:#c0c5ce;" class="language-typescript "><code class="language-typescript" data-lang="typescript"><span style="color:#b48ead;">const </span><span style="color:#8fa1b3;">App </span><span>= () </span><span style="color:#b48ead;">=&gt; </span><span>{
+</span><span>  </span><span style="color:#b48ead;">return </span><span>(
+</span><span>    &lt;div&gt;
+</span><span>      &lt;button&gt;</span><span style="color:#bf616a;">Increment</span><span>&lt;/</span><span style="color:#bf616a;">button</span><span>&gt; </span><span style="color:#d08770;">1
+</span><span>    &lt;/</span><span style="color:#bf616a;">div</span><span>&gt;
+</span><span>  )
+</span><span>}
+</span><span>
+</span><span style="color:#b48ead;">export default </span><span style="color:#bf616a;">App</span><span>;
+</span></code></pre>
+<p>You can then start the app to make sure it runs:</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">yarn</span><span> start
+</span></code></pre>
+<p>The simple app should open up in <code>https://localhost:3000</code>.</p>
+<h2 id="adding-tauri">Adding tauri</h2>
+<p>The instructions for integrating tauri <a rel="noopener nofollow noreferrer" target="_blank" href="https://tauri.studio/en/docs/usage/development/integration">can be found
+here</a>. Firstly we
+need to install the Tauri CLI locally.</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">yarn</span><span> add</span><span style="color:#bf616a;"> -D</span><span> @tauri-apps/cli
+</span></code></pre>
+<p>We also want to install the Tauri APIs</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">yarn</span><span> add @tauri-apps/api
+</span></code></pre>
+<p>Finally we initialise Tauri using</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">yarn</span><span> tauri init
+</span></code></pre>
+<p>Just select all the default options for now. After a few mintues the process
+should complete and there should be a separate <code>src-tauri</code> folder where your
+Tauri app lives. If you open up <code>src-tauri/tauri.conf.json</code> you can see all the
+configuration for the Tauri app. One of the key parts for integrating the CRA
+app is this bit:</p>
+<pre data-lang="json" style="background-color:#2b303b;color:#c0c5ce;" class="language-json "><code class="language-json" data-lang="json"><span>&quot;</span><span style="color:#a3be8c;">build</span><span>&quot;: {
+</span><span>  &quot;</span><span style="color:#a3be8c;">distDir</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">../build</span><span>&quot;,
+</span><span>  &quot;</span><span style="color:#a3be8c;">devPath</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">http://localhost:3000</span><span>&quot;,
+</span><span>  &quot;</span><span style="color:#a3be8c;">beforeDevCommand</span><span>&quot;: &quot;&quot;,
+</span><span>  &quot;</span><span style="color:#a3be8c;">beforeBuildCommand</span><span>&quot;: &quot;&quot;
+</span><span>},
+</span></code></pre>
+<p>This is how Tauri knows how to run your project in dev, and what to do to build
+your project. Update the build config as follows:</p>
+<pre data-lang="json" style="background-color:#2b303b;color:#c0c5ce;" class="language-json "><code class="language-json" data-lang="json"><span>&quot;</span><span style="color:#a3be8c;">build</span><span>&quot;: {
+</span><span>  &quot;</span><span style="color:#a3be8c;">distDir</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">../build</span><span>&quot;,
+</span><span>  &quot;</span><span style="color:#a3be8c;">devPath</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">http://localhost:3000</span><span>&quot;,
+</span><span>  &quot;</span><span style="color:#a3be8c;">beforeDevCommand</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">yarn start</span><span>&quot;,
+</span><span>  &quot;</span><span style="color:#a3be8c;">beforeBuildCommand</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">yarn build</span><span>&quot;
+</span><span>},
+</span></code></pre>
+<p>This will ensure that Tauri runs the <code>yarn start</code> command when you run it in
+develop mode, and the <code>yarn build</code> command when you build and bundle the app.</p>
+<p>I like to add one more shortcut to the root <code>package.json</code>,</p>
+<pre data-lang="json" style="background-color:#2b303b;color:#c0c5ce;" class="language-json "><code class="language-json" data-lang="json"><span>&quot;</span><span style="color:#a3be8c;">scripts</span><span>&quot;: {
+</span><span>  </span><span style="color:#65737e;">//...
+</span><span>  &quot;</span><span style="color:#a3be8c;">dev</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">yarn tauri dev</span><span>&quot;
+</span><span>}
+</span></code></pre>
+<p>Now if I want to develop the app in a browser (outside of Tauri) I can run <code>yarn start</code>, and if I want to develop within the Tauri app I can run <code>yarn dev</code>.</p>
+<p>If everything has gone to plan at this point you should be able to start the
+Tauri app in dev mode:</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">yarn</span><span> dev
+</span></code></pre>
+<p>It should look something like this:</p>
+<p><img src="https://willhart.io/post/tauri-create-react-app-tutorial-part1/tauri-step1.png" alt="The basic Tauri app window" /></p>
+<p>Both the web app and the Tauri app reload when changes are made. You can verify
+this by editing our <code>App.tsx</code> from <code>&lt;button&gt;Increment&lt;/button&gt; 0</code> to
+<code>&lt;button&gt;Increment&lt;/button&gt; 1</code>. After saving the Tauri app should automatically
+update.</p>
+<blockquote>
+<p>The code at this point can be accessed <a rel="noopener nofollow noreferrer" target="_blank" href="https://github.com/will-hart/tauri-cra-tutorial/tree/283a4196665c9c014046206fc832c7efb7e31357">on
+github</a>.
+Part 2 of the series <a href="/post/20210827_tauri_create_react_app_tutorial_part2">can be found
+here</a></p>
+</blockquote>
+</article>
+
+<div class="container col">
+  <h2>Comments</h2>
+  <blockquote>Comments are powered by github and <a href="https://giscus.app">giscus</a></blockquote>
+  <script src="https://giscus.app/client.js"
+        data-repo="will-hart/will-hart.github.io"
+        data-repo-id="MDEwOlJlcG9zaXRvcnkzMjQ2NjY3Mzg="
+        data-category="General"
+        data-category-id="DIC_kwDOE1oFcs4CtiK6"
+        data-mapping="og:title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+  </script>
+</div>
+</div>
+
+  <footer id="footer">
+    <div class="container col">
+      This website was hand-made using Zola and Tera.
+      All text and images are available under CC0 1.0 Universal and code under MIT unless otherwise specified. See <a href="https://github.com/will-hart/willhart.io/blob/main/LICENSE.md">LICENSE.md</a> for more.
+    </div>
+  </footer>
+</body>
+
+</html>

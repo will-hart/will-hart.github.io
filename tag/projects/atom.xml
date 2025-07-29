@@ -1,0 +1,2010 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
+    <title>William Hart | willhart.io - projects</title>
+    <subtitle>My little internet home page, full of uninteresting musings and thinking out louds.</subtitle>
+    <link rel="self" type="application/atom+xml" href="https://willhart.io/tag/projects/atom.xml"/>
+    <link rel="alternate" type="text/html" href="https://willhart.io"/>
+    <generator uri="https://www.getzola.org/">Zola</generator>
+    <updated>2025-07-21T00:00:00+00:00</updated>
+    <id>https://willhart.io/tag/projects/atom.xml</id>
+    <entry xml:lang="en">
+        <title>Morse Kodeboard - a Morse Code Keyboard</title>
+        <published>2025-07-21T00:00:00+00:00</published>
+        <updated>2025-07-21T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              William Hart
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://willhart.io/post/morse-kodeboard/"/>
+        <id>https://willhart.io/post/morse-kodeboard/</id>
+        
+        <content type="html" xml:base="https://willhart.io/post/morse-kodeboard/">&lt;p&gt;Here is another project in a long line of “I don’t know why I’m doing this”
+projects! A while back my family and I spent a week in coastal Victoria as I was
+running the Great Ocean Road Marathon. While we were there we visited the
+&lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;https:&#x2F;&#x2F;www.lightstation.com&quot;&gt;Cape Otway Lightstation&lt;&#x2F;a&gt;, which was an important
+lighthouse that helped guide ships through the “Shipwreck Coast”.&lt;&#x2F;p&gt;
+&lt;p&gt;The Lightstation was also a key part of a 400km long telegraph cable that connected
+Tasmania to the Australian mainland in the 1850s. In one of the buildings we
+spotted a morse code table. My kids spent half the long drive back decoding a
+message written in &lt;code&gt;dits&lt;&#x2F;code&gt; and &lt;code&gt;dahs&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;A few weeks later, I was chatting to a friend about my weakness for clicky,
+tactile interfaces and input devices. In my excitement I got a bit careless in
+my typing and was forced to defend my accuracy. “I’m typing on my Morse Code
+keyboard” and then realised I’d found my next project.&lt;&#x2F;p&gt;
+&lt;p&gt;The idea was simple - a single button that you tap on long and short pulses. The
+keyboard reads the pulses as morse code and outputs the correct codes through a
+USB interface.&lt;&#x2F;p&gt;
+&lt;p&gt;I decided to call this a:&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;strong&gt;—— ——— ·—· ··· · | —·— ——— —·· · —··· ——— ·— ·—· —··&lt;&#x2F;strong&gt;&lt;sup class=&quot;footnote-reference&quot; id=&quot;fr-1-1&quot;&gt;&lt;a href=&quot;#fn-1&quot;&gt;1&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;You can find the source code + hardware files at &lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;will-hart&#x2F;morse-kodeboard&quot;&gt;https:&#x2F;&#x2F;github.com&#x2F;will-hart&#x2F;morse-kodeboard&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;initial-build&quot;&gt;Initial build&lt;&#x2F;h2&gt;
+&lt;p&gt;As this project was a bit of a meme, I didn’t really want to over-engineer it.
+I’ve already made quite a few USB-HID interfaces using rust firmware, and I have
+a few RaspberryPi Pico’s sitting around. So the logical choice was to throw together
+some &lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;https:&#x2F;&#x2F;embassy.dev&#x2F;&quot;&gt;embassy&lt;&#x2F;a&gt; firmware and use a third-party morse code
+library to decode. By building a simple breadboard circuit I had something up
+and running in a couple of evenings.&lt;&#x2F;p&gt;
+&lt;p&gt;As usual I had some issues with getting USB descriptors sorted, which
+in this case turned out to be because I had a few loops without any “idle” mechanism,
+which presumably meant they were hogging 100% of the microcontrollers clock cycles.
+This was a fairly easy fix with embassy as I was able to throttle the loops using
+a &lt;code&gt;Ticker&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;morse-code-decoding&quot;&gt;Morse Code Decoding&lt;&#x2F;h2&gt;
+&lt;p&gt;The next challenge was decoding the button presses into characters. I initially
+found a few libraries on crates.io and ran with those, and a couple of these
+even supported &lt;code&gt;no-std&lt;&#x2F;code&gt;. Unfortunately I found that these libraries didn’t quite
+work in my use case, as they matched “greedily”, meaning that I couldn’t continuously
+poll.&lt;&#x2F;p&gt;
+&lt;p&gt;For example, if I wanted to type &lt;code&gt;s&lt;&#x2F;code&gt; (···), then when I polled the decoder in a
+loop, I’d get &lt;code&gt;e e e&lt;&#x2F;code&gt; (· · ·). So instead I decided to implement my own decoder,
+which can be found &lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;will-hart&#x2F;morse-kodeboard&#x2F;blob&#x2F;main&#x2F;src&#x2F;decoder.rs&quot;&gt;on the GitHub&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;Its a fairly basic bit of code that has a “dit time” specified, is fed high and
+low edges of a button and converts that into pulse durations and gaps. It then
+stores these as dits, dahs and breaks in a ring buffer. The buffer is compared
+to a set of acceptable characters using a &lt;code&gt;match&lt;&#x2F;code&gt;, for example here is the pattern
+for the first few characters:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;rust&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-rust &quot;&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;if let &lt;&#x2F;span&gt;&lt;span&gt;Some(c) = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;match &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;self&lt;&#x2F;span&gt;&lt;span&gt;.value_buffer {
+&lt;&#x2F;span&gt;&lt;span&gt;            [Dit, Dah, Break, Empty, Empty, Empty] =&amp;gt; Some(&amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;a&lt;&#x2F;span&gt;&lt;span&gt;&amp;#39;),
+&lt;&#x2F;span&gt;&lt;span&gt;            [Dah, Dit, Dit, Dit, Break, Empty] =&amp;gt; Some(&amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;b&lt;&#x2F;span&gt;&lt;span&gt;&amp;#39;),
+&lt;&#x2F;span&gt;&lt;span&gt;            [Dah, Dit, Dah, Dit, Break, Empty] =&amp;gt; Some(&amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;c&lt;&#x2F;span&gt;&lt;span&gt;&amp;#39;),
+&lt;&#x2F;span&gt;&lt;span&gt;            &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F;&#x2F;...
+&lt;&#x2F;span&gt;&lt;span&gt;} {
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; handle a character
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; reset the ring buffer
+&lt;&#x2F;span&gt;&lt;span&gt;}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Using this approach made decoding a lot simpler. A task could be set up to watch
+the morse code button, feed the inputs to the decoder and when a character match
+was found, use a channel to feed that character to the task that managed the USB
+HID interface.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;more-keys&quot;&gt;More keys?&lt;&#x2F;h2&gt;
+&lt;p&gt;At this point I realised a few fundamental issues with the one button approach.
+For starters, without a space bar it is very hard to write more than one very long
+word. So a space key was a must. Secondly, without a shift key, it was very hard
+to add punctuation, proper sentence structure or beyond basic text. This might
+have been OK in the days when morse code was in regular use, but in this modern
+era I’d love to be able to type &lt;em&gt;most&lt;&#x2F;em&gt; things without being shouted at for poor
+punctuation.&lt;&#x2F;p&gt;
+&lt;p&gt;So one key turned into three keys&lt;sup class=&quot;footnote-reference&quot; id=&quot;fr-2-1&quot;&gt;&lt;a href=&quot;#fn-2&quot;&gt;2&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt; - a “morse” key, a shift key and a space key.
+This in turn meant the firmware now had a lot of different tasks spawned:&lt;&#x2F;p&gt;
+&lt;ol&gt;
+&lt;li&gt;A &lt;code&gt;usb_loop&lt;&#x2F;code&gt; that manages the underlying USB interface&lt;&#x2F;li&gt;
+&lt;li&gt;A &lt;code&gt;usb_hid_loop&lt;&#x2F;code&gt; that manages writing to the USB HID interface&lt;&#x2F;li&gt;
+&lt;li&gt;A &lt;code&gt;usb_request_handler&lt;&#x2F;code&gt; that manages incoming requests on the USB HID interface&lt;&#x2F;li&gt;
+&lt;li&gt;A &lt;code&gt;monitor_space_key&lt;&#x2F;code&gt; task that watches the space button and generates ’ ’ characters
+for the USB HID loop to send&lt;&#x2F;li&gt;
+&lt;li&gt;A &lt;code&gt;generate_morse_code_characters&lt;&#x2F;code&gt; task, that watches the &lt;code&gt;shift&lt;&#x2F;code&gt; and &lt;code&gt;morse&lt;&#x2F;code&gt;
+keys and generates the appropriate morse code characters for the &lt;code&gt;usb_hid_loop&lt;&#x2F;code&gt;
+to send.&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;p&gt;The whole thing is tied together with a series of bounded embassy &lt;code&gt;Channel&lt;&#x2F;code&gt;s.&lt;&#x2F;p&gt;
+&lt;p&gt;Here is a video of the firmware running on a breadboard device with a debugger
+attached:&lt;&#x2F;p&gt;
+&lt;video controls muted loop preload=&quot;metadata&quot; width=&quot;640&quot; height=&quot;480&quot; style=&quot;margin: -2rem auto 3rem auto;&quot;&gt;
+  &lt;source src=&quot;morse_code_example.webm&quot; type=&quot;video&#x2F;webm&quot;&gt;
+  Your browser does not support the video tag.
+&lt;&#x2F;video&gt;
+&lt;h2 id=&quot;building-the-hardware&quot;&gt;Building the hardware&lt;&#x2F;h2&gt;
+&lt;p&gt;As much as this was a meme project, I felt like adding some hardware would be nice.
+I figured as this was a keyboard (and I have some hardware lying around) that
+using hot-swappable mechanical switches would be a good first start&lt;sup class=&quot;footnote-reference&quot; id=&quot;fr-3-1&quot;&gt;&lt;a href=&quot;#fn-3&quot;&gt;3&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;From here making a PCB in Kicad was pretty straightforward, its a connector,
+three mechanical switches (using hot-swappable sockets) and a few 0603 pull-up
+resistors. It took may an hour or two, then I sent of the gerbers to a Chinese
+fab, and a week later for less than a tenner I had a few PCBs to play with.
+Soldering was very straightforward by hand and took maybe 20 minutes, although
+I have to admit to doing a pretty poor job of the connectors&lt;sup class=&quot;footnote-reference&quot; id=&quot;fr-4-1&quot;&gt;&lt;a href=&quot;#fn-4&quot;&gt;4&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt; and they’re
+straight not right-angled as I’d originally planned.&lt;&#x2F;p&gt;
+&lt;p&gt;The resulting Frankenstein looks like this:&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;willhart.io&#x2F;post&#x2F;morse-kodeboard&#x2F;morse_kodeboard_pcb.jpg&quot; alt=&quot;The Morse Kodeboard PCB&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;typing-performance&quot;&gt;Typing performance&lt;&#x2F;h2&gt;
+&lt;p&gt;OK, I know what you’re really here to see is how fast you can type on a Morse
+Kodeboard. To keep this comparison fair, I think some benchmarking is in
+order. There are lots of random typing speed tests on the internet, so let’s try
+to see how fast I can type on the Kodeboard vs a regular keyboard.&lt;&#x2F;p&gt;
+&lt;p&gt;First the control, typing on my Keychron K8:&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;willhart.io&#x2F;post&#x2F;morse-kodeboard&#x2F;keyboard_typing_test.png&quot; alt=&quot;Typing test results from a normal keyboard - 107 words per minute, 97% accuracy&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;I do find sometimes I can type faster but then get in loops where the delete key
+gets a real work out. Actually, that makes me think - I don’t actually have a
+delete key on the Kodeboard! We’re in too deep now to go back, so I’ll just have
+to be perfect.&lt;&#x2F;p&gt;
+&lt;p&gt;And the Kodeboard results are in:&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;willhart.io&#x2F;post&#x2F;morse-kodeboard&#x2F;kodeboard_typing_test.png&quot; alt=&quot;Typing test results from Morse Kodeboard - 5 words per minute, 93% accuracy&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;The Kodeboard is about 20x slower, but around the same accuracy if you squint.
+So I guess we call that tie (or should I say a &lt;code&gt;— ·· ·&lt;&#x2F;code&gt;)&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-next&quot;&gt;What next?&lt;&#x2F;h2&gt;
+&lt;p&gt;I’m not sure if there is anything next to be honest! It could do with an enclosure.
+I have a few options here&lt;&#x2F;p&gt;
+&lt;ol&gt;
+&lt;li&gt;Butcher an electronics project box (maybe a laser cut top),&lt;&#x2F;li&gt;
+&lt;li&gt;Print or laser cut a fully custom enclosure,&lt;&#x2F;li&gt;
+&lt;li&gt;Look at a more traditional morse code key, of which it seems there are a wide
+&lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;https:&#x2F;&#x2F;hamuniverse.com&#x2F;n2eycodekeys.html&quot;&gt;variety of types&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;p&gt;I could see some other features being added like:&lt;&#x2F;p&gt;
+&lt;ol&gt;
+&lt;li&gt;A rotary encoder to set the duration of a &lt;code&gt;dit&lt;&#x2F;code&gt; (i.e. how fast you have to tap)&lt;&#x2F;li&gt;
+&lt;li&gt;A delete button&lt;&#x2F;li&gt;
+&lt;li&gt;Some LEDs indicating i.e. when “shift” is down (actually its more like Capslock)&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;p&gt;A this point though I think I’ve made my point, whatever that is and I may just
+throw it in a project box and call it a day.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;notes&quot;&gt;Notes&lt;&#x2F;h2&gt;
+&lt;section class=&quot;footnotes&quot;&gt;
+&lt;ol class=&quot;footnotes-list&quot;&gt;
+&lt;li id=&quot;fn-1&quot;&gt;
+&lt;p&gt;Morse Kodeboard, as you may have guessed. &lt;a href=&quot;#fr-1-1&quot;&gt;↩&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li id=&quot;fn-2&quot;&gt;
+&lt;p&gt;Spoiler, its probably going to need more than three keys. &lt;a href=&quot;#fr-2-1&quot;&gt;↩&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li id=&quot;fn-3&quot;&gt;
+&lt;p&gt;Eventually it would be nice perhaps to build a more old-fashioned morse-code style interface, but for now this is still a “keyboard” in the modern sense. &lt;a href=&quot;#fr-3-1&quot;&gt;↩&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li id=&quot;fn-4&quot;&gt;
+&lt;p&gt;The offending soldering work is blurred for your safety. &lt;a href=&quot;#fr-4-1&quot;&gt;↩&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;&#x2F;section&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Building a basketball video analysis software tool</title>
+        <published>2024-05-30T00:00:00+00:00</published>
+        <updated>2024-05-30T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              William Hart
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://willhart.io/post/basketball-analysis-software/"/>
+        <id>https://willhart.io/post/basketball-analysis-software/</id>
+        
+        <content type="html" xml:base="https://willhart.io/post/basketball-analysis-software/">&lt;blockquote&gt;
+&lt;p&gt;This is a super long article discussing a tool that has been on my mind for at
+least eight years. I’m probably the only one interested in these details, but
+it is satisfying for me to document this project as I’m unlikely to release
+the source code and it seems my work on the project is coming to an end.&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;In fiction writing, there is a saying - “show don’t tell”. I think this is also
+a great phrase to apply as a youth sports coach. I’ve been coaching junior
+basketball for about 25 years now at various levels. Over that time I’ve
+noticed a big increase in the level of professionalism and the technical
+expertise of coaches.&lt;&#x2F;p&gt;
+&lt;p&gt;For instance, twenty years ago video analysis was very rare, but these days
+analysing game film with the team can be done routinely, even at the youngest
+levels of representative basketball. All our games are now filmed and available
+on Youtube or other services. Video analysis is a fantastic tool as a coach to
+both highlight areas for improvement and show where players are doing things
+well. Often a message only really sinks in for players when they see the
+examples (both positive and negative) in game film.&lt;&#x2F;p&gt;
+&lt;p&gt;I previously posted about my &lt;a href=&quot;&#x2F;post&#x2F;first-impressions-converting-a-firebase-project-to-graphql&quot;&gt;basketball diagram
+software&lt;&#x2F;a&gt;
+which I used to write training plans, do scouting reports and diagram plays. In
+addition to this tool, I’ve also spent over eight years slowly building a tool
+for video analysis, similar to tools from hudl or Catapult. I’m going to
+describe a little bit about this tool and how I built it in this post.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;defining-the-product&quot;&gt;Defining the “product”&lt;&#x2F;h2&gt;
+&lt;p&gt;I’m a volunteer coach with my own job and family, and so in addition to having
+limited training time, I also want to spend as little time as possible preparing
+for video analysis (Yes, I’m aware that I probably spent hundreds of hours
+building a software tool to save me minutes of effort).&lt;&#x2F;p&gt;
+&lt;p&gt;So about eight years ago I began to develop a software tool that would:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;let me watch a game film (preferably at 1.5x speed),&lt;&#x2F;li&gt;
+&lt;li&gt;“tag up” key plays with text, or as specific “events” in the game,&lt;&#x2F;li&gt;
+&lt;li&gt;play back the video using the list of tags to jump to key sections,&lt;&#x2F;li&gt;
+&lt;li&gt;filter the list of tags so that I can jump to “every time we ran offence X” or
+“defence Y”&lt;&#x2F;li&gt;
+&lt;li&gt;generate box scores, shot charts, and other stats from the tags.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;As the tool evolved I added and removed some other features:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;a &lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;https:&#x2F;&#x2F;en.wikipedia.org&#x2F;wiki&#x2F;Telestrator&quot;&gt;telestrator&lt;&#x2F;a&gt; feature to
+playback,&lt;&#x2F;li&gt;
+&lt;li&gt;automatically export a filtered set of tags to a “highlights video”&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;h2 id=&quot;challenges&quot;&gt;Challenges&lt;&#x2F;h2&gt;
+&lt;p&gt;I want to highlight up front some of the key challenges I faced while building
+this tool, and then discuss later how each implementation attempted to address
+them.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;1-the-tagging-problem&quot;&gt;1. The tagging problem&lt;&#x2F;h3&gt;
+&lt;p&gt;Strangely enough, one of the trickiest pieces of the project was how to create
+the video tags. From the start I wanted to be able to gather more data than just
+a plain text “bookmark”. This requires being able to provide a UI that can
+select from different basketball actions, including:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;typical basketball stats like pass, shot, turnover, rebound, etc,&lt;&#x2F;li&gt;
+&lt;li&gt;plain text tags at a specific time (“x happened at this time”),&lt;&#x2F;li&gt;
+&lt;li&gt;plain text tags across a time span (“y happened at this time, for A seconds”),&lt;&#x2F;li&gt;
+&lt;li&gt;add “meta” tags like lineup changes, clock times, clock start&#x2F;stop, etc&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;It turns out that each of these potential tags requires different metadata to be
+associated with it, for instance a shot may require:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;the player that took the shot,&lt;&#x2F;li&gt;
+&lt;li&gt;where the shot was taken from (and maybe whether it was a free throw, 2pt or
+3pt shot),&lt;&#x2F;li&gt;
+&lt;li&gt;whether the shot missed or was made,&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;while a metadata tag like a “lineup change” may require a list of players that
+went on and a list of players that went off.&lt;&#x2F;p&gt;
+&lt;p&gt;This is a complex data modelling problem for strongly typed languages, but it is
+even more complex as a UI problem, because different controls need to be
+displayed depending on both &lt;em&gt;what&lt;&#x2F;em&gt; tag is being created and &lt;em&gt;which&lt;&#x2F;em&gt; details are
+being provided. For most UI frameworks this results in a lot of spaghetti code.&lt;&#x2F;p&gt;
+&lt;p&gt;I also wanted to be able to annotate a full set of tags while watching the video
+at 1.5x speed. I’ll revisit this challenge more as the article goes on.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;2-the-video-hosting-problem&quot;&gt;2. The video hosting problem&lt;&#x2F;h3&gt;
+&lt;p&gt;From the start I had a challenge around how the videos would be made available
+to the app and when I was showing them to the players in the video analysis
+session. Back when I started mobile data was poor (in Australia) and our
+internet speeds didn’t really allow large videos to be uploaded and streamed
+reliably. Local files initially seemed like a better option, but that made it
+harder to share with other coaches.&lt;&#x2F;p&gt;
+&lt;p&gt;Later, once internet speeds improved it became a question of where to host -
+either my own cloud media server (expensive and with complex access controls -
+these are videos of kids after all) or through an existing hosting site like
+youtube. In the end most game film these days ends up on youtube so that became
+the logical choice for hosting.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;first-attempt-net-wpf&quot;&gt;First attempt - .NET WPF&lt;&#x2F;h2&gt;
+&lt;p&gt;My first attempt was made about eight years ago using a WPF app in C#.
+Unfortunately I seem to have lost the source code and all screenshots, but this
+was a pretty good first attempt that had tagging and playback of local video
+files, showed the tags on the playback progress bar and had a telestrator
+functionality.&lt;&#x2F;p&gt;
+&lt;p&gt;There were two issues with this implementation:&lt;&#x2F;p&gt;
+&lt;ol&gt;
+&lt;li&gt;it was offline only, so it was a bit tricky to share with others,&lt;&#x2F;li&gt;
+&lt;li&gt;the tagging interface was very clunky - because of the complexity of the tags
+required, it was very difficult in C# to add new tags or to show a custom UI
+flow for tagging particular things and adding the relevant metadata. In other
+words, the tagging pattern required very stateful UI, which was a bit clumsy
+to do in WPF.&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;p&gt;To get around the tagging issues I had  brief foray with trying to write the
+code in typescript &#x2F; React as a part of the play diagramming tool, but the UI
+flow still didn’t sit well and I quickly abandoned the approach.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;second-attempt-rust-tui&quot;&gt;Second attempt - rust TUI&lt;&#x2F;h2&gt;
+&lt;h3 id=&quot;typestate-to-the-rescue&quot;&gt;Typestate to the rescue&lt;&#x2F;h3&gt;
+&lt;p&gt;About this time I encountered a language called &lt;code&gt;rust&lt;&#x2F;code&gt;, which you may have heard
+of. I pretty quickly fell in love with it (and now use it relatively often in my
+day job!). I was playing around with rust for a bunch of tools, but it didn’t
+occur to me to try building the video analysis tool in rust until I found the
+article by Cliffle on &lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;https:&#x2F;&#x2F;cliffle.com&#x2F;blog&#x2F;rust-typestate&#x2F;&quot;&gt;type states in
+rust&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;TLDR: the type state approach is sort of like a state machine baked into the
+types. In other words, it uses the type system at compile time to ensure only
+valid state transitions are available to be called.&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;As I was reading the article it dawned on me that this was a great model for
+tagging videos. The core of the complex user flow could be reduced to a fairly
+readable rust enum:&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;willhart.io&#x2F;post&#x2F;basketball-analysis-software&#x2F;typestate_implementation_of_tagging.png&quot; alt=&quot;A screenshot of a rust enum showing the typestate pattern used for tagging&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;Here the variants of the enum are the different states our tagging UI can be in,
+for instance setting whether a shot was made or missed, selecting a player, or
+selecting a shot location. The &lt;code&gt;VideoTagFactory&amp;lt;T&amp;gt;&lt;&#x2F;code&gt; could then be used to ensure
+that &lt;em&gt;only&lt;&#x2F;em&gt; the relevant transitions are available from each “UI state”. It took
+a bit of noodling but in short order I’d written up the tagging logic and a rust
+“terminal user interface” (TUI) to provide the UI.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;syncing-to-video&quot;&gt;Syncing to video&lt;&#x2F;h3&gt;
+&lt;p&gt;To manage the video, I worked with local files and used &lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;https:&#x2F;&#x2F;wiki.videolan.org&#x2F;VLC_HTTP_requests&#x2F;&quot;&gt;VLC HTTP
+requests&lt;&#x2F;a&gt; to control the player.
+Overall it was a pretty reliable system, although sometimes VLC would have some
+issues buffering when playing youtube videos. I set it up so that I could use
+&lt;code&gt;youtube-dl&lt;&#x2F;code&gt; to download videos locally, and configure my tool to accept both a
+youtube and local video path, preferring local where available.&lt;&#x2F;p&gt;
+&lt;p&gt;This approach &lt;em&gt;immediately&lt;&#x2F;em&gt; felt better. The code was cleaner, the UI just
+naturally flowed from the state of the tag, and it was easy to add new tags. I
+added a second simpler factory for “text-based” tags, and implemented all the
+logic around live box scores. The result looked like this:&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;willhart.io&#x2F;post&#x2F;basketball-analysis-software&#x2F;rust_tui.png&quot; alt=&quot;The rust TUI&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;Tagging was via keyboard inputs, for instance to add a new shot, I would press
+&lt;code&gt;&amp;lt;tab&amp;gt; 2 2 1 4553&amp;lt;enter&amp;gt; y &amp;lt;enter&amp;gt;&lt;&#x2F;code&gt;. Decoding this:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;&amp;lt;tab&amp;gt;&lt;&#x2F;code&gt; to start a tag&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;code&gt;2&lt;&#x2F;code&gt; to select a two-point shot tag&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;code&gt;2&lt;&#x2F;code&gt; to select player number 2 in the list as the shooter,&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;code&gt;1&lt;&#x2F;code&gt; to select player number 1 in the list as having assisted the shooter,&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;code&gt;4553&amp;lt;enter&amp;gt;&lt;&#x2F;code&gt; to use a “keypad” system to select where on the court the shot was taken,&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;code&gt;y&lt;&#x2F;code&gt; to say the shot was made.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;While this looks a bit complicated, after a few minutes of tagging I could
+basically tag in real-time (i.e. at 1x playback speed). Tags were saved in a
+local file. I also implemented exporting highlights from a list of filtered
+plays using &lt;code&gt;ffmpeg&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;challenge-clock-management&quot;&gt;Challenge: Clock management&lt;&#x2F;h3&gt;
+&lt;p&gt;An interesting problem came about with mapping video time to game time. For
+instance a video may start a few minutes before the game starts, and in our
+timing rules the clock stops on every whistle. This means that in order to track
+how many minutes players are playing you need to have a separate concept for
+“game time” vs “video time”. Tags are in “video time”, while all of the stats
+are in “video time”.&lt;&#x2F;p&gt;
+&lt;p&gt;The problem is compounded in that all of our scorers are parents, and its fairly
+common for them to forget to start or stop the clock at key moments. Depending
+on the angle, there isn’t always a scoreboard visible in the video, so its not
+always obvious what the game clock is actually showing!&lt;&#x2F;p&gt;
+&lt;p&gt;To solve this I introduced the concept of a “clock sync” tag. This was a tag
+that was considered a “source of truth” for the current game time, for instance
+&lt;code&gt;03:13 remaining in the third quarter&lt;&#x2F;code&gt;. There were also “clock start” and “clock
+stop” tags, and “period start” and “period end” tags which were essentially
+fancy clock sync tags.&lt;&#x2F;p&gt;
+&lt;p&gt;Between these it was possible to produce a basic algorithm which used the
+elapsed video time and the clock management tags to determine the game time.
+When a clock sync tag was found, the game clock was updated to match, and
+elapsed times for things like lineup combinations and player minutes were
+reconciled using some business logic.&lt;&#x2F;p&gt;
+&lt;p&gt;Overall this wasn’t a complex problem but took a bit of thinking to get right.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;challenge-sharing&quot;&gt;Challenge: Sharing&lt;&#x2F;h3&gt;
+&lt;p&gt;One challenge was that this was not easy to share with non-technical people.
+Around this time I wanted to step back a little from coaching so I joined
+another coach as their assistant. One of my jobs was tagging the video for
+analysis with the team, but I couldn’t hand over a terminal program for them to
+use. Instead I ended up building a simple &lt;code&gt;tera&lt;&#x2F;code&gt; template generator to output a
+standalone HTML file with an embedded youtube player and list of tags.&lt;&#x2F;p&gt;
+&lt;p&gt;This was … ugly, but it worked pretty well. Up until Covid hit and we lost
+basically two years to the pandemic. Overall I was fairly happy other than it
+feeling a bit too “technical” to run, being a bit slapped together with separate
+video and TUI windows, and still only letting me tag at about 1x game speed.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;third-attempt-rust-axum-and-next-js&quot;&gt;Third attempt - rust (axum) and Next.js&lt;&#x2F;h2&gt;
+&lt;p&gt;I took a couple of year hiatus from the project while Covid messed up our
+basketball seasons. When things started to return to normal, I began to get more
+and more frustrated by the slightly janky TUI and the awkwardness of sharing
+game footage.&lt;&#x2F;p&gt;
+&lt;p&gt;If I’m honest I also began to wonder at this point whether I had a “genuine
+product” on my hands. If I recall at the time hudl cost hundreds of dollars a
+month. There seemed to be a gap in the market for a simpler “semi-pro” service
+targeted at representative &#x2F; amateur sports where budgets are typically
+non-existent. The main problem at this point was around UX pain points, the TUI
+worked great for me (and the four or five other people who prefer a TUI over a
+GUI) but wasn’t SaaS-ready.&lt;&#x2F;p&gt;
+&lt;p&gt;I began to consider turning the tool into a web app, with some of the features a
+SaaS requires like user accounts, sharing, granular permissions and so on.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;tech-stack&quot;&gt;Tech stack&lt;&#x2F;h3&gt;
+&lt;p&gt;After a bit of research I settled on a tech stack for round 3.&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;postgresql database hosted on &lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;https:&#x2F;&#x2F;fly.io&quot;&gt;fly.io&lt;&#x2F;a&gt;,&lt;&#x2F;li&gt;
+&lt;li&gt;rust &#x2F; axum backend hosted on &lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;https:&#x2F;&#x2F;fly.io&quot;&gt;fly.io&lt;&#x2F;a&gt;, which allowed me to
+reuse a bunch of the TUI code,&lt;&#x2F;li&gt;
+&lt;li&gt;auth via &lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;https:&#x2F;&#x2F;auth0.com&quot;&gt;auth0&lt;&#x2F;a&gt;, so I could outsource user&#x2F;auth code,&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;Then I picked a few “comfort” options:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;react front end using next.js,&lt;&#x2F;li&gt;
+&lt;li&gt;CI&#x2F;CD via github actions&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;h3 id=&quot;building-a-tagging-language&quot;&gt;Building a tagging “language”&lt;&#x2F;h3&gt;
+&lt;p&gt;Initially I started reusing a lot of the typestate logic from the TUI. However
+at the time I was skimming through &lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;https:&#x2F;&#x2F;app.thestorygraph.com&#x2F;books&#x2F;10606458-5ea8-499a-9940-ed13667d511a&quot;&gt;Basketball on
+Paper&lt;&#x2F;a&gt;,
+a book about the use of data and statistics in basketball. I remember seeing a
+lot of basic statistical errors in the book, however one really interesting
+feature of the book was their way of annotating a game using a series of letters
+and numbers. I decided to adapt this to my needs.&lt;&#x2F;p&gt;
+&lt;p&gt;For instance the following would be used to describe a complete possession:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;color:#c0c5ce;&quot;&gt;&lt;code&gt;&lt;span&gt;01:11 a 19i 9 19 36d 19i 9 4 29x3- 4rt
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;This can be broken down as follows:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;01:11&lt;&#x2F;code&gt; this is the “video time” when the possession started&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;code&gt;a&lt;&#x2F;code&gt; indicates this is a possession for the away team&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;code&gt;19i&lt;&#x2F;code&gt; indicates player &lt;code&gt;19&lt;&#x2F;code&gt; from the away team inbounded the ball&lt;&#x2F;li&gt;
+&lt;li&gt;There were a series of passes between players &lt;code&gt;9 -&amp;gt; 19 -&amp;gt; 36&lt;&#x2F;code&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;When they caught the ball, player &lt;code&gt;36&lt;&#x2F;code&gt; dribbled, and at some point the ball
+when out of bounds (probably deflected, but I don’t record that here).&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;code&gt;19i&lt;&#x2F;code&gt; player 19 inbounded the ball again, and a series of passes followed.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;code&gt;29x3-&lt;&#x2F;code&gt; indicates that player 29 took a shot from “region 3” of the court, and
+the &lt;code&gt;-&lt;&#x2F;code&gt; indicates it missed. A &lt;code&gt;+&lt;&#x2F;code&gt; would indicate that the shot was made, and
+a &lt;code&gt;++&lt;&#x2F;code&gt; would indicate the shot was made and the player who gave them the ball
+should be awarded an assist.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;code&gt;4r&lt;&#x2F;code&gt; player 4 rebounded the ball (we know this is an offensive rebound
+because their team has possession)&lt;&#x2F;li&gt;
+&lt;li&gt;the final &lt;code&gt;t&lt;&#x2F;code&gt; indicates that player 4 then turned it over.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;There is a lot of data packed into this single line, and it can be very compact
+and detailed, for instance &lt;code&gt;12 99f36x3++.&lt;&#x2F;code&gt; indicates:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;#99 took a 2pt shot from “region 3” which is in the key,&lt;&#x2F;li&gt;
+&lt;li&gt;They made the shot and #12 was awarded an assist,&lt;&#x2F;li&gt;
+&lt;li&gt;#99 was fouled in the act of shooting by #36 from the other team,&lt;&#x2F;li&gt;
+&lt;li&gt;#99 missed the resulting free throw&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;I can make text tags by typing:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;color:#c0c5ce;&quot;&gt;&lt;code&gt;&lt;span&gt;@01:11 Good drive and kick (Bob to Fred)
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Or a text range tag using&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;color:#c0c5ce;&quot;&gt;&lt;code&gt;&lt;span&gt;@01:11 +5 A five second range with a text annotation
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;I implemented a parser using &lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;https:&#x2F;&#x2F;crates.io&#x2F;crates&#x2F;nom&quot;&gt;&lt;code&gt;nom&lt;&#x2F;code&gt;&lt;&#x2F;a&gt;, and the
+React GUI had some logic to pre-fill the video time in the tagging text input. A
+typical game has 100-150 lines of this format which includes all possessions,
+clock management, lineups, annotations and so on.&lt;&#x2F;p&gt;
+&lt;p&gt;An excerpt from an actual game looks like this, and can be imported or exported
+from the GUI:&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;willhart.io&#x2F;post&#x2F;basketball-analysis-software&#x2F;game_metadata.png&quot; alt=&quot;An extract from a game summary written using the custom tagging DSL&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;In terms of UX I’d consider this a “pro” interface - its extremely fast to
+annotate and quite natural once you learn the key codes, however has a bit of a
+learning curve. For a SaaS product it would still need a more traditional “point
+and click” GUI interface.&lt;&#x2F;p&gt;
+&lt;p&gt;For the users at least the output was human readable, for instance the input
+above would be displayed in the UI by a stream of possession logs like this,
+along with a running score:&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;willhart.io&#x2F;post&#x2F;basketball-analysis-software&#x2F;game_runsheet.png&quot; alt=&quot;A stream of events for a single game&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;Clicking on a timestamp takes you to that time in the video.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;stats-and-analysis&quot;&gt;Stats and analysis&lt;&#x2F;h3&gt;
+&lt;p&gt;The great thing about all this rich data and the parser was that it suddenly
+became possible to “reduce” over these lines and produce detailed stats by
+parsing the game sequence into a vector of “actions”, and then running a
+“map-reduce” on those to produce a box score. It was also possible to produce a
+quarter by quarter breakdown, see an example:&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;willhart.io&#x2F;post&#x2F;basketball-analysis-software&#x2F;box_scores.png&quot; alt=&quot;An example box score&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;Short charts can also be produced from the same data:&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;willhart.io&#x2F;post&#x2F;basketball-analysis-software&#x2F;shot_charts.png&quot; alt=&quot;An example short chart&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;It was also possible to compute more interesting statistics, such as the
+effectiveness of specific lineups:&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;willhart.io&#x2F;post&#x2F;basketball-analysis-software&#x2F;lineups.png&quot; alt=&quot;An example of lineup effectiveness stats for a single game&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;There are a lot of lineups in a junior basketball game because for player
+development and well-being its important that everybody plays a decent amount of
+minutes. I also implemented some possession statistics, which in many cases
+matched my “feel” of the tempo and outcome of the game pretty closely:&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;willhart.io&#x2F;post&#x2F;basketball-analysis-software&#x2F;possession_stats.png&quot; alt=&quot;Example possession statistics&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;A neat feature of rust was how easy it was to go from a single game box score to
+an average across a subset of games or even a season. By implementing the
+&lt;code&gt;std::ops::Add&lt;&#x2F;code&gt; trait on the Box Score then this could be done with basically no
+code changes in the API.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;sharing-games&quot;&gt;Sharing games&lt;&#x2F;h3&gt;
+&lt;p&gt;As this version of the analysis software was written using a SaaS model, there
+was a fairly basic underlying role-based permission system. This meant it was
+easy to create a “shared” link that was essentially a read-only version of the
+page. These were enforced at the postgres DB level using row-level permissions
+and tested with unit tests (I know, unit tests a side project!?).&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-next&quot;&gt;What next?&lt;&#x2F;h2&gt;
+&lt;p&gt;Developing the analysis tool has been a very rewarding long-term project. I
+learned quite a lot out of doing it and got a lot of pleasure out of using it to
+analyse a bunch of games. Since I started working on these tools almost a decade
+ago, my life has changed a lot. I have my own little people who rely on me,
+other hobbies demanding my time, and a job which seems to drain most of my
+energy. I’m probably going to have to hang up my coaching boots at the end of
+this season, at least until (or if) my own little kids decide to play. Its hard
+to keep plugging away at something that I’ll probably no longer have a use for.&lt;&#x2F;p&gt;
+&lt;p&gt;There were some features or ideas that I wanted to return to, and who knows -
+maybe one day if my kids are playing and I lace up the coaching clipboard again,
+I’ll return to these to “save some time”.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;a-proper-tagging-interface&quot;&gt;A proper tagging interface&lt;&#x2F;h3&gt;
+&lt;p&gt;The “text-based” tagging interface in the latest iteration of the analysis
+software works for me, but if I ever want other people to use it I’d have to
+create a proper GUI for tagging. I think a React interface would have the same
+limitations as the original C# one in handling the branching tagging interface.
+I’d be curious to try something that uses the existing rust typestate backend
+for tagging (developed for the TUI) and delivers HTMX to the front end to show
+the correct GUI.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;integration-with-diagramming-software&quot;&gt;Integration with diagramming software&lt;&#x2F;h3&gt;
+&lt;p&gt;I also have some really capable play diagramming software, which at the moment
+is a separate tool. I think it would be really interesting to merge the two
+tools, and in particular I’d love to be able to draw up diagrams right from
+within the video analysis software, either as a teaching or a scouting tool.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;machine-learning&quot;&gt;Machine learning&lt;&#x2F;h3&gt;
+&lt;p&gt;I think the ultimate UI for tagging videos would be… no UI at all! Could we
+get machine learning algorithms to tag up the video for us? I’m not 100% on the
+AI hype train, but I do think some good old fashioned machine learning tools to
+analyse the video would be useful, especially if they could extract highlights
+and tags automatically. It would be even cooler if the ML could process the
+video and turn it into play diagrams.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;https:&#x2F;&#x2F;www.statsperform.com&#x2F;opta-tracking&#x2F;&quot;&gt;I’m&lt;&#x2F;a&gt;
+&lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;https:&#x2F;&#x2F;medium.com&#x2F;@kalidrafts&#x2F;exploring-basketball-spacing-through-computer-vision-broadcast-data-cdff8a118c4f&quot;&gt;clearly&lt;&#x2F;a&gt;
+&lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;https:&#x2F;&#x2F;medium.com&#x2F;swlh&#x2F;automating-basketball-highlights-with-object-tracking-b134ce9afec2&quot;&gt;not&lt;&#x2F;a&gt;
+&lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;https:&#x2F;&#x2F;datahacker.rs&#x2F;005-advanced-computer-vision-basketball-layer-tracking-with-open-cv&#x2F;&quot;&gt;the&lt;&#x2F;a&gt;
+&lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;https:&#x2F;&#x2F;www.youtube.com&#x2F;watch?v=yJWAtr3kvPU&quot;&gt;first&lt;&#x2F;a&gt;
+&lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;https:&#x2F;&#x2F;blog.roboflow.com&#x2F;track-football-players&#x2F;&quot;&gt;to&lt;&#x2F;a&gt;
+&lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;https:&#x2F;&#x2F;www.youtube.com&#x2F;watch?v=XHT2c8jT3Bc&quot;&gt;think&lt;&#x2F;a&gt;
+&lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;sketscripter&#x2F;Computer-vision-basketball-court-mapping-and-player-tracking&quot;&gt;of&lt;&#x2F;a&gt;
+&lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;https:&#x2F;&#x2F;neptune.ai&#x2F;blog&#x2F;dive-into-football-analytics-with-tensorflow-object-detection-api&quot;&gt;this&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;I think this would be very challenging given the majority of game films in
+amateur leagues probably use off the shelf cameras with poor low-light
+performance, and the video angle is often very shallow with lots of players or
+spectators obscuring the feed. Despite this it would be &lt;em&gt;very&lt;&#x2F;em&gt; cool.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;video-hosting&quot;&gt;Video hosting&lt;&#x2F;h3&gt;
+&lt;p&gt;Long-term it would be interesting to have a custom video pipeline using some
+sort of streaming media server. I looked at a few options for doing this,
+including off the shelf things like Cloudflare Stream, but at the end of the day
+for a hobby project Youtube is more than enough!&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>3D printed flexure foot pedal</title>
+        <published>2022-02-13T00:00:00+00:00</published>
+        <updated>2022-02-13T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              William Hart
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://willhart.io/post/3d-printed-flexure-foot-pedal/"/>
+        <id>https://willhart.io/post/3d-printed-flexure-foot-pedal/</id>
+        
+        <content type="html" xml:base="https://willhart.io/post/3d-printed-flexure-foot-pedal/">&lt;p&gt;Following on from my &lt;a href=&quot;&#x2F;post&#x2F;custom-gaming-foot-pedals&quot;&gt;previous post&lt;&#x2F;a&gt;
+on some custom foot pedals I designed, I decided to try simplifying the design
+using 3D printed mechanical flexures in the place of the three part design with
+springs. This provided to be surprisingly easy to do, although I did play around
+a lot with different types of flexures to find a design I was happy with, mostly
+inspired by &lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;https:&#x2F;&#x2F;hackaday.com&#x2F;2021&#x2F;06&#x2F;22&#x2F;print-your-own-flexures&#x2F;&quot;&gt;several&lt;&#x2F;a&gt;
+&lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;https:&#x2F;&#x2F;hackaday.com&#x2F;2021&#x2F;12&#x2F;14&#x2F;fabulous-flexure-mechanism-makes-for-resetting-cat-calendar&#x2F;&quot;&gt;posts&lt;&#x2F;a&gt;
+on hackaday and one timely youtube video about &lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;https:&#x2F;&#x2F;www.youtube.com&#x2F;watch?v=5MxH1sfJLBQ&quot;&gt;mirror actuators on the James
+Webb telescope&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;I also had to experiment with what the printer could handle, and what sort of
+thickenss and joints were required to make sure the plastic didn’t snap when
+actuated. Giving the flexures to my kids to play with was a great way to stress
+test them! I wanted about 10mm of movement and so designing the flexure in a way
+that it stayed out of its own way was part of the challenge. The designs I tried
+are below, each is about 40mm x 30mm, and some of them are missing a few pieces.
+(As a side effect these proved to be great little fidget pieces for long zoom
+meetings.)&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;willhart.io&#x2F;post&#x2F;3d-printed-flexure-foot-pedal&#x2F;flexures.png&quot; alt=&quot;Different flexure designs I trialled before settling on a modified version of the right most design.&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;The left most designs were just test runs to work out the width of cuts and
+beams that my printer and the PLA material could support. The two designs below
+“A” were good at deflecting but tended to permanently deform. The designs under
+“B” had similar issues. In the end I want with a variation on the “C” design,
+this easily deflected 10mm at the end of the beam and reliably returned to its
+original shape.&lt;&#x2F;p&gt;
+&lt;p&gt;The next step was to translate the flexure into a workable design. In this case
+it was also relatively straightforward. From design “C” in the image above, the
+outer rectangular frame would be the main body of the pedal, while the pedal
+button itself would be attached where the red dot is on the image.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;willhart.io&#x2F;post&#x2F;3d-printed-flexure-foot-pedal&#x2F;back_view.jpg&quot; alt=&quot;The final printed pedal, with a tactile button hot glued in place.&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;To act as a button, I just hot glued a tactile switch with a nice red switch cap
+on it to the frame of the pedal. An interesting feature about this design is
+that the pedal moves very easily when I place my foot on it, but it requires
+quite a positive force to depress the switch. The switch itself has a nice
+tactile click when it is pressed. A side-effect of this design is that its very
+digital, i.e. in its current form it probably couldn’t be used to provide an
+analog signal, while the previous spring-driven design would be much more suited
+to that use case. It also requires quite a lot of support material when
+printing, which seems a bit wasteful and probably increases the risk of damage
+to the pedal while removing it.&lt;&#x2F;p&gt;
+&lt;p&gt;It seems pretty durable in “normal” operation, but I’m not sure how it would go
+if loaded up with excessive force. Overall I think the feel of the pedal is
+nicer and a lot simpler, but I’m not sure if this is the design I’ll “mass
+produce” for my mates. I do like this clicky tactile switch more than the limit
+switches I used on my previous design so I might end up somewhere in the middle
+for the final “rev 3” design.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Custom gaming foot pedals</title>
+        <published>2022-02-08T00:00:00+00:00</published>
+        <updated>2022-02-08T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              William Hart
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://willhart.io/post/custom-gaming-foot-pedals/"/>
+        <id>https://willhart.io/post/custom-gaming-foot-pedals/</id>
+        
+        <content type="html" xml:base="https://willhart.io/post/custom-gaming-foot-pedals/">&lt;p&gt;While playing a certain online shooter with some friends, one of our party noted
+that having some foot pedals to lean would make it easier than using the default
+Q and E keys. We found a bunch of commercial ones online, with prices from about
+$50 to $350 after shipping (electronics and shipping to Australia tend to be
+pretty expensive). One of my side projects at the moment is to build my own
+mechanical keyboard from scratch, and thinking about it I was almost certain I
+had everything I needed on hand to make a set of my own custom pedals.&lt;&#x2F;p&gt;
+&lt;p&gt;The idea was simple - grab a couple of limit switches I had for upgrading my
+budget CNC, wire them up with a microcontroller with USB HID capability and make
+a little custom keyboard that could only press Q or E. The only thing I needed
+to buy were springs, as I didn’t have any suitable ones in my random stash of
+salvaged mechanical pieces. These were about $3 from the local big box hardware
+store.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;willhart.io&#x2F;post&#x2F;custom-gaming-foot-pedals&#x2F;pedals_disassembled.jpg&quot; alt=&quot;The foot pedals during assembly&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;The design was otherwise fairly simple. The main structure was a box with an
+angled top, and a hole for the foot button to poke through. A skirt on the
+button prevents it from popping out the top, and two springs keep the pedal up
+off the switch and provide some resistance. The limit switch is hot glued down
+onto a raised base which limits the travel of the foot pedal, and M3 bolts in
+heat set threaded inserts were used to fix the two halves together and lock the
+“button” in place.&lt;&#x2F;p&gt;
+&lt;p&gt;The electronics are equally simple, I had a stash of “blue pill” STM32F103C8
+chips, which can be programmed through the Arduino environment. Its a bit of a
+hassle because programming requires an external FTDI adapter and manually moving
+jumpers around, but once I got the process sorted out it was easy enough. By
+putting the GPIO pins into &lt;code&gt;INPUT_PULLUP&lt;&#x2F;code&gt; mode, I could also avoid any external
+components and just wire the limit switches between the GPIO pins and ground.&lt;&#x2F;p&gt;
+&lt;p&gt;Using the inbuilt &lt;code&gt;USBComposite&lt;&#x2F;code&gt; library for STM32 chips, the firmware was also
+pretty trivial. I’ve included the gist below. (I’m fairly certain as well that
+later on I could provide a two way USB Serial interface to rebind the keys).&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;results&quot;&gt;Results&lt;&#x2F;h2&gt;
+&lt;p&gt;The results were pretty satisfactory, and I can now lean left and right with my
+feet while keeping my hands on the WASD keys - its truly a fantastic age to be a
+nerd with a tiny home workshop! My friends have both placed orders but I’m not
+sure I want to ship them rev 1. I can think of a number of mechanical
+improvements I could make, and its hard to resist making custom electronics.&lt;&#x2F;p&gt;
+&lt;p&gt;I’d be curious to try other switches, for instance I’ve got some spare MX Browns
+from a mechanical keyboard I’m building that might be interesting to test. I
+could even make my own &lt;a
+href=&quot;https:&#x2F;&#x2F;hackaday.com&#x2F;2022&#x2F;01&#x2F;17&#x2F;3d-printed-magnetic-switches-promise-truly-custom-keyboards&#x2F;&quot;
+target=&quot;_blank&quot; rel=&quot;noopener noreferrer&quot;&gt;magnetic mechanical switches&lt;&#x2F;a&gt;!&lt;&#x2F;p&gt;
+&lt;p&gt;I’m also looking into removing the springs and replacing them with mechanical
+flexures (assuming they last long enough to be useful). This would also allow
+combining the button and lid into one part which would make manufacturing and
+assembly easier.&lt;&#x2F;p&gt;
+&lt;p&gt;Either way, it was a fairly trivial and fun project - but very satisfying to
+play with.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;firmware&quot;&gt;Firmware&lt;&#x2F;h2&gt;
+&lt;script src=&quot;https:&#x2F;&#x2F;gist.github.com&#x2F;will-hart&#x2F;45090e7d43fe5d6656ce9fc78dbceb27.js&quot;&gt;&lt;&#x2F;script&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>CMOS analog clock</title>
+        <published>2022-01-11T00:00:00+00:00</published>
+        <updated>2022-01-11T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              William Hart
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://willhart.io/post/cmos-analog-clock/"/>
+        <id>https://willhart.io/post/cmos-analog-clock/</id>
+        
+        <content type="html" xml:base="https://willhart.io/post/cmos-analog-clock/">&lt;blockquote&gt;
+&lt;p&gt;The purpose of this project was to build a large 30cm by 20cm clock using CMOS electronics driven from a 32kHz crystal. The project was a housewarming gift that arrived about four years too late and several IOUs later.&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;I took inspiration from a number of sources for the analog circuitry, but unfortunately most of those links are lost in the mists of time. The basic principle is to take a 32kHz signal and divide it down to the correct signals using analog ICs, mostly a combination of 74HC4040s and 74HC161s mixed with a series of logic gates (the schematics are included below) and then 74HC238s on the outputs. The circuitry was complicated enough that I breadboarded it:&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;willhart.io&#x2F;post&#x2F;cmos-analog-clock&#x2F;breadboard.png&quot; alt=&quot;The clock circuitry built on a breadboard prior to ordering the PCBs. (size: 340x411px)&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;This would have gone a lot better if I’d had an oscilloscope or decent logic probe for debugging, but I developed a system of LEDs logic probes and used the Arduino to inject signals at arbitrary frequencies and got there in the end.&lt;&#x2F;p&gt;
+&lt;p&gt;Once the clock circuitry was set, it was time to design the layout itself. I wanted something that combined the blocky, industrial vibe of the analog circuitry with softer, more natural lines of timber. Luckily my Dad is very into furniture making, and was very keen to help out by supplying a piece of French Oak he had spare and as much of his highly specialised woodworking skills as I needed. I came up with a design (supported by my design consultant a.k.a. my Wife) with separate “clock” and “main board” sections, each contrasted by rough and clean cuts of the oak.&lt;&#x2F;p&gt;
+&lt;p&gt;The digits were small circuit boards mounted on brass standoffs with the cables drilled through the oak. There were twelve, to display 1 hour and 5 minute intervals using LEDs that were mounted on the back of the digit board and shone through slots. Having only a five minute tick may be a detractor for some, but this is as much a piece of wall art as it is a Swiss timepiece and it makes actually building the circuitry somewhat feasible.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;willhart.io&#x2F;post&#x2F;cmos-analog-clock&#x2F;digit.png&quot; alt=&quot;A close up of the clock digit, seen mounted on the oak with brass standoffs and a drilled hole for routing cables through. (size: 1386x927px)&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;The main board contained all the clock logic, with the ICs mounted in “industrial” rows, with as much many of the traces as possible routed on the back. At the other end to the ICs was a simple eucalpyt design I drew in inkscape and cut out of the solder mask in Kicad.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;willhart.io&#x2F;post&#x2F;cmos-analog-clock&#x2F;main_board.png&quot; alt=&quot;A close up of the CMOS logic ICs mounted on the rough finished oak board. (size: 790x1036px)&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;Overall I’m pleased with the design of the clock, and I like the contrast between the electronics and the timber.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;willhart.io&#x2F;post&#x2F;cmos-analog-clock&#x2F;clock.png&quot; alt=&quot;An overall view of the clock. (size: 1600x800px)&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-i-learned&quot;&gt;What I learned&lt;&#x2F;h2&gt;
+&lt;p&gt;The clock took about three years longer to complete than I’d planned. Partly this was doing the work while spending basically every waking moment working on my PhD, but partly I ran into a few snags that blocked me while I came up with a solution. Overall I feel like I learned an awful lot about analog circuitry, packaging and the challenges of creating a (hopefully) visually appealing but functional PCB design.&lt;&#x2F;p&gt;
+&lt;p&gt;The main issues were around routing the cables on the back and having proper connectors that would secure the cables from the back of the main board to the digits. Each digit required a ground and two signal cables, and for some reason I struggled to find appropriate “JST” connectors when I first built the boards. I then spent an awful lot of time playing around with adapter boards, weird pin header connectors and ribbon cables to get some solid connections, before I finally found some premade 3-pin JST cables and SMD headers off ebay.&lt;&#x2F;p&gt;
+&lt;p&gt;I also had some issues with assembling the main PCBs. Some of the smaller logic chips were at the limit of my hand soldering ability, and I didn’t yet have a proper heat gun. The board was a bit too large for my regular home reflow methods. This meant a few reworks before I got it right. Luckily as the most expensive components were in the DIP sockets, there wasn’t much wastage in terms of ICs.&lt;&#x2F;p&gt;
+&lt;p&gt;This was a very satisfying project to finish up, and not pictured is a CNC cut and laser engraved back plate to guide and constrain the cables on the back. This project was stressful at times, and holds the dubious record of being the only thing that has ever given me an instantaneous migraine!&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;schematics&quot;&gt;Schematics&lt;&#x2F;h2&gt;
+&lt;p&gt;Below are images of the schematics for the clock circuitry.&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Right click and save as or open in a new tab for &lt;em&gt;slightly&lt;&#x2F;em&gt; higher resolution.&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;willhart.io&#x2F;post&#x2F;cmos-analog-clock&#x2F;schematic_1.png&quot; alt=&quot;Page 1 of the CMOS clock schematics (size: 1492x1049px)&quot; &#x2F;&gt;
+&lt;img src=&quot;https:&#x2F;&#x2F;willhart.io&#x2F;post&#x2F;cmos-analog-clock&#x2F;schematic_2.png&quot; alt=&quot;Page 2 of the CMOS clock schematics (size: 1506x1054px)&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Recreating the blog in NextJS</title>
+        <published>2020-12-28T00:00:00+00:00</published>
+        <updated>2020-12-28T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              William Hart
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://willhart.io/post/recreating-the-blog-in-nextjs/"/>
+        <id>https://willhart.io/post/recreating-the-blog-in-nextjs/</id>
+        
+        <content type="html" xml:base="https://willhart.io/post/recreating-the-blog-in-nextjs/">&lt;p&gt;Well this &lt;a href=&quot;&#x2F;post&#x2F;switched-to-ghost&quot;&gt;isn’t the first post of this kind&lt;&#x2F;a&gt;,
+(note from 2025 Will: I’m about three more rewrites in by now!) but once
+again its that time of year when I look at the blog and decide its time to
+migrate to a different blog host. The current Ghost blog has been fine but costs
+$5&#x2F;month to host. Backups and updates are pretty annoying and the whole thing is
+a very manual process.&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Also I’ve currently forgotten my admin password for Ghost :| As the server
+didn’t have an email configuration, I can’t reset the password and so I can’t
+post anything new even if I had the inclination!&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;I’ve been using &lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;https:&#x2F;&#x2F;nextjs.org&#x2F;&quot;&gt;NextJS&lt;&#x2F;a&gt; a lot recently (for work and side
+projects) and really like the file based routing and ability to choose between
+static, server or client rendered pages. Furthermore automated deploy pipelines
+like those supported by NextJS really make life easy. Deployment is just a matter of &lt;code&gt;git push&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;Spurred by these advantages I decided to open source the blog and make a
+statically generated site using NextJS. The main way this works is by keeping an
+array of post URLs, then loading in markdown files based on these URLs to
+display. Markdown files use YAML frontmatter to store configuration (author,
+date, titles, summaries and so on).&lt;&#x2F;p&gt;
+&lt;p&gt;Static generation is enabled in NextJS by specifying the URLs to generate (if
+the URLs contain dynamic segments like slugs or IDs) and also specifying a
+function that generates the props on the server. For the blog post pages this
+looks like this:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;typescript&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-typescript &quot;&gt;&lt;code class=&quot;language-typescript&quot; data-lang=&quot;typescript&quot;&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;**
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt; * Get a list of post slugs to statically generate. Here 
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt; * pageData contains all the URL slugs. Its hard coded which
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt; * isn&amp;#39;t ideal, but its not a big burden to keep the list 
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt; * up to date. It&amp;#39;s also easy to filter once the corresponding
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt; * posts are loaded in - for instance to only return posts with
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt; * a particular tag. As its statically generated, at build time,
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt; * performance isn&amp;#39;t all that important.
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt; *&#x2F;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;export const &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;getStaticPaths&lt;&#x2F;span&gt;&lt;span&gt;: GetStaticPaths = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;async &lt;&#x2F;span&gt;&lt;span&gt;() &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;=&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ebcb8b;&quot;&gt;Promise&lt;&#x2F;span&gt;&lt;span&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;resolve&lt;&#x2F;span&gt;&lt;span&gt;({
+&lt;&#x2F;span&gt;&lt;span&gt;    paths: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;pageData&lt;&#x2F;span&gt;&lt;span&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;map&lt;&#x2F;span&gt;&lt;span&gt;((&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;slug&lt;&#x2F;span&gt;&lt;span&gt;) &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;=&amp;gt; &lt;&#x2F;span&gt;&lt;span&gt;({ params: { &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;slug &lt;&#x2F;span&gt;&lt;span&gt;} })),
+&lt;&#x2F;span&gt;&lt;span&gt;    fallback: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;false&lt;&#x2F;span&gt;&lt;span&gt;,
+&lt;&#x2F;span&gt;&lt;span&gt;  })
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;**
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt; * This loads the data for each post - it reads the post slug from the
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt; * parameters and uses the postReader helper to load in the file from
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt; * disk. The gray-matter YAML parser extracts the front matter and 
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt; * a react-markdown component renders the markdown to file.
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt; * 
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt; * Each blog post is statically generated and preloaded when it enters
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt; * the viewport.
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt; *&#x2F;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;export const &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;getStaticProps&lt;&#x2F;span&gt;&lt;span&gt;: GetStaticProps = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;async &lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;context&lt;&#x2F;span&gt;&lt;span&gt;) &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;=&amp;gt; &lt;&#x2F;span&gt;&lt;span&gt;{
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;const &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;slug &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;context&lt;&#x2F;span&gt;&lt;span&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;params&lt;&#x2F;span&gt;&lt;span&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;slug&lt;&#x2F;span&gt;&lt;span&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;toString&lt;&#x2F;span&gt;&lt;span&gt;()
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;const &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;post &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;await &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;postReader&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;slug&lt;&#x2F;span&gt;&lt;span&gt;)
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;return &lt;&#x2F;span&gt;&lt;span&gt;{ props: { ...&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;post &lt;&#x2F;span&gt;&lt;span&gt;} }
+&lt;&#x2F;span&gt;&lt;span&gt;}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;The home page, category&#x2F;tags pages and individual post pages are all statically
+generated at build time. On the down side, I had to write my own blog template
+and migrate all the posts by hand :(&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;The repo is at
+&lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;will-hart&#x2F;willhart.io&quot;&gt;https:&#x2F;&#x2F;github.com&#x2F;will-hart&#x2F;willhart.io&lt;&#x2F;a&gt;.
+I don’t really think it will spur me to write more posts, but at least when I do
+decide to write something it’s as easy as writing a Markdown document and
+committing to git.&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Python static site generator</title>
+        <published>2015-04-26T00:00:00+00:00</published>
+        <updated>2015-04-26T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              William Hart
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://willhart.io/post/python-static-site-generator/"/>
+        <id>https://willhart.io/post/python-static-site-generator/</id>
+        
+        <content type="html" xml:base="https://willhart.io/post/python-static-site-generator/">&lt;h2 id=&quot;about&quot;&gt;About&lt;&#x2F;h2&gt;
+&lt;p&gt;The following code is described in &lt;a href=&quot;&#x2F;post&#x2F;a-simple-static-site-generator-in-python&quot;&gt;this blog
+post&lt;&#x2F;a&gt;. It is available under the MIT
+license. You can also see the code &lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;https:&#x2F;&#x2F;gist.github.com&#x2F;will-hart&#x2F;9609188&quot;&gt;as a
+gist&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;the-code&quot;&gt;The Code&lt;&#x2F;h2&gt;
+&lt;pre data-lang=&quot;python&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-python &quot;&gt;&lt;code class=&quot;language-python&quot; data-lang=&quot;python&quot;&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&amp;quot;&amp;quot;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;Free to use under the MIT license
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;Builds a static site from a list of Markdown source files. The source
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;files should have the same directory structure as the desired output.
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;Files are rendered using Markdown2 and can declare metadata variables:
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;    ---
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;    template: index.html
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;    title: My Title
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;    ---
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;    # your makdown doc from here on
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;Site templates are stored in the `templates` folder and should be Jinja2
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;templates. Apart from the `template` meta variable in markdown documents, 
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;any variables supplied in the Markdown meta will be available in the 
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;template under the same name. The variable `title` given above can therefore
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;be accessed.
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;The static site will be exported to the `build` directory
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&amp;quot;&amp;quot;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;from &lt;&#x2F;span&gt;&lt;span&gt;jinja2 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;import &lt;&#x2F;span&gt;&lt;span&gt;Environment, FileSystemLoader, TemplateNotFound
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;import &lt;&#x2F;span&gt;&lt;span&gt;markdown2
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;import &lt;&#x2F;span&gt;&lt;span&gt;os
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;import &lt;&#x2F;span&gt;&lt;span&gt;shutil
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;# include additional markdown 2 extras here (e.g. tables, footnotes etc)
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;MARKDOWN_EXTRAS &lt;&#x2F;span&gt;&lt;span&gt;= [&amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;metadata&lt;&#x2F;span&gt;&lt;span&gt;&amp;#39;]
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;# folders that should be copied from your `src` directory to the `build` directory
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;STATIC_DIRS &lt;&#x2F;span&gt;&lt;span&gt;= [&amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;images&lt;&#x2F;span&gt;&lt;span&gt;&amp;#39;]
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;def &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;files_with_extension&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;dir&lt;&#x2F;span&gt;&lt;span&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;ext&lt;&#x2F;span&gt;&lt;span&gt;):
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&amp;quot;&amp;quot;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;    Gets all files in the given directory with the given extension
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;    &amp;quot;&amp;quot;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;return &lt;&#x2F;span&gt;&lt;span&gt;[x &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;for &lt;&#x2F;span&gt;&lt;span&gt;x &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;in &lt;&#x2F;span&gt;&lt;span&gt;os.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;listdir&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;dir&lt;&#x2F;span&gt;&lt;span&gt;) &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;if &lt;&#x2F;span&gt;&lt;span&gt;x.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;endswith&lt;&#x2F;span&gt;&lt;span&gt;(ext)]
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;def &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;copy_directory&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;src&lt;&#x2F;span&gt;&lt;span&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;dst&lt;&#x2F;span&gt;&lt;span&gt;):
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&amp;quot;&amp;quot;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;    Copies all the contents from the source directory to the output directory
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;    &amp;quot;&amp;quot;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;print &lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;Copying &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;{0}&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt; to &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;{1}&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;format&lt;&#x2F;span&gt;&lt;span&gt;(src, dst)
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;try&lt;&#x2F;span&gt;&lt;span&gt;:
+&lt;&#x2F;span&gt;&lt;span&gt;        shutil.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;copytree&lt;&#x2F;span&gt;&lt;span&gt;(src, dst)
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;except &lt;&#x2F;span&gt;&lt;span&gt;OSError &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;as &lt;&#x2F;span&gt;&lt;span&gt;e:
+&lt;&#x2F;span&gt;&lt;span&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;print &lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;  &amp;gt; There was an error copying the files from &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;{0}&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt; to &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;{1}&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;format&lt;&#x2F;span&gt;&lt;span&gt;(src, dst)
+&lt;&#x2F;span&gt;&lt;span&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;print &lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;  &amp;gt; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;{0}&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;format&lt;&#x2F;span&gt;&lt;span&gt;(e)
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;def &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;get_templates&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;path&lt;&#x2F;span&gt;&lt;span&gt;):
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&amp;quot;&amp;quot;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;    Compiles all the templates in the template directory and
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;    returns a dictionary of Jinja2 `Template` objects with the
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;    file names as the keys
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;    &amp;quot;&amp;quot;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;return &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;Environment&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;loader&lt;&#x2F;span&gt;&lt;span&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;FileSystemLoader&lt;&#x2F;span&gt;&lt;span&gt;(path))
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;def &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;build_directory&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;templates&lt;&#x2F;span&gt;&lt;span&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;input_path&lt;&#x2F;span&gt;&lt;span&gt;):
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&amp;quot;&amp;quot;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;    Takes all the *.md files in the given directory, builds them into
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;    HTML and renders them using the Jinja templates. The rendered markdown
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;    is available in the Jinja templates as the `content` variable.
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;    ::warning:: There can only be one `src` folder in the path, as the script
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;    directly replaces `src` with `build` once to find the output path
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;    &amp;quot;&amp;quot;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;print &lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;Looking for Markdown files in &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;{0}&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;format&lt;&#x2F;span&gt;&lt;span&gt;(input_path)
+&lt;&#x2F;span&gt;&lt;span&gt;    files = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;files_with_extension&lt;&#x2F;span&gt;&lt;span&gt;(input_path, &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;.md&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;)
+&lt;&#x2F;span&gt;&lt;span&gt;    op_dir = input_path.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;replace&lt;&#x2F;span&gt;&lt;span&gt;(&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;src&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;,&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;build&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;1&lt;&#x2F;span&gt;&lt;span&gt;)
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;if &lt;&#x2F;span&gt;&lt;span&gt;not os.path.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;isdir&lt;&#x2F;span&gt;&lt;span&gt;(op_dir):
+&lt;&#x2F;span&gt;&lt;span&gt;        os.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;mkdir&lt;&#x2F;span&gt;&lt;span&gt;(op_dir)
+&lt;&#x2F;span&gt;&lt;span&gt;        os.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;chmod&lt;&#x2F;span&gt;&lt;span&gt;(op_dir, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;0o777&lt;&#x2F;span&gt;&lt;span&gt;)
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;for &lt;&#x2F;span&gt;&lt;span&gt;f &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;in &lt;&#x2F;span&gt;&lt;span&gt;files:
+&lt;&#x2F;span&gt;&lt;span&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;print &lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;Converting &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;{0}&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;format&lt;&#x2F;span&gt;&lt;span&gt;(f)
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;        ip_path = os.path.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;join&lt;&#x2F;span&gt;&lt;span&gt;(input_path, f)
+&lt;&#x2F;span&gt;&lt;span&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;with &lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;open&lt;&#x2F;span&gt;&lt;span&gt;(ip_path, &amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;r&lt;&#x2F;span&gt;&lt;span&gt;&amp;#39;) &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;as &lt;&#x2F;span&gt;&lt;span&gt;ip:
+&lt;&#x2F;span&gt;&lt;span&gt;            raw_html = markdown2.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;markdown&lt;&#x2F;span&gt;&lt;span&gt;(ip.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;read&lt;&#x2F;span&gt;&lt;span&gt;(), &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;extras&lt;&#x2F;span&gt;&lt;span&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;MARKDOWN_EXTRAS&lt;&#x2F;span&gt;&lt;span&gt;)
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;try&lt;&#x2F;span&gt;&lt;span&gt;:
+&lt;&#x2F;span&gt;&lt;span&gt;            template = raw_html.metadata[&amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;template&lt;&#x2F;span&gt;&lt;span&gt;&amp;#39;]
+&lt;&#x2F;span&gt;&lt;span&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;except &lt;&#x2F;span&gt;&lt;span&gt;KeyError:
+&lt;&#x2F;span&gt;&lt;span&gt;            &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;print &lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;WARNING: No template specified for &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;{0}&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;, using index.html&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;format&lt;&#x2F;span&gt;&lt;span&gt;(f)
+&lt;&#x2F;span&gt;&lt;span&gt;            template = &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;index.html&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;try&lt;&#x2F;span&gt;&lt;span&gt;:
+&lt;&#x2F;span&gt;&lt;span&gt;            tpl = templates.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;get_template&lt;&#x2F;span&gt;&lt;span&gt;(template)
+&lt;&#x2F;span&gt;&lt;span&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;except &lt;&#x2F;span&gt;&lt;span&gt;TemplateNotFound:
+&lt;&#x2F;span&gt;&lt;span&gt;            &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;raise &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;Exception&lt;&#x2F;span&gt;&lt;span&gt;(&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;Unable to locate the template &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;{0}&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt; for file &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;{1}&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;. Aborting&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;format&lt;&#x2F;span&gt;&lt;span&gt;(template, f))
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;        context = raw_html.metadata
+&lt;&#x2F;span&gt;&lt;span&gt;        context[&amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;content&lt;&#x2F;span&gt;&lt;span&gt;&amp;#39;] = raw_html
+&lt;&#x2F;span&gt;&lt;span&gt;        result = tpl.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;render&lt;&#x2F;span&gt;&lt;span&gt;(context)
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;        op_path = os.path.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;join&lt;&#x2F;span&gt;&lt;span&gt;(op_dir, f.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;replace&lt;&#x2F;span&gt;&lt;span&gt;(&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;.md&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;, &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;.html&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;))
+&lt;&#x2F;span&gt;&lt;span&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;print &lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;Writing to &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;{0}&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;format&lt;&#x2F;span&gt;&lt;span&gt;(op_path)
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;with &lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;open&lt;&#x2F;span&gt;&lt;span&gt;(op_path, &amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;w+&lt;&#x2F;span&gt;&lt;span&gt;&amp;#39;) &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;as &lt;&#x2F;span&gt;&lt;span&gt;op:
+&lt;&#x2F;span&gt;&lt;span&gt;            op.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;write&lt;&#x2F;span&gt;&lt;span&gt;(result)
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;print &lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;  &amp;gt; Rendered files at &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;{0}&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt; to &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;{1}&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;format&lt;&#x2F;span&gt;&lt;span&gt;(ip_path, op_path)
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;print &lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;Folder complete&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;def &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;build_site&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;template_dir&lt;&#x2F;span&gt;&lt;span&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;ip_dir&lt;&#x2F;span&gt;&lt;span&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;clean&lt;&#x2F;span&gt;&lt;span&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;True&lt;&#x2F;span&gt;&lt;span&gt;):
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&amp;quot;&amp;quot;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;    Gets all the markdown files in the `src` directory, renders them using the template
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;    given in metadata (or `index.html`) if no template given, and then throws them in the
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;    same directory structure in the `build` folder.
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;    Additionally everything in the `templates&#x2F;static` folder is copied to `build&#x2F;static`
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;    &amp;quot;&amp;quot;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;# delete the old build
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;if &lt;&#x2F;span&gt;&lt;span&gt;clean:
+&lt;&#x2F;span&gt;&lt;span&gt;        op_dir = ip_dir.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;replace&lt;&#x2F;span&gt;&lt;span&gt;(&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;src&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;, &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;build&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;1&lt;&#x2F;span&gt;&lt;span&gt;)
+&lt;&#x2F;span&gt;&lt;span&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;print &lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;Cleaning out old files from &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;{0}&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;format&lt;&#x2F;span&gt;&lt;span&gt;(op_dir)
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;try&lt;&#x2F;span&gt;&lt;span&gt;:
+&lt;&#x2F;span&gt;&lt;span&gt;            shutil.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;rmtree&lt;&#x2F;span&gt;&lt;span&gt;(op_dir)
+&lt;&#x2F;span&gt;&lt;span&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;except &lt;&#x2F;span&gt;&lt;span&gt;Exception &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;as &lt;&#x2F;span&gt;&lt;span&gt;e:
+&lt;&#x2F;span&gt;&lt;span&gt;            &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;print &lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;  &amp;gt; ERROR - Unable to clean the old build directory&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span&gt;            &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;print &lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;  &amp;gt; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;{0}&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;format&lt;&#x2F;span&gt;&lt;span&gt;(e)
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;try&lt;&#x2F;span&gt;&lt;span&gt;:
+&lt;&#x2F;span&gt;&lt;span&gt;            os.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;mkdir&lt;&#x2F;span&gt;&lt;span&gt;(op_dir)
+&lt;&#x2F;span&gt;&lt;span&gt;            os.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;chmod&lt;&#x2F;span&gt;&lt;span&gt;(op_dir, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;0o777&lt;&#x2F;span&gt;&lt;span&gt;)
+&lt;&#x2F;span&gt;&lt;span&gt;            &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;print &lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;Created output directory&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;except &lt;&#x2F;span&gt;&lt;span&gt;Exception &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;as &lt;&#x2F;span&gt;&lt;span&gt;e:
+&lt;&#x2F;span&gt;&lt;span&gt;            &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;print &lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;  &amp;gt; ERROR - Unable to create a directory at &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;{0}&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;format&lt;&#x2F;span&gt;&lt;span&gt;(op_dir)
+&lt;&#x2F;span&gt;&lt;span&gt;            &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;print &lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;  &amp;gt; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;{0}&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;format&lt;&#x2F;span&gt;&lt;span&gt;(e)
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;# copy the `templates&#x2F;static` folder to `build&#x2F;static`
+&lt;&#x2F;span&gt;&lt;span&gt;    src = os.path.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;join&lt;&#x2F;span&gt;&lt;span&gt;(template_dir, &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;static&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;)
+&lt;&#x2F;span&gt;&lt;span&gt;    dst = os.path.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;join&lt;&#x2F;span&gt;&lt;span&gt;(ip_dir.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;replace&lt;&#x2F;span&gt;&lt;span&gt;(&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;src&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;, &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;build&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;1&lt;&#x2F;span&gt;&lt;span&gt;), &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;static&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;)
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;copy_directory&lt;&#x2F;span&gt;&lt;span&gt;(src, dst)
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;# copy all the static files
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;for &lt;&#x2F;span&gt;&lt;span&gt;sd &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;in &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;STATIC_DIRS&lt;&#x2F;span&gt;&lt;span&gt;:
+&lt;&#x2F;span&gt;&lt;span&gt;        src = os.path.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;join&lt;&#x2F;span&gt;&lt;span&gt;(ip_dir, sd)
+&lt;&#x2F;span&gt;&lt;span&gt;        dst = os.path.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;join&lt;&#x2F;span&gt;&lt;span&gt;(ip_dir.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;replace&lt;&#x2F;span&gt;&lt;span&gt;(&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;src&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;, &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;build&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;1&lt;&#x2F;span&gt;&lt;span&gt;), sd)
+&lt;&#x2F;span&gt;&lt;span&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;copy_directory&lt;&#x2F;span&gt;&lt;span&gt;(src, dst)
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;# load the templates
+&lt;&#x2F;span&gt;&lt;span&gt;    templates = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;get_templates&lt;&#x2F;span&gt;&lt;span&gt;(template_dir)
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;# Do the root directory
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;build_directory&lt;&#x2F;span&gt;&lt;span&gt;(templates, ip_dir)
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;# get all the source directories
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;for &lt;&#x2F;span&gt;&lt;span&gt;path, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;dir&lt;&#x2F;span&gt;&lt;span&gt;, files &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;in &lt;&#x2F;span&gt;&lt;span&gt;os.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;walk&lt;&#x2F;span&gt;&lt;span&gt;(ip_dir):
+&lt;&#x2F;span&gt;&lt;span&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;for &lt;&#x2F;span&gt;&lt;span&gt;d &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;in &lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;dir&lt;&#x2F;span&gt;&lt;span&gt;:
+&lt;&#x2F;span&gt;&lt;span&gt;            &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;build_directory&lt;&#x2F;span&gt;&lt;span&gt;(templates, os.path.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;join&lt;&#x2F;span&gt;&lt;span&gt;(path, d))
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;print &lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;Site build complete&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;if &lt;&#x2F;span&gt;&lt;span&gt;__name__ == &amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;__main__&lt;&#x2F;span&gt;&lt;span&gt;&amp;#39;:
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;# get the input and template dir paths
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;dir &lt;&#x2F;span&gt;&lt;span&gt;= os.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;getcwd&lt;&#x2F;span&gt;&lt;span&gt;()
+&lt;&#x2F;span&gt;&lt;span&gt;    template_dir = os.path.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;join&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;dir&lt;&#x2F;span&gt;&lt;span&gt;, &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;templates&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;)
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;input &lt;&#x2F;span&gt;&lt;span&gt;= os.path.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;join&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;dir&lt;&#x2F;span&gt;&lt;span&gt;, &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;src&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;)
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;# build the site
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;build_site&lt;&#x2F;span&gt;&lt;span&gt;(template_dir, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;input&lt;&#x2F;span&gt;&lt;span&gt;)
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Reducing online abuse through sentiment analysis</title>
+        <published>2014-01-27T00:00:00+00:00</published>
+        <updated>2014-01-27T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              William Hart
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://willhart.io/post/reducing-online-abuse-through-sentiment-analysis/"/>
+        <id>https://willhart.io/post/reducing-online-abuse-through-sentiment-analysis/</id>
+        
+        <content type="html" xml:base="https://willhart.io/post/reducing-online-abuse-through-sentiment-analysis/">&lt;h2 id=&quot;cleaning-up-twitter&quot;&gt;Cleaning up Twitter&lt;&#x2F;h2&gt;
+&lt;p&gt;Recently the issue of on-line abuse has received a lot of play time in the news.
+In the UK several prominent female figures were sent death threats through
+Twitter after they campaigned to have a female (other than the Queen) on a UK
+bank note. Articles such as this one by &lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;http:&#x2F;&#x2F;www.psmag.com&#x2F;navigation&#x2F;health-and-behavior&#x2F;women-arent-welcome-internet-72170&#x2F;&quot;&gt;Pacific Standard
+Magazine&lt;&#x2F;a&gt;
+present a chilling picture of the state of on-line media and its treatment of
+women, and the lack of a clear policy from law enforcement agencies. As a result
+of the UK episode two people were arrested and jailed, however many more escaped
+without penalty.&lt;&#x2F;p&gt;
+&lt;p&gt;The explosion of on-line media has generated a range of compelling, complex and
+large scale issues that we have only slowly begun to adapt to. For instance, how
+much should Twitter and other social media outlets be required to police what
+goes on using their services? In the past phone companies were not held to
+account for what people said over the phone lines. However tweets and the
+facebook posts are both public and persistent. Does this impose a new burden of
+responsibility for these companies? And if there is, what can they actually do
+about it?&lt;&#x2F;p&gt;
+&lt;p&gt;From wild supposition I would imagine that you can divide the abusers into two
+different groups. The first is those who are doing it for “a bit of a laugh”,
+without considering the impact it has on the victim. The second group are
+potentially conducting this behaviour as as symptom of wider social or mental
+issues. The behaviour of the first group is probably open to influence, through
+making them aware that what they are doing has both social and legal
+consequences. However, the second category of abuser is unlikely to be managed
+through actions undertaken by Twitter.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-can-be-done&quot;&gt;What can be done?&lt;&#x2F;h2&gt;
+&lt;p&gt;From a technical standpoint, one possible way to “jolt” the first group into
+modifying their behaviour is through a visual cue in the browser. Something that
+alerts the user if the tweet they have typed (and are about to “send”) appears
+to be abusive. For instance, the message could read:&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;WARNING - the message you have typed appears to be abusive. Your IP address
+has been logged and on-line abuse can be a criminal offence.&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;Upon seeing a message like this, the casual abuser could hopefully be prevented
+from hitting the “send” button.&lt;&#x2F;p&gt;
+&lt;p&gt;Determining if a tweet is “good” or “bad” falls under a the heading of a
+“classification problem”. In these problems a computer must categorise a data
+point, usually based on a small and finite number of possible states. In the
+case of natural language (i.e. text), this technique is frequently known as
+“sentiment analysis”, and is supposedly used by business such as Amazon to
+detect the tone of reviews written on their site. This involves an algorithm
+which looks over a sentence or slab of text, and tries to work out if the mood
+of the text is positive or negative based on the prevalence of certain words or
+word patterns. In the remainder of this article I’ll attempt to build a
+classifying algorithm for tweets, and see if it could have applicability to
+“cleaning up Twitter”.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;sentiment-analysis&quot;&gt;Sentiment analysis&lt;&#x2F;h2&gt;
+&lt;p&gt;The basic approach is often quite simple:&lt;&#x2F;p&gt;
+&lt;ol&gt;
+&lt;li&gt;Count the number of times words appear in the text&lt;&#x2F;li&gt;
+&lt;li&gt;Work out which words are more common in good or bad text and see if these are
+present in our text&lt;&#x2F;li&gt;
+&lt;li&gt;See if there are more good or bad words in our text&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;p&gt;The first part involves some basic string manipulation, and is often referred to
+as “vectorisation” of text. For short sentences like Tweets (with 160
+characters) this would be quite easy to do. One complication may be that the use
+of abbreviations and “text speak” (or whatever the kids are calling it these
+days) would mean that the number of words that would need to be tracked as good
+or bad would grow.&lt;&#x2F;p&gt;
+&lt;p&gt;A number of different rules can be applied to perform steps 2 and 3. The most
+common of these use some sort of probability theory - for instance the
+probability that the word “LeBron” will appear in a tweet if it is about the NBA
+can be calculated. Some sort of formula can then be calculated to determine how
+likely it is that a tweet is good or bad based on this probabilities. This type
+of technique, as we shall see, is usually referred to as some form of &lt;em&gt;Bayesian
+classification&lt;&#x2F;em&gt;.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;classifying-tweets&quot;&gt;Classifying tweets&lt;&#x2F;h2&gt;
+&lt;h3 id=&quot;approach&quot;&gt;Approach&lt;&#x2F;h3&gt;
+&lt;p&gt;To perform this task, I decided to use a &lt;em&gt;Naive Bayes&lt;&#x2F;em&gt; approach, which makes
+some simplifying assumptions and uses &lt;em&gt;Bayes Rule&lt;&#x2F;em&gt; to mathematically formulate
+the problem. In words, we are trying to answer the following question:&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;What is the probability the tweet is bad given it has the following words in
+it: ….&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;The word &lt;em&gt;given&lt;&#x2F;em&gt; has a specific role in probability - for instance
+$P(apple|fruit)$ means “the probability we have an apple given we have a fruit”.
+If you don’t remember your high school probability - if we are holding an
+object, the probability it is an apple rather than any of the other objects in
+the universe is, for instance, 0.00001%. However if we are told that what we are
+holding is a fruit, the probability that object we are holding is an apple given
+we are holding a fruit becomes much higher, say 30% if my fruit bowl is anything
+to go by.&lt;&#x2F;p&gt;
+&lt;p&gt;The Naive Bayes approach relies on some simple rules to formulate our word
+problem above. into mathematical symbols. This could look something like the
+following (from the &lt;code&gt;scikit-learn&lt;&#x2F;code&gt; documentation):&lt;&#x2F;p&gt;
+&lt;p&gt;$$P(y|x_1, …, x_n) = \frac{P(y)\Pi_{i=1}^nP(x_i|y)}{P(x_1, …, x_n)}$$
+​&lt;&#x2F;p&gt;
+&lt;p&gt;Where &lt;code&gt;y&lt;&#x2F;code&gt; is the “good”&#x2F;“bad” classification and &lt;code&gt;x&lt;&#x2F;code&gt; variables are the words in
+the tweet.&lt;&#x2F;p&gt;
+&lt;p&gt;If this is gibberish to you, don’t despair its not really necessary to
+understand the maths in detail. All this is saying is that to work out if the
+tweet is bad - given the presence of a whole bunch of words - we multiply
+together the probability that each of the words is present given the tweet is
+known to be bad - $\Pi_{i=1}^nP(x_i|y)$. For instance, words such as &lt;code&gt;the&lt;&#x2F;code&gt; and
+&lt;code&gt;you&lt;&#x2F;code&gt; may be equally likely to be present in good or bad tweets, whilst other
+words are much more likely to be present in bad tweets alone.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;an-example&quot;&gt;An Example&lt;&#x2F;h3&gt;
+&lt;p&gt;If our tweet contains the words “Chocolate tastes great”, then the mathematical
+formulation would become:&lt;&#x2F;p&gt;
+&lt;p&gt;$$P(bad|chocolate,tastes,great)=\frac{P(bad)\times P(chocolate|bad)\times P(tastes|bad)\times P(great|bad)}{P(chocolate,tastes,great)}$$&lt;&#x2F;p&gt;
+&lt;p&gt;Where $P(chocolate)$ is the probability the tweet contains the word “chocolate”.
+The probability the tweet is good would be given by:&lt;&#x2F;p&gt;
+&lt;p&gt;$$P(good|chocolate,tastes,great)=\frac{P(good)\times P(chocolate|good)\times P(tastes|good)\times P(great|good)}{P(chocolate,tastes,great)}$$&lt;&#x2F;p&gt;
+&lt;p&gt;To work out if the tweet is good or bad, we can just compare which of these
+probability is greater, e.g.&lt;&#x2F;p&gt;
+&lt;p&gt;$$P(good|chocolate,tastes,great) &amp;gt; P(bad|chocolate,tastes,great)$$&lt;&#x2F;p&gt;
+&lt;p&gt;As the denominator of the fraction is the same on both probabilities, we only
+need to compare the top lines of the fraction.&lt;&#x2F;p&gt;
+&lt;p&gt;I tend to code in Python given the wide range of libraries available for
+scientific computing. Classification problems are no exception, as Python’s
+&lt;code&gt;scikit-learn&lt;&#x2F;code&gt; includes Naive Bayes functionality based on the mathematical
+formulation above. &lt;code&gt;scikit-learn&lt;&#x2F;code&gt; can be installed by typing into the command
+line:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;bash&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-bash &quot;&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;pip&lt;&#x2F;span&gt;&lt;span&gt; install scipy
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;pip&lt;&#x2F;span&gt;&lt;span&gt; install scikit-learn
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;blockquote&gt;
+&lt;p&gt;On Windows I’ve found it easier to use a Python installation such as WinPython
+for these kinds of tasks as pip sometimes seems to struggle with building
+packages on Windows. On Linux the above should work without a hitch.&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;h3 id=&quot;building-a-probability-matrix&quot;&gt;Building a probability matrix&lt;&#x2F;h3&gt;
+&lt;p&gt;As we can see from the slightly horrible maths expression we used above, a Naive
+Bayes just multiplies together a whole bunch of probabilities. This problem can
+be made much easier for computers if we pre-build our probabilities, a process
+known as &lt;em&gt;training&lt;&#x2F;em&gt; our algorithm. This requires a data set of known results - a
+“training set” - which helps us build a probability matrix. This has the likely
+outcomes (good&#x2F;bad tweet) as rows and the recorded words as columns. The values
+in the matrix indicate the conditional probabilities - the chance the word is in
+the tweet if it is either good or bad. For instance the following simplified
+matrix could exist to determine if a tweet is related to the Star Wars movies:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;color:#c0c5ce;&quot;&gt;&lt;code&gt;&lt;span&gt;|---------|-------|------|
+&lt;&#x2F;span&gt;&lt;span&gt;| Word    |  Bad  | Good |
+&lt;&#x2F;span&gt;&lt;span&gt;|---------|-------|------|
+&lt;&#x2F;span&gt;&lt;span&gt;| Wookie  | 0.56  | 0.03 | 
+&lt;&#x2F;span&gt;&lt;span&gt;| Star    | 0.75  | 0.19 |
+&lt;&#x2F;span&gt;&lt;span&gt;| Wars    | 0.79  | 0.32 |
+&lt;&#x2F;span&gt;&lt;span&gt;| Ireland | 0.04  | 0.13 |
+&lt;&#x2F;span&gt;&lt;span&gt;|---------|-------|------|
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Reading across, we can see that the probability the tweet contains the word
+“wookie” given it is bad (i.e. related to Star Wars) is 0.56 or 56%. This matrix
+is quite small, and in a real life situation would likely contain thousands of
+columns. Storing and traversing this efficiently is quite a complex task!&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;what-does-a-training-data-set-look-like&quot;&gt;What does a training data set look like?&lt;&#x2F;h3&gt;
+&lt;p&gt;To train our Naive Bayes classifier we need some kind of learning data set. This
+would contain as many tweets as we could find and a flag to indicate which of
+these is considered “bad”. As I don’t really want to upload and work with a data
+set filled with despicable words and phrases, we will continue with our example
+of detecting if our tweets are related to the Star Wars movies. For instance the
+following (made up) tweets are considered Star Wars related:&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Luke Skywalker is not MY father&lt;br &#x2F;&gt;
+Darth Vader spotted in the Dagobah system&lt;br &#x2F;&gt;
+My Jedi mind tricks are amazing - just got a pay rise&lt;br &#x2F;&gt;
+Episode 1 is horrendous&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;Whilst the following would not be related:&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;My coffee tastes like bilge water&lt;br &#x2F;&gt;
+It’s raining cats and dogs&lt;br &#x2F;&gt;
+Sometimes I look at the stars and cry&lt;br &#x2F;&gt;
+New satellites are taking war to the stars&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;From looking at some of these made up examples, it is clear that this problem is
+more difficult than first thought. For instance:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;Should the tweet about “Jedi mind tricks” be considered to be about Star Wars?
+Its referring to Star Wars but is not directly related&lt;&#x2F;li&gt;
+&lt;li&gt;without context, how do we know if “Episode 1 is horrendous” is Star Wars
+based?&lt;&#x2F;li&gt;
+&lt;li&gt;Other tweets such as the last one talk about “star” and “wars” but are not
+related to “Star Wars” - only by reading the context and proximity of words
+can we work out whether this tweet should count&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;This is a weakness of the “bag of words” approach we are using here, and can
+easily lead to “false positives” - where we incorrectly identify a tweet as
+“Star Warsy” - or “false negatives” - where we say a tweet is not related to
+Star Wars when it is. Whilst a percentage of false positives is probably
+unavoidable, the objective is to improve the accuracy as much as possible so
+that these false classifications are the exception rather than the rule. In
+general a larger training dataset will make the classifier more likely to
+correctly group our tweets.&lt;&#x2F;p&gt;
+&lt;p&gt;The training set should be as large as possible but also as close to “reality”
+as possible. For instance, a review of the equations above show that the final
+classification is also dependent on the probability that a tweet is good or bad&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;$P(y)$. This means that we should ensure the dataset is representative of real
+life data - if we increase the proportion of bad tweets in our training dataset
+then we increase the likelihood the algorithm will classify a tweet as bad.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;h3 id=&quot;gathering-the-data&quot;&gt;Gathering the data&lt;&#x2F;h3&gt;
+&lt;p&gt;In a real life situation we would probably need to gather thousands of tweets,
+manually classify each one and then split this data into training and testing
+data sets. This task would be quite time intensive. Luckily for a demonstration
+like this we can create a basic twitter API script in Python to do a good
+approximation of this task for us. There are quite a few different twitter APIs
+written in Python, but the one that seemed to work the best for me was &lt;code&gt;tweepy&lt;&#x2F;code&gt;. I
+installed this in the usual way (&lt;code&gt;pip install tweepy&lt;&#x2F;code&gt;) and then wrote some very
+simple code to search for tweets.&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;python&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-python &quot;&gt;&lt;code class=&quot;language-python&quot; data-lang=&quot;python&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;from &lt;&#x2F;span&gt;&lt;span&gt;tweepy &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;import &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;API &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;as &lt;&#x2F;span&gt;&lt;span&gt;TweepyApi, OAuthHandler
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;def &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;search_tweets&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;search&lt;&#x2F;span&gt;&lt;span&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;count&lt;&#x2F;span&gt;&lt;span&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;15&lt;&#x2F;span&gt;&lt;span&gt;):
+&lt;&#x2F;span&gt;&lt;span&gt;    
+&lt;&#x2F;span&gt;&lt;span&gt;    auth = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;OAuthHandler&lt;&#x2F;span&gt;&lt;span&gt;(
+&lt;&#x2F;span&gt;&lt;span&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;MY_SETTINGS&lt;&#x2F;span&gt;&lt;span&gt;.consumer_key,
+&lt;&#x2F;span&gt;&lt;span&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;MY_SETTINGS&lt;&#x2F;span&gt;&lt;span&gt;.consumer_secret
+&lt;&#x2F;span&gt;&lt;span&gt;    )
+&lt;&#x2F;span&gt;&lt;span&gt;    auth.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;set_access_token&lt;&#x2F;span&gt;&lt;span&gt;(
+&lt;&#x2F;span&gt;&lt;span&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;MY_SETTINGS&lt;&#x2F;span&gt;&lt;span&gt;.access_token_key,
+&lt;&#x2F;span&gt;&lt;span&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;MY_SETTINGS&lt;&#x2F;span&gt;&lt;span&gt;.access_token_secret
+&lt;&#x2F;span&gt;&lt;span&gt;    )
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;api = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;TweepyApi&lt;&#x2F;span&gt;&lt;span&gt;(auth)
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;result = api.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;search&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;q&lt;&#x2F;span&gt;&lt;span&gt;=search, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;count&lt;&#x2F;span&gt;&lt;span&gt;=count, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;lang&lt;&#x2F;span&gt;&lt;span&gt;=&amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;en&lt;&#x2F;span&gt;&lt;span&gt;&amp;#39;)
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;return &lt;&#x2F;span&gt;&lt;span&gt;[x.text.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;encode&lt;&#x2F;span&gt;&lt;span&gt;(&amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;ascii&lt;&#x2F;span&gt;&lt;span&gt;&amp;#39;, &amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;ignore&lt;&#x2F;span&gt;&lt;span&gt;&amp;#39;).&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;replace&lt;&#x2F;span&gt;&lt;span&gt;(&amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;\n&lt;&#x2F;span&gt;&lt;span&gt;&amp;#39;, &amp;#39;&amp;#39;) &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;for &lt;&#x2F;span&gt;&lt;span&gt;x &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;in &lt;&#x2F;span&gt;&lt;span&gt;result]
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;&lt;code&gt;MY_SETTINGS&lt;&#x2F;code&gt; is a dictionary I imported from another file with my API
+credentials - so that they are hidden from github. To get 20 tweets about star
+wars, I can run the following:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;python&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-python &quot;&gt;&lt;code class=&quot;language-python&quot; data-lang=&quot;python&quot;&gt;&lt;span&gt;star_wars_tweets = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;search_tweets&lt;&#x2F;span&gt;&lt;span&gt;(&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;star wars&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;20&lt;&#x2F;span&gt;&lt;span&gt;)
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;This takes care of the bad tweets. To get the “good” tweets, we need a wide
+sampling of random tweets. I played around with the streaming &lt;code&gt;sample()&lt;&#x2F;code&gt; API but
+found that no matter what I did it denied my credentials - maybe I’m missing
+something obvious? In the end I just decided to get some tweets for a few
+unrelated topics such as “emberjs”, “nba”, “superbowl”, “science” and “bieber”.
+Whilst this data set will be definition be incomplete (and reduce accuracy) its
+a simple way to get enough data for a proof of concept.&lt;&#x2F;p&gt;
+&lt;p&gt;By wrapping this code in a class and adding some helper functions I was able to
+generate several hundred good tweets and 200 bad tweets in very short order. I
+could repeat this process (after a short break to allow new tweets to
+accumulate) to get another bunch of test data.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;building-the-classifier&quot;&gt;Building the classifier&lt;&#x2F;h3&gt;
+&lt;p&gt;The next step was to build the classifier itself. Lets jump straight into some
+code.&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;python&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-python &quot;&gt;&lt;code class=&quot;language-python&quot; data-lang=&quot;python&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;import &lt;&#x2F;span&gt;&lt;span&gt;numpy &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;as &lt;&#x2F;span&gt;&lt;span&gt;np
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;from &lt;&#x2F;span&gt;&lt;span&gt;sklearn.feature_extraction.text &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;import &lt;&#x2F;span&gt;&lt;span&gt;CountVectorizer, TfidfTransformer
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;from &lt;&#x2F;span&gt;&lt;span&gt;sklearn.naive_bayes &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;import &lt;&#x2F;span&gt;&lt;span&gt;MultinomialNB
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;def &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;train&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;expected&lt;&#x2F;span&gt;&lt;span&gt;):
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&amp;quot;&amp;quot;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;    Teaches the classifier based on the data set passed in the constructor
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;    &amp;quot;&amp;quot;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;# use a utility function to load the data set and expected results (0 = good, 1 = bad)
+&lt;&#x2F;span&gt;&lt;span&gt;    raw_data, expected = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;load_dataset&lt;&#x2F;span&gt;&lt;span&gt;()
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;# STEP 1: vectorise the text
+&lt;&#x2F;span&gt;&lt;span&gt;    vectoriser = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;CountVectorizer&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;lowercase&lt;&#x2F;span&gt;&lt;span&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;True&lt;&#x2F;span&gt;&lt;span&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;strip_accents&lt;&#x2F;span&gt;&lt;span&gt;=&amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;unicode&lt;&#x2F;span&gt;&lt;span&gt;&amp;#39;)
+&lt;&#x2F;span&gt;&lt;span&gt;    res = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;self&lt;&#x2F;span&gt;&lt;span&gt;.vectoriser.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;fit_transform&lt;&#x2F;span&gt;&lt;span&gt;(raw_data)
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;# STEP 2: Apply &amp;quot;Term Frequency times Inverse Document Frequency&amp;quot; methodology
+&lt;&#x2F;span&gt;&lt;span&gt;    transformer = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;TfidfTransformer&lt;&#x2F;span&gt;&lt;span&gt;()
+&lt;&#x2F;span&gt;&lt;span&gt;    res = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;self&lt;&#x2F;span&gt;&lt;span&gt;.transformer.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;fit_transform&lt;&#x2F;span&gt;&lt;span&gt;(res)
+&lt;&#x2F;span&gt;&lt;span&gt;    
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;# STEP 3: use a multinomial classifier to generate probabilities
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;self&lt;&#x2F;span&gt;&lt;span&gt;.classifier = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;MultinomialNB&lt;&#x2F;span&gt;&lt;span&gt;()
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;self&lt;&#x2F;span&gt;&lt;span&gt;.classifier.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;fit&lt;&#x2F;span&gt;&lt;span&gt;(res, expected)
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Using &lt;code&gt;scikit-learn&lt;&#x2F;code&gt;, building a classifier is very simple, and only three main
+steps were required.&lt;&#x2F;p&gt;
+&lt;ol&gt;
+&lt;li&gt;We ‘vectorise’ the text using a &lt;code&gt;CountVectorizer&lt;&#x2F;code&gt;. In English this means that
+we count the number of times each word appears in the tweets and create a
+dictionary with the word as a key and the count as the value.&lt;&#x2F;li&gt;
+&lt;li&gt;We ‘transform’ the data using the &lt;code&gt;TfidfTransformer&lt;&#x2F;code&gt;. This is a useful
+operation to apply for text analysis - it basically accounts for the fact
+that words will be more frequent in longer tweets, and some words are popular
+in both “good” and “bad” tweets. Clearly the length issue is not too much of
+a problem with tweets given the character limit, but the “idf” part (Inverse
+Document Frequency) reduces the impact of words that are common in both types
+of tweets.&lt;&#x2F;li&gt;
+&lt;li&gt;We train the classifier using a &lt;code&gt;MultinomialNB&lt;&#x2F;code&gt; (Multinomial Naive Bayes)
+classifer. This uses our training set to calculate the probability table we
+discussed earlier.&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;p&gt;The &lt;code&gt;load_dataset()&lt;&#x2F;code&gt; method simply takes a text file and generates a list, with
+each item being a tweet or a 0&#x2F;1 indicating if it is good or bad. The &lt;code&gt;expected&lt;&#x2F;code&gt;
+variable is a &lt;code&gt;numpy&lt;&#x2F;code&gt; array. It is possible to combine the three steps into a
+single &lt;code&gt;Pipeline&lt;&#x2F;code&gt;, however I found that it was easier to implement
+&lt;code&gt;load_dataset&lt;&#x2F;code&gt; as a generator when I did not - making it easier to parse larger
+files.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;testing-the-classifier&quot;&gt;Testing the classifier&lt;&#x2F;h3&gt;
+&lt;p&gt;With these 20 or so lines we have built a Naive Bayes classifier. We can test
+the classifier (once trained) on a single tweet by doing the following:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;python&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-python &quot;&gt;&lt;code class=&quot;language-python&quot; data-lang=&quot;python&quot;&gt;&lt;span&gt;classifier.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;predict&lt;&#x2F;span&gt;&lt;span&gt;(&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;A tweet about Star Wars&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;)
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Putting together a quick script made it simple to gather the training and test
+data, train the classifier and then run the test data, displaying results.
+Running this four times I got:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;color:#c0c5ce;&quot;&gt;&lt;code&gt;&lt;span&gt;Tested 120 tweets, got 102 correct (85%)
+&lt;&#x2F;span&gt;&lt;span&gt;Tested 120 tweets, got 109 correct (91%)
+&lt;&#x2F;span&gt;&lt;span&gt;Tested 120 tweets, got 117 correct (98%)
+&lt;&#x2F;span&gt;&lt;span&gt;Tested 120 tweets, got 113 correct (94%)
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;The number presumably improved where there were more similar tweets in the two
+datasets (i.e. if I ran the commands in quick succession then there was more
+duplication between the test and training set and hence a higher accuracy).
+Despite this, 85-90% seems to be a fairly good accuracy with such a small
+training set.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;validating-tweets&quot;&gt;Validating tweets&lt;&#x2F;h2&gt;
+&lt;h3 id=&quot;client-side&quot;&gt;Client side?&lt;&#x2F;h3&gt;
+&lt;p&gt;Having demonstrated that we can (with relatively good accuracy) classify Star
+Wars tweets using Python and &lt;code&gt;scikit-learn&lt;&#x2F;code&gt;, we need to find a way that it could
+be integrated with Twitter. One option would be to use a javascript client side
+library that would test the tweet as it was typed. This javascript would
+undertake the following steps:&lt;&#x2F;p&gt;
+&lt;ol&gt;
+&lt;li&gt;“Vectorise” the tweet, breaking into words and counting occurrences&lt;&#x2F;li&gt;
+&lt;li&gt;Use a static probability matrix, multiplying the required values to generate
+a probability of “good” (!$P(good)$!) and a probability of “bad” $P(bad)$&lt;&#x2F;li&gt;
+&lt;li&gt;If $P(good) &amp;gt;= P(bad)$ then the tweet is good, and conversely if $P(bad) &amp;gt;
+P(good)$ then the tweet is bad&lt;&#x2F;li&gt;
+&lt;li&gt;Display a warning if the tweet is bad&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;p&gt;We can access the probability matrix generated by &lt;code&gt;scikit-learn&lt;&#x2F;code&gt; to save to file
+by running&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;python&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-python &quot;&gt;&lt;code class=&quot;language-python&quot; data-lang=&quot;python&quot;&gt;&lt;span&gt;classifier.feature_log_prob_
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;The big issue here is that for our test simple dataset this array was 2 rows,
+773 columns. This was obtained by:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;python&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-python &quot;&gt;&lt;code class=&quot;language-python&quot; data-lang=&quot;python&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;print &lt;&#x2F;span&gt;&lt;span&gt;classifier.feature_log_prob_.shape
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Once our matrix is stored in an ASCII encoded file, we can estimate how much
+download bandwidth it would take up. Assuming 1 byte per character and with each
+probability having a length of 12 bytes including punctuation, the simple matrix
+generated from our training set above gives us a file size of around 20kB:&lt;&#x2F;p&gt;
+&lt;p&gt;$$1\text{ byte}\times 12\text{ characters}\times 2\text{ rows}\times 773\text{ columns} = 18,552\text{ bytes}$$&lt;&#x2F;p&gt;
+&lt;p&gt;To perform this operation client side, we would therefore need to download at
+least 20kB of probability matrix. Given the emphasis placed on minimising
+download amounts, this makes client side validation unlikely to be viable.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;server-side&quot;&gt;Server side&lt;&#x2F;h3&gt;
+&lt;p&gt;Another approach would be to use a simple web service approach, where the tweet
+could be periodically sent to the server and analysed, and the web service could
+return “0” if the tweet is classified as good, or “1” if the tweet is bad. This
+is pretty similar to the spam detection services offered by companies such as
+Askimet. In Python, something like this is very implemented with one of the many
+light weight web frameworks such as Tornado or Flask. A flask app which
+performed this could be as simple as the following (where the &lt;code&gt;TweetClassifier&lt;&#x2F;code&gt; is
+a class implementing our classification code above):&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;python&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-python &quot;&gt;&lt;code class=&quot;language-python&quot; data-lang=&quot;python&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;from &lt;&#x2F;span&gt;&lt;span&gt;flask &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;import &lt;&#x2F;span&gt;&lt;span&gt;Flask, request
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;from &lt;&#x2F;span&gt;&lt;span&gt;flask_cors &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;import &lt;&#x2F;span&gt;&lt;span&gt;cross_origin
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;import &lt;&#x2F;span&gt;&lt;span&gt;os
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;from &lt;&#x2F;span&gt;&lt;span&gt;tweet_classifier &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;import &lt;&#x2F;span&gt;&lt;span&gt;TweetClassifier
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;app = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;Flask&lt;&#x2F;span&gt;&lt;span&gt;(__name__)
+&lt;&#x2F;span&gt;&lt;span&gt;classifier = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;TweetClassifier&lt;&#x2F;span&gt;&lt;span&gt;()
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;if &lt;&#x2F;span&gt;&lt;span&gt;not os.path.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;isfile&lt;&#x2F;span&gt;&lt;span&gt;(&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;train_data.txt&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;):
+&lt;&#x2F;span&gt;&lt;span&gt;    classifier.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;fetch_data&lt;&#x2F;span&gt;&lt;span&gt;()
+&lt;&#x2F;span&gt;&lt;span&gt;classifier.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;train&lt;&#x2F;span&gt;&lt;span&gt;(&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;train_data.txt&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;)
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;@app.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;route&lt;&#x2F;span&gt;&lt;span&gt;(&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;&#x2F;&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;methods&lt;&#x2F;span&gt;&lt;span&gt;=[&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;GET&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;])
+&lt;&#x2F;span&gt;&lt;span&gt;@&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;cross_origin&lt;&#x2F;span&gt;&lt;span&gt;()
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;def &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;validate_tweet&lt;&#x2F;span&gt;&lt;span&gt;():
+&lt;&#x2F;span&gt;&lt;span&gt;    tweet = request.args.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;get&lt;&#x2F;span&gt;&lt;span&gt;(&amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;tweet&lt;&#x2F;span&gt;&lt;span&gt;&amp;#39;)
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;return &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;str&lt;&#x2F;span&gt;&lt;span&gt;(classifier.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;classify&lt;&#x2F;span&gt;&lt;span&gt;(tweet))
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;app.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;run&lt;&#x2F;span&gt;&lt;span&gt;()
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;If this was saved in a file called &lt;code&gt;run_server.py&lt;&#x2F;code&gt;, setting up the server would be
+as simple as&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;python&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-python &quot;&gt;&lt;code class=&quot;language-python&quot; data-lang=&quot;python&quot;&gt;&lt;span&gt;python run_server.py
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;The code above would set up a &lt;code&gt;route&lt;&#x2F;code&gt;, or a “web page” which would answer &lt;code&gt;GET&lt;&#x2F;code&gt;
+requests to the url &lt;code&gt;&#x2F;&lt;&#x2F;code&gt; (e.g. &lt;code&gt;http:&#x2F;&#x2F;127.0.0.1&#x2F;&lt;&#x2F;code&gt;) and return a response with
+&lt;code&gt;0&lt;&#x2F;code&gt; or &lt;code&gt;1&lt;&#x2F;code&gt;. A simple &lt;code&gt;index.html&lt;&#x2F;code&gt; page (assuming the server is running at
+&lt;code&gt;127.0.0.1&lt;&#x2F;code&gt;) would look like the following, using jQuery for the AJAX request:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;html&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-html &quot;&gt;&lt;code class=&quot;language-html&quot; data-lang=&quot;html&quot;&gt;&lt;span&gt;&amp;lt;!&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;DOCTYPE &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;html&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;html&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;    &amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;head&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;        &amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;title&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;Check a tweet&amp;lt;&#x2F;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;title&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;    &amp;lt;&#x2F;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;head&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;    &amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;body&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;        &amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;input &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;type&lt;&#x2F;span&gt;&lt;span&gt;=&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;text&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;value&lt;&#x2F;span&gt;&lt;span&gt;=&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;You are an awesome person&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;id&lt;&#x2F;span&gt;&lt;span&gt;=&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;phrase&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot; &#x2F;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;        &amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;button &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;id&lt;&#x2F;span&gt;&lt;span&gt;=&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;check_phrase&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;&amp;gt;Check&amp;lt;&#x2F;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;button&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;        &amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;div &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;id&lt;&#x2F;span&gt;&lt;span&gt;=&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;result&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;&amp;gt;&amp;lt;&#x2F;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;div&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;        &amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;script &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;src&lt;&#x2F;span&gt;&lt;span&gt;=&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;http:&#x2F;&#x2F;cdnjs.cloudflare.com&#x2F;ajax&#x2F;libs&#x2F;jquery&#x2F;2.1.0&#x2F;jquery.min.js&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;type&lt;&#x2F;span&gt;&lt;span&gt;=&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;text&#x2F;javascript&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;&amp;gt;&amp;lt;&#x2F;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;script&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;        &amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;script &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;type&lt;&#x2F;span&gt;&lt;span&gt;=&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;text&#x2F;javascript&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;            &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;$&lt;&#x2F;span&gt;&lt;span&gt;(&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;#check_phrase&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;).&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;click&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;function&lt;&#x2F;span&gt;&lt;span&gt;(e) {
+&lt;&#x2F;span&gt;&lt;span&gt;                &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;e&lt;&#x2F;span&gt;&lt;span&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;preventDefault&lt;&#x2F;span&gt;&lt;span&gt;();
+&lt;&#x2F;span&gt;&lt;span&gt;  
+&lt;&#x2F;span&gt;&lt;span&gt;                &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;$&lt;&#x2F;span&gt;&lt;span&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;ajax&lt;&#x2F;span&gt;&lt;span&gt;({
+&lt;&#x2F;span&gt;&lt;span&gt;                    type: &amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;GET&lt;&#x2F;span&gt;&lt;span&gt;&amp;#39;,
+&lt;&#x2F;span&gt;&lt;span&gt;                    url: &amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;http:&#x2F;&#x2F;127.0.0.1:5000&#x2F;&lt;&#x2F;span&gt;&lt;span&gt;&amp;#39;,
+&lt;&#x2F;span&gt;&lt;span&gt;                    data: {
+&lt;&#x2F;span&gt;&lt;span&gt;                        tweet: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;$&lt;&#x2F;span&gt;&lt;span&gt;(&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;#phrase&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;).&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;val&lt;&#x2F;span&gt;&lt;span&gt;()
+&lt;&#x2F;span&gt;&lt;span&gt;                    },
+&lt;&#x2F;span&gt;&lt;span&gt;                    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;success&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;function&lt;&#x2F;span&gt;&lt;span&gt;(data, status, xhr) {
+&lt;&#x2F;span&gt;&lt;span&gt;                        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;$&lt;&#x2F;span&gt;&lt;span&gt;(&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;#result&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;).&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;html&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;data&lt;&#x2F;span&gt;&lt;span&gt;);
+&lt;&#x2F;span&gt;&lt;span&gt;                    }
+&lt;&#x2F;span&gt;&lt;span&gt;                });
+&lt;&#x2F;span&gt;&lt;span&gt;            });
+&lt;&#x2F;span&gt;&lt;span&gt;        &amp;lt;&#x2F;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;script&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;    &amp;lt;&#x2F;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;body&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;&amp;lt;&#x2F;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;html&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Visiting the &lt;code&gt;index.html&lt;&#x2F;code&gt; page shows an input box. We can type something in the
+box, click the “Check” button, and in a short time either &lt;code&gt;0&lt;&#x2F;code&gt; or &lt;code&gt;1&lt;&#x2F;code&gt; will be
+displayed below the tweet.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;accuracy&quot;&gt;Accuracy&lt;&#x2F;h2&gt;
+&lt;p&gt;Its clear after a little bit of testing that the accuracy depends to a large
+extent on the quality of the training data. I tested with about 2,400 tweets as
+training data and found that the accuracy was fairly good for items like:&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Star Wars Episode 7 being released!&lt;br &#x2F;&gt;
+C3PO is a rockstar&lt;br &#x2F;&gt;
+Luke Skywalker, I am your father&lt;br &#x2F;&gt;
+JJ Abrams directing Episode 7&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;However due to the narrowly defined training set (for instance only six or seven
+categories were used for “good” tweet data) statements like the following were
+false positives due to the amount of discussion about the new Star Wars movies
+being made:&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Harry Potter Episode 7 is boring&lt;br &#x2F;&gt;
+JJ Abrams directed Lost&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;Some false negatives were also found due to only 200 “bad” tweets being used:&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;3PO is a robot&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;Despite these issues, the method produced something that could detect well over
+half of Star Wars related tweets that I typed in in only a few hours of work.
+Accuracy could be improved by gathering a broader range of random tweets
+(presuming that the Twitter streaming API can be made to return anything other
+than a 401 response code!) or by cherry picking and searching specific Star Wars
+related terms where performance is poor. It is also possible that detecting
+abusive tweets could be a little easier given certain words are exceedingly
+common in these types of tweets but not in everyday speech.&lt;&#x2F;p&gt;
+&lt;p&gt;Additionally the use of N-grams, which are very short phrases could also improve
+the algorithm. For instance a tweet could possibly include a phrase such as
+“this millennium I want to fly a falcon” and not be related to Star Wars, whilst
+a tweet “I like the Millennium Falcon” is far more likely to be related.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;effectiveness&quot;&gt;Effectiveness&lt;&#x2F;h2&gt;
+&lt;p&gt;The best that could be hoped from a system like this is that it would reduce
+“casual” abuse, or at the very least make people think twice before sending a
+horrible tweet. For many on the edge of society it is likely that a visual
+warning would provide no deterrence whatsoever.&lt;&#x2F;p&gt;
+&lt;p&gt;Additionally, the performance impact on a high volume site such as Twitter would
+be considerable. Something like 400 million tweets a day are made, and for each
+one to be passed through an “abuse” web service would require considerable
+financial investment in terms of servers, support and so on. A client side
+approach is technically feasible but unlikely to work given the large
+probability matrix that would need to be downloaded in order for it to work. A
+quick bit of research shows that a number of sentiment analysis APIs already
+exist on-line, some are listed in &lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;http:&#x2F;&#x2F;blog.mashape.com&#x2F;post&#x2F;48757031167&#x2F;list-of-20-sentiment-analysis-apis&quot;&gt;this blog post&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;All in all, as an investigation of sentiment analysis and Naive Bayes methods
+the approach was a success but in terms of making a real dent in on-line abuse,
+sadly it seems unlikely to provide any great benefits.&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;The full source code of the application and the article can be found at
+&lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;will-hart&#x2F;twitter_sentiment&quot;&gt;https:&#x2F;&#x2F;github.com&#x2F;will-hart&#x2F;twitter_sentiment&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>demarcate.js 2 redesign</title>
+        <published>2013-08-25T00:00:00+00:00</published>
+        <updated>2013-08-25T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              William Hart
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://willhart.io/post/demarcatejs-2-redesign/"/>
+        <id>https://willhart.io/post/demarcatejs-2-redesign/</id>
+        
+        <content type="html" xml:base="https://willhart.io/post/demarcatejs-2-redesign/">&lt;h2 id=&quot;background&quot;&gt;Background&lt;&#x2F;h2&gt;
+&lt;p&gt;demarcate.js is an “in-place” editor for Markdown that is free and open source.
+It is designed to be a text editor which integrated directly into the browser
+and lets you edit in a what-you-see-is-what-you-get (WYSIWYG) way. When you are
+finished editing - &lt;strong&gt;HEY PRESTO!&lt;&#x2F;strong&gt; - without having to type any Markdown you
+have a properly formatted Markdown document. demarcate.js is &lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;will-hart&#x2F;demarcate.js&quot;&gt;available on
+github&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;issues-with-version-1-x-x&quot;&gt;Issues with version 1.x.x&lt;&#x2F;h2&gt;
+&lt;p&gt;demarcate.js was an experiment which grew out of my desire for a browser text
+editor that could easily push out Markdown. However version 1.x.x did have some
+issues:&lt;&#x2F;p&gt;
+&lt;ol&gt;
+&lt;li&gt;mobile browsers weren’t supported&lt;&#x2F;li&gt;
+&lt;li&gt;the UI was a bit clunky to use&lt;&#x2F;li&gt;
+&lt;li&gt;the UI code was a bit ugly&lt;&#x2F;li&gt;
+&lt;li&gt;it required jQuery and showdown to operate&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;p&gt;With this in mind I embarked on a review of demarcate.js.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;contenteditable&quot;&gt;contentEditable&lt;&#x2F;h2&gt;
+&lt;p&gt;The first thing I decided was that the clunky textarea based editing had to go.
+It required a lot of hackish code to resize the &lt;code&gt;textarea&lt;&#x2F;code&gt; based on formatting,
+and needed a lot of DOM editing and removal. I decide to use the
+&lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;https:&#x2F;&#x2F;developer.mozilla.org&#x2F;en-US&#x2F;docs&#x2F;Web&#x2F;HTML&#x2F;Content_Editable&quot;&gt;contentEditable&lt;&#x2F;a&gt;
+feature that virtually all modern browsers
+(&lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;http:&#x2F;&#x2F;caniuse.com&#x2F;#search=contenteditable&quot;&gt;http:&#x2F;&#x2F;caniuse.com&#x2F;#search=contenteditable&lt;&#x2F;a&gt;)
+support. This allows a much richer UI and through use of a few shortcut keys can
+be made to work closely to a “desktop” word processor.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;modularity&quot;&gt;Modularity&lt;&#x2F;h2&gt;
+&lt;p&gt;In working on Blitz Logger recently I’ve had to think a lot about modularity.
+One of the upsides of this is that I’ve had a bit more practice. demarcate.js
+now exposes a single &lt;code&gt;parse&lt;&#x2F;code&gt; function which is used to convert the HTML DOM into
+Markdown. This parser self-registers against the demarcate library and is a
+separate object in its own right. This makes it much easier now to override the
+Markdown parser with a custom one such as the jQuery based parser from version
+1.1.4 or even perhaps a restructured text one?&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;coming-soon&quot;&gt;Coming Soon&lt;&#x2F;h2&gt;
+&lt;p&gt;Demarcate.js 2.0 is nearly ready for release. You can have a look at the develop
+branch on github.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Days Ago, a Chrome App</title>
+        <published>2013-07-28T00:00:00+00:00</published>
+        <updated>2013-07-28T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              William Hart
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://willhart.io/post/days-ago-chrome-app/"/>
+        <id>https://willhart.io/post/days-ago-chrome-app/</id>
+        
+        <content type="html" xml:base="https://willhart.io/post/days-ago-chrome-app/">&lt;p&gt;Days Ago is a Chrome Application (a new style ‘packaged app’) which you can
+install in Chrome and launch from the browser. It lets you type in very simple
+“todos”, for instance:&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Write letter to the bank in 3 days&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;This will appear as a task Write letter to bank with a due date of 3 days. Tasks
+can then be coloured according to their due dates, and removed when completed.&lt;&#x2F;p&gt;
+&lt;p&gt;Days Ago is currently available in the Apps section if you are on the Chrome
+Developer channel, or it can be installed by visiting
+[https:&#x2F;&#x2F;chrome.google.com&#x2F;webstore&#x2F;detail&#x2F;jgpkfclnhphhkocokeikoiabmjeejdlf].&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>demarcate.js Markdown Editor</title>
+        <published>2013-01-29T00:00:00+00:00</published>
+        <updated>2013-01-29T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              William Hart
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://willhart.io/post/demarcatejs-markdown-editor/"/>
+        <id>https://willhart.io/post/demarcatejs-markdown-editor/</id>
+        
+        <content type="html" xml:base="https://willhart.io/post/demarcatejs-markdown-editor/">&lt;p&gt;demarcate.js is a new open source project to create an in-line or in-place
+markdown editor. This allows you to edit an HTML page by clicking on elements
+and typing in a box that appears in their place.&lt;&#x2F;p&gt;
+&lt;p&gt;The contents of the page can then be retrieved in Markdown encoded text which
+can be saved to a database to persist changes.&lt;&#x2F;p&gt;
+&lt;p&gt;demarcate.js was designed to become the main editor for &lt;code&gt;textr&lt;&#x2F;code&gt;, an online
+publishing service. You can see the source and browse some more demos at the
+github page: [https:&#x2F;&#x2F;github.com&#x2F;will-hart&#x2F;demarcate.js].&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>HTML5 Game using easel.js</title>
+        <published>2012-06-05T00:00:00+00:00</published>
+        <updated>2012-06-05T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              William Hart
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://willhart.io/post/html5-game-using-easeljs/"/>
+        <id>https://willhart.io/post/html5-game-using-easeljs/</id>
+        
+        <content type="html" xml:base="https://willhart.io/post/html5-game-using-easeljs/">&lt;p&gt;As an exercise I recently wrote an HTML5 game using Easel.js, which is a
+relatively cool javascript library that helps when working with canvas objects.
+Although I did find the easel documents a little confusing to begin with, it
+only took a handful of hours before I had a working Connect Four game!&lt;&#x2F;p&gt;
+&lt;p&gt;For those with a short attention span, you can &lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;http:&#x2F;&#x2F;en.wikipedia.org&#x2F;wiki&#x2F;Connect_Four&quot;&gt;find out what Connect Four
+is&lt;&#x2F;a&gt;, view the &lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;will-hart&#x2F;html5-connect4&quot;&gt;source
+code&lt;&#x2F;a&gt;, or &lt;del&gt;play the game&lt;&#x2F;del&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;The &lt;code&gt;easel.js&lt;&#x2F;code&gt; code is actually a lot simpler than it looks. Basically a
+spritesheet is used for the graphics and BitmapAnimation objects are used to
+show the particular image on screen. The animations are set to single frames
+without repeating.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;willhart.io&#x2F;post&#x2F;html5-game-using-easeljs&#x2F;connect4_spritesheet.png&quot; alt=&quot;Connect Four Spritesheet&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;A Timer is used to call &lt;code&gt;stage.update()&lt;&#x2F;code&gt; at about 60 frames per second, and then
+some mouse event handlers are added for:&lt;&#x2F;p&gt;
+&lt;ol&gt;
+&lt;li&gt;Hovering over the top of a row&lt;&#x2F;li&gt;
+&lt;li&gt;Clicking on the top of a row to place a disc&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;willhart.io&#x2F;post&#x2F;html5-game-using-easeljs&#x2F;connect4.png&quot; alt=&quot;Connect Four screenshot&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;Finally a function had to be written to determine if there was a winner when a
+disc was placed. This was done with some basic recursion - have a look at the
+&lt;code&gt;checkForWinner()&lt;&#x2F;code&gt; function &lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;will-hart&#x2F;html5-connect4&#x2F;blob&#x2F;master&#x2F;js&#x2F;connect4.js#L170&quot;&gt;in the source
+code&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Gradekeep Coursework Management</title>
+        <published>2012-04-27T00:00:00+00:00</published>
+        <updated>2012-04-27T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              William Hart
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://willhart.io/post/gradekeep-coursework-management/"/>
+        <id>https://willhart.io/post/gradekeep-coursework-management/</id>
+        
+        <content type="html" xml:base="https://willhart.io/post/gradekeep-coursework-management/">&lt;p&gt;I’ve recently gone back to uni to get an engineering degree. Its hard work…
+many hours of study, constantly learning new things and challenging my brain in
+a way that it hasn’t been challenged for nearly a decade. One of the
+difficulties I’ve had is keeping track of all the assignments that are due, the
+class tests, the lab reports, and so on. So I decided to put together an
+assessment tracking tool me and my fellow students could use.&lt;&#x2F;p&gt;
+&lt;p&gt;Initially I built a spreadsheet but that didn’t quite cut it. First of all it
+was a bit ugly, and secondly it was a pain to keep track of all the classes and
+to work out what was due when. So I set about building a little web application
+to help me manage my coursework - to keep track of my progress and my scores, to
+work out how much of a subject I had completed, and to remind me when something
+was due soon. What resulted was GradeKeep!&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-is-it&quot;&gt;What is it?&lt;&#x2F;h2&gt;
+&lt;p&gt;The idea behind GradeKeep is pretty simple. Its an Open Source, online web
+application for teachers and students. Its for tracking your progress and
+keeping you informed when due dates are approaching.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;features&quot;&gt;Features&lt;&#x2F;h2&gt;
+&lt;ol&gt;
+&lt;li&gt;List all of your subjects and coursework&#x2F;assignments&lt;&#x2F;li&gt;
+&lt;li&gt;Work out when things are due&lt;&#x2F;li&gt;
+&lt;li&gt;Keep track of your scores&lt;&#x2F;li&gt;
+&lt;li&gt;Keep track of your progress&lt;&#x2F;li&gt;
+&lt;li&gt;Get notified when something is due&lt;&#x2F;li&gt;
+&lt;li&gt;Share or install template courses with all your subjects&#x2F;coursework already
+defined&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;p&gt;GradeKeep is free and &lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;http:&#x2F;&#x2F;www.github.com&#x2F;mecharius&#x2F;GradeManager&quot;&gt;open source&lt;&#x2F;a&gt; so you are welcome to use it on your own server, modify, fork, make pull requests and so on if you are a Github ninja.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;screenshots&quot;&gt;Screenshots&lt;&#x2F;h2&gt;
+&lt;p&gt;Charts from the course dashboard, showing your progress in each subject&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;willhart.io&#x2F;post&#x2F;gradekeep-coursework-management&#x2F;gk_1.png&quot; alt=&quot;Subject Progress&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;The subject dashboard - showing assessment weightings, progress and scores&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;willhart.io&#x2F;post&#x2F;gradekeep-coursework-management&#x2F;gk_2.png&quot; alt=&quot;Dashboard Progress&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;Various reports are available&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;willhart.io&#x2F;post&#x2F;gradekeep-coursework-management&#x2F;gk_3.png&quot; alt=&quot;Available Reports&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;You can install an existing course template&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;willhart.io&#x2F;post&#x2F;gradekeep-coursework-management&#x2F;gk_4.png&quot; alt=&quot;Course Templates&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-next&quot;&gt;What next?&lt;&#x2F;h2&gt;
+&lt;p&gt;The current version is 1.0. This is the first release and has all the basic
+functionality. Currently under development for version 2.0 are&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;A private API&lt;&#x2F;li&gt;
+&lt;li&gt;An Android app&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>GasORM Example Application</title>
+        <published>2012-04-19T00:00:00+00:00</published>
+        <updated>2012-04-19T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              William Hart
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://willhart.io/post/gasorm-example-application/"/>
+        <id>https://willhart.io/post/gasorm-example-application/</id>
+        
+        <content type="html" xml:base="https://willhart.io/post/gasorm-example-application/">&lt;p&gt;I’ve recently been using &lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;toopay&#x2F;gas-orm&quot;&gt;GasORM&lt;&#x2F;a&gt; which is a
+very neat little Object Relational Mapping (ORM) library for CodeIgniter 2.0+. I
+wanted to help out a little bit with this great library so I have written a
+little tutorial&lt;&#x2F;p&gt;
+&lt;p&gt;This example application is now included as part of the Gas ORM documentation.
+It can be found at
+&lt;a rel=&quot;noopener nofollow noreferrer&quot; target=&quot;_blank&quot; href=&quot;http:&#x2F;&#x2F;gasorm-doc.taufanaditya.com&#x2F;example.html&quot;&gt;http:&#x2F;&#x2F;gasorm-doc.taufanaditya.com&#x2F;example.html&lt;&#x2F;a&gt;.
+If you are looking for a very simple, efficient and lightweight library for
+database interaction then check out GasORM.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>SMD Prototype PCB</title>
+        <published>2012-02-18T00:00:00+00:00</published>
+        <updated>2012-02-18T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              William Hart
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://willhart.io/post/smd-prototype-pcb/"/>
+        <id>https://willhart.io/post/smd-prototype-pcb/</id>
+        
+        <content type="html" xml:base="https://willhart.io/post/smd-prototype-pcb/">&lt;p&gt;I frequently come up with ideas for projects. If I really like the idea, I draw
+up the schematic and then maybe breadboard it. If I think the idea might be
+useful I normally try to make something a bit more permanent. This is fine for
+through hole devices - a slab of vero board, a couple of components from my
+through hole collection and away we go, however it is not so great for SMD
+circuits. I decided I needed to build and SMD prototype board.&lt;&#x2F;p&gt;
+&lt;p&gt;I’ve been enticed into trying out SMD designs, partly because there is a better
+range of components, partly because the designs are smaller and mostly because
+it’s a new challenge. SMD designs are all well and good, but they makes bread
+boarding extremely difficult and more or less require a custom PCB every time
+you want to mock up a design. I could make the boards myself, but as I’m
+studying full time I don’t have all the time in the world so the decision is
+normally to try and buy one. What tends to happen then is I do the sums and
+realise that I don’t really need to spend 40 quid to make some transistor logic
+gates, and the project gets filed away.&lt;&#x2F;p&gt;
+&lt;p&gt;A few days ago it hit me… the thing that’s missing in my life is an SMD
+prototype PCB, basically an “SMD breadboard”. After some ebay searching and a
+bit of head scratching I realised that there wasn’t much out there that I would
+actually like to pay for. So I decided to design one myself.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;specification&quot;&gt;Specification&lt;&#x2F;h2&gt;
+&lt;p&gt;The first thing I did was sit down and try to work out what I wanted from the PCB. The basic idea is to build an SMD Prototype PCB that can be used flexibly either as a breadboard &#x2F; breakout, or as a PCB in its own right. SMD parts can be soldered to it and prototype circuits built. The eventual design concept I came up with was:&lt;&#x2F;p&gt;
+&lt;ol&gt;
+&lt;li&gt;Breadboard compatible&lt;&#x2F;li&gt;
+&lt;li&gt;Footprints for several SOIC 300 chips&lt;&#x2F;li&gt;
+&lt;li&gt;Prototyping area for through hole components&lt;&#x2F;li&gt;
+&lt;li&gt;ICSP and XTAL connectors for one of the SOIC footprints&lt;&#x2F;li&gt;
+&lt;li&gt;A place for one 0805 chip on each SOIC pin&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;h2 id=&quot;the-design&quot;&gt;The Design&lt;&#x2F;h2&gt;
+&lt;p&gt;With the specification on board, I set about routing the board. I started using
+a Schematic and converting this into a PCB, but in the end ditched the schematic
+and just worked on the PCB manually. The Rev A design I came up with is shown
+below:&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;willhart.io&#x2F;post&#x2F;smd-prototype-pcb&#x2F;smd_proto_board_1.png&quot; alt=&quot;SMD Prototype Board&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;I decided to use the 0805 footprints on each SOIC pin as a solder jumper if no
+component is required. In practice, this requires either a 0 ohm resistor on the
+pad, or a bit of wire as a solder jumper. I also pulled the solder mask back on
+the through hole area to match the approach of a copper clad vero board.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;usage&quot;&gt;Usage&lt;&#x2F;h2&gt;
+&lt;p&gt;The basic idea is to solder your components on the footprint and then hookup
+with jumper wire where its needed. I’ve tried to find a balance in the design
+between pre wired connections and flexibility.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;willhart.io&#x2F;post&#x2F;smd-prototype-pcb&#x2F;soic_dev_breadboard.jpg&quot; alt=&quot;SMD Prototype Board&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;The image above shows the board with a PIC 28 pin device and a 24 pin 16 channel
+LED driver. There is a slight misalignment between the two SOIC sections meaning
+it takes a second or two to push it into the breadboard. I’m about to wire this
+one up to control the LED matrix via the LED driver.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Chez D&#x27;Alert: PIC Countdown Alarm</title>
+        <published>2012-01-24T00:00:00+00:00</published>
+        <updated>2012-01-24T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              William Hart
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://willhart.io/post/chez-dalert-pic-countdown-alarm/"/>
+        <id>https://willhart.io/post/chez-dalert-pic-countdown-alarm/</id>
+        
+        <content type="html" xml:base="https://willhart.io/post/chez-dalert-pic-countdown-alarm/">&lt;p&gt;For my Dad’s 60th birthday, I wanted to make him something a bit special. Dad
+spends a fair bit of his spare time in his shed “doing woodwork” and building
+some really nice pieces of furniture. However he is a busy man and sometimes
+only has a little bit of spare time to plane a few bits of timber, use a
+thicknesser or whatever woodworky stuff he does. So I decided the best possible
+thing to make would be a PIC countdown Alarm so that he can use his time in the
+shed efficiently&lt;&#x2F;p&gt;
+&lt;p&gt;As a friend of mine mentioned, he can even use it to time lacquer and stains for
+drying and curing, so its not all about getting his nose back to the grindstone
+on time!&lt;&#x2F;p&gt;
+&lt;p&gt;Thus, the Chez D’Alert (pronounced Shed Alert in Australian) was born, a PIC
+based countdown timer with a laser cut body. In this article I’m going to
+describe a bit about the design process, and in particular some of the lessons I
+learned through the process.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;the-pic-countdown-alarm-design&quot;&gt;The PIC Countdown Alarm Design&lt;&#x2F;h2&gt;
+&lt;h3 id=&quot;enclosure&quot;&gt;Enclosure&lt;&#x2F;h3&gt;
+&lt;p&gt;Custom laser cut acrylic, designed in SolidWorks and transferred to Inkscape for
+laser cutting.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;inputs&quot;&gt;Inputs&lt;&#x2F;h3&gt;
+&lt;p&gt;Four buttons - +1 minute, +15minutes, start&#x2F;stop and reset. Custom software
+debounce routine.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;outputs&quot;&gt;Outputs&lt;&#x2F;h3&gt;
+&lt;p&gt;A seven segment LED display, multiplexed.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;electronics&quot;&gt;Electronics&lt;&#x2F;h3&gt;
+&lt;p&gt;Main controller board with PIC16F877A. IO board with buttons and displays.&lt;&#x2F;p&gt;
+&lt;hr &#x2F;&gt;
+&lt;p&gt;As this was my first properly complex, permanent electronics project I didn’t
+try to do anything too flashy. Basically the PIC countdown timer has four
+buttons, a seven segment display, a buzzer, some LEDs and a microcontroller to
+control it all. You set the time with two buttons, then start&#x2F;stop and reset the
+timer using the other two buttons. When the timer runs out, the buzzer beeps and
+the LEDs flash.&lt;&#x2F;p&gt;
+&lt;p&gt;I put a bit of effort into the enclosure which is basically a laser cut version
+of Melbourne’s skyline. I’ve seen quite a few articles and forum discussions
+about whether you should design your PCB or enclosure first, however in this
+case the enclosure would be custom made, and as size was not a particular issue
+I decided to design the schematic and PCB first. The final design had two boards&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;an IO board with buttons and a display, and&lt;&#x2F;li&gt;
+&lt;li&gt;a main board with the PIC, buzzer, and most of the passive components.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;This was partly because the IO board required very thin traces so I had it
+manufactured, but also because it fit better in an enclosure with the buttons
+and display slightly elevated.&lt;&#x2F;p&gt;
+&lt;p&gt;The original design had a PIC16F628A, however it quickly became apparent that a
+board with more IO pins would be a better option. From Rev C of the main board I
+switched to a PIC16F877A, mostly because my preferred online hobby store had
+them in stock!&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;the-final-product&quot;&gt;The Final Product&lt;&#x2F;h2&gt;
+&lt;p&gt;So, after quite a bit of back and forth and a lot of revisions, the final
+product was completed. Some photos are shown below, and I hope to have some more
+once Dad takes some of it in place (he’s 17,000km away so it takes a while for
+the emails to get here).&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;willhart.io&#x2F;post&#x2F;chez-dalert-pic-countdown-alarm&#x2F;shed-alert-breadboard.jpg&quot; alt=&quot;Chez D’Alert Breadboard Breadboard&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;willhart.io&#x2F;post&#x2F;chez-dalert-pic-countdown-alarm&#x2F;shed-alert-revb-board.jpg&quot; alt=&quot;Chez D’Alert RevB Board Rev B Board&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;willhart.io&#x2F;post&#x2F;chez-dalert-pic-countdown-alarm&#x2F;shed-alert-revd-board.jpg&quot; alt=&quot;Chez D’Alert RevD Board Rev D Board&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;There were some issues with the finished design - basically I mucked up in
+Solidworks, and as I hadn’t built anything when I sent the enclosure off for
+manufacturing, I had the button holes about 10mm from where they should have
+been. This was mainly because I had assumed the IO board would be centred on the
+main board, but because of the heat sink it was not. The enclosure had to be
+“customised” later with a drill and some paper labels which ruined the look a
+little bit. The original button labels were laser engraved in and looked quite
+professional.&lt;&#x2F;p&gt;
+&lt;p&gt;One of the features that I wanted to add was to have flash LEDs when the timer
+went off. My idea was to have several colours (I settled on white, blue and red)
+with two LEDs of each type that were turned on at the same time. To reduce the
+number of pins that were required to drive this, I decided to &lt;a href=&quot;&#x2F;chez-dalert-pic-countdown-alarm&quot;&gt;Charlieplex the
+LEDs&lt;&#x2F;a&gt;. The circuit is shown below. Basically
+by setting the pins to a combination of +5v, GND or “disconnected” I could turn
+on just two LEDs at a time by only using four pins. (On reflection it would have
+been better to do this with three pins!)&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;willhart.io&#x2F;post&#x2F;chez-dalert-pic-countdown-alarm&#x2F;led_charlieplex.png&quot; alt=&quot;Four Pin LED Charliplex&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;The code to run this was fairly simple, basically I used the arrays below to OR
+with TRISB and PORTB, setting the pins to the correct mode. You can see the full
+working version in the C source code attached below.&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;c&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-c &quot;&gt;&lt;code class=&quot;language-c&quot; data-lang=&quot;c&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;const&lt;&#x2F;span&gt;&lt;span&gt; uchar LED_TRISB_OR[] =
+&lt;&#x2F;span&gt;&lt;span&gt;{
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;0&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#bf616a;color:#2b303b;&quot;&gt;b00111100&lt;&#x2F;span&gt;&lt;span&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; off
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;0&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#bf616a;color:#2b303b;&quot;&gt;b00000100&lt;&#x2F;span&gt;&lt;span&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; blue
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;0&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#bf616a;color:#2b303b;&quot;&gt;b00100000&lt;&#x2F;span&gt;&lt;span&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; white
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;0&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#bf616a;color:#2b303b;&quot;&gt;b00000000&lt;&#x2F;span&gt;&lt;span&gt; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; red
+&lt;&#x2F;span&gt;&lt;span&gt;};
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;const&lt;&#x2F;span&gt;&lt;span&gt; uchar LED_PORTB_OR[] =
+&lt;&#x2F;span&gt;&lt;span&gt;{
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;0&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#bf616a;color:#2b303b;&quot;&gt;b00000000&lt;&#x2F;span&gt;&lt;span&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; off
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;0&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#bf616a;color:#2b303b;&quot;&gt;b00011000&lt;&#x2F;span&gt;&lt;span&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; blue
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;0&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#bf616a;color:#2b303b;&quot;&gt;b00011000&lt;&#x2F;span&gt;&lt;span&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; white
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;0&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#bf616a;color:#2b303b;&quot;&gt;b00100100&lt;&#x2F;span&gt;&lt;span&gt; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; red
+&lt;&#x2F;span&gt;&lt;span&gt;};
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;h2 id=&quot;a-few-gotchas&quot;&gt;A Few Gotchas&lt;&#x2F;h2&gt;
+&lt;p&gt;I came across a few gotchas throughout the design which I’ll describe here in
+the hope that somebody will find them useful!&lt;&#x2F;p&gt;
+&lt;p&gt;I ended with about Revision E of the main board and D of the IO board. The
+original Rev A designs had a PIC16F628A, however it quickly became apparent that
+a board with more IO pins would be a better option. From Rev C of the main board
+I switched to a PIC16F877A. I chose this chip because I was time and budget
+constrained, and my local hobby store had them in stock. In reality (and if I
+had the ability at this stage to comfortably solder SMD parts) an SMD chip with
+a real time clock and “nanowatt” power mode would be a better option.&lt;&#x2F;p&gt;
+&lt;p&gt;The main electronics issues I ran across were:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;ICSP - In the first prototype I forget to add an ICSP to my circuit. Don’t do
+this! For a prototype you would be insane not to include this port - it only
+needs a few connectors but its impossibly painful to try to debug the software
+without it!&lt;&#x2F;li&gt;
+&lt;li&gt;I had some issues with RA4 on the PIC16F628A, before I re-read the datasheet
+and noticed it was an “open drain”. This mean it can’t really be used for
+output unless some additional circuitry is used. The lesson learned here is to
+thoroughly read the datasheet before ordering any parts and re-read it again
+before soldering!&lt;&#x2F;li&gt;
+&lt;li&gt;My PCB manufacturing technique was not perfected, and I had some issues with
+traces and ground planes being “smushed” during toner transfer and bridging.
+The solution was to buy a laminator to do the toner transfer, and to increase
+the isolation in eagles DRC rules. In the case of the IO board I had it
+manufactured for me.&lt;&#x2F;li&gt;
+&lt;li&gt;Sometimes the PICKIT2 would freeze, all lights on, when attempting to read or
+program a chip using ICSP. I eventually worked out that this was because the
+software had reset the power voltage from 5V to 2.5V. Setting the voltage to
+5v again stopped the PICKIT2 from freezing&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;h2 id=&quot;better-luck-next-time&quot;&gt;Better Luck Next Time?&lt;&#x2F;h2&gt;
+&lt;p&gt;Without meaning to use Dad’s birthday present as a bit of a guinea pig, it has
+kind of turned out that way. The experience has taught me a lot about how to
+approach my next design task, and in particular the importance of a thorough
+testing &#x2F; prototyping &#x2F; breadboarding stage. The PIC Countdown Alarm turned out
+ok, but I could probably have got there in a lot fewer iterations with a bit
+more effort in the design phase!&lt;&#x2F;p&gt;
+&lt;p&gt;If I were to do the project again, or a similar one, I might do a few things
+differently:&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;micro-selection&quot;&gt;Micro Selection&lt;&#x2F;h3&gt;
+&lt;p&gt;I originally chose the PIC16F628A for the project because I had used this
+before, had a few development boards built, and was familiar with the basics. On
+reflection, this chip is unsuitable for a number of reasons - firstly it didn’t
+have enough IO pins, meaning that an additional shift register was required, but
+secondly it is not a low power chip. The final chip I selected does not have the
+XLP features of some PIC chips, so is probably not ideal, but was what I could
+get a hold of in the time&#x2F;budget I had available. For future projects I would
+spend a lot more time selecting an appropriate chip, and would be more likely to
+order one from RS or something especially (extremely high shipping costs aside).&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;component-types&quot;&gt;Component Types&lt;&#x2F;h3&gt;
+&lt;p&gt;I used DIP &#x2F; through-hole components for the design but I think for future
+projects I would really like to give SMD components a go as it will give me more
+room to route the boards and make smaller PCBs. This will require a bit of
+experimentation to make sure the PCB manufacturing accuracy is high enough,
+or…&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;make-vs-buy-pcbs&quot;&gt;Make vs Buy PCBs&lt;&#x2F;h3&gt;
+&lt;p&gt;My original plan was to make the PCB as a way of saving a bit of cash and also
+because I felt it would be a bit more “personal”. In the end I think it has cost
+me more money from buying materials, remaking and certainly has taken a lot
+longer with a poorer quality output. The jury is out on this one!&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;NOTE FROM 2020 Will&lt;&#x2F;strong&gt; the jury is no longer out on this one, since 2012 an absolute truck
+load of low-cost, high-quality PCB prototyping services have emerged&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Live Electric Vehicle Telemetry Software</title>
+        <published>2012-01-14T00:00:00+00:00</published>
+        <updated>2012-01-14T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              William Hart
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://willhart.io/post/live-telemetry-software/"/>
+        <id>https://willhart.io/post/live-telemetry-software/</id>
+        
+        <content type="html" xml:base="https://willhart.io/post/live-telemetry-software/">&lt;p&gt;As part of my course we can get involved in the Formula Student race team. At my
+university this is quite a big deal with three distinct projects - a petrol car,
+an electric car and a bespoke twin cylinder engine. I’m working mostly on the
+electric car and volunteered myself to update our data logging &#x2F; telemetry
+software.&lt;&#x2F;p&gt;
+&lt;p&gt;This allows us to record and replay the data in real time from our onboard
+CANBus network. Luckily we had existing C++ based CANBus libraries for decoding
+the information, and an array of sensors &#x2F; telemetry hardware already on board.
+The scope was therefore to build a student run version of something like Pi
+Toolbox.&lt;&#x2F;p&gt;
+&lt;p&gt;This is important for testing and troubleshooting of the motor and for safety
+reasons - our drive is strapped next to some pretty mean batteries and we want
+to know if they are getting hot!&lt;&#x2F;p&gt;
+&lt;p&gt;This project is ongoing, and is based on a C# desktop application and SQLite
+database. Currently we can log decoded CANBus messages and there are
+“sparklines” showing all our sensor readings. I’m working on a simple graph
+control after having had difficulty finding something lightweight and compatible
+with WPF. As it gets more complete I’ll throw up some screenshots!&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+</feed>

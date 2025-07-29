@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Gradekeep Coursework Management | willhart.io</title>
+
+
+  <link rel="icon" type="image/x-icon" href="/icons/icon_light_32x32.png">
+
+  
+<meta name="description" content="A simple PHP web app for managing university grades. Posted on https://willhart.io" />
+<meta property="og:description" content="A simple PHP web app for managing university grades" />
+<meta property="og:title" content="Gradekeep Coursework Management" />
+<meta property="og:url" content="https://willhart.io/post/gradekeep-coursework-management/">
+<meta property="og:type" content="article" />
+<meta property="og:locale" content="en_AU" />
+
+
+  <link rel="stylesheet" href="https://willhart.io/global.css?h=f83cd20cd0df26d72c2b" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sono:wght@200..800&display=swap" rel="stylesheet">
+
+  
+
+  <!-- Cloudflare Web Analytics -->
+  <script defer src='https://static.cloudflareinsights.com/beacon.min.js'
+    data-cf-beacon='{"token": "310f93cab66a42c5a328f246cc053025"}'></script>
+  <!-- End Cloudflare Web Analytics -->
+
+  <!-- Light/Dark theme toggling -->
+  <script type="text/javascript">
+    const storageKey = "websiteTheme";
+
+    // apply theme once we have a DOM
+    document.addEventListener("DOMContentLoaded", () => {
+      applyTheme();
+    })
+
+    // a function that toggles between light and dark theme
+    const toggleTheme = () => {
+      localStorage.setItem(storageKey, localStorage.getItem(storageKey) === "d" ? "l" : "d" );
+      applyTheme();
+    }
+
+    // a function that actually applies the theme
+    const applyTheme = () => {
+      const useDarkTheme = localStorage.getItem(storageKey) === "d";
+      document.getElementsByTagName("html")[0].className = useDarkTheme ? "dark" : "";
+      document.getElementById("theme-toggle").textContent = useDarkTheme ? "🔆" : "🌑";
+    }
+  </script>
+
+  <script type="speculationrules">
+  {
+    "prerender": [
+      { "where": { "selector_matches": "a" } }
+    ]
+  }
+  </script></head>
+
+<body>
+  <nav id="header">
+    <a href="/" aria-label="Website Logo and Link to Home Page">
+      <div id="logo" >&nbsp;</div>
+    </a>
+    <span>
+      <button type="button" id="theme-toggle" aria-label="Toggle Theme" onClick="toggleTheme()">🌑</button>
+      <a class="header-item" href="/post">POSTS</a>
+      <a class="header-item" href="/tag">TAGS</a>
+      <span class="header-item hide-when-slim">|</span>
+      <a class="header-item hide-when-slim" href="/tag/projects">PROJECTS</a>
+      <a class="header-item hide-when-slim" href="/tag/gamedev">GAMEDEV</a>
+      <a class="header-item hide-when-slim" href="/tag/electronics">ELECTRONICS</a>
+    </span>
+  </nav>
+
+  
+
+<div class="container col mb mt">
+  <h1>Gradekeep Coursework Management</h1>
+  <div class="col txtsm">
+    <span>Posted by Will Hart on 2012-04-27</span>
+    <div>
+      <span>See also:</span>
+      
+      <a class="txtsm mr" href="https://willhart.io/tag/projects/">#projects</a>
+      
+      <a class="txtsm mr" href="https://willhart.io/tag/code/">#code</a>
+      
+    </div>
+  </div>
+</div>
+
+
+
+<article class="container col mblg"><p>I’ve recently gone back to uni to get an engineering degree. Its hard work…
+many hours of study, constantly learning new things and challenging my brain in
+a way that it hasn’t been challenged for nearly a decade. One of the
+difficulties I’ve had is keeping track of all the assignments that are due, the
+class tests, the lab reports, and so on. So I decided to put together an
+assessment tracking tool me and my fellow students could use.</p>
+<p>Initially I built a spreadsheet but that didn’t quite cut it. First of all it
+was a bit ugly, and secondly it was a pain to keep track of all the classes and
+to work out what was due when. So I set about building a little web application
+to help me manage my coursework - to keep track of my progress and my scores, to
+work out how much of a subject I had completed, and to remind me when something
+was due soon. What resulted was GradeKeep!</p>
+<h2 id="what-is-it">What is it?</h2>
+<p>The idea behind GradeKeep is pretty simple. Its an Open Source, online web
+application for teachers and students. Its for tracking your progress and
+keeping you informed when due dates are approaching.</p>
+<h2 id="features">Features</h2>
+<ol>
+<li>List all of your subjects and coursework/assignments</li>
+<li>Work out when things are due</li>
+<li>Keep track of your scores</li>
+<li>Keep track of your progress</li>
+<li>Get notified when something is due</li>
+<li>Share or install template courses with all your subjects/coursework already
+defined</li>
+</ol>
+<p>GradeKeep is free and <a rel="noopener nofollow noreferrer" target="_blank" href="http://www.github.com/mecharius/GradeManager">open source</a> so you are welcome to use it on your own server, modify, fork, make pull requests and so on if you are a Github ninja.</p>
+<h2 id="screenshots">Screenshots</h2>
+<p>Charts from the course dashboard, showing your progress in each subject</p>
+<p><img src="https://willhart.io/post/gradekeep-coursework-management/gk_1.png" alt="Subject Progress" /></p>
+<p>The subject dashboard - showing assessment weightings, progress and scores</p>
+<p><img src="https://willhart.io/post/gradekeep-coursework-management/gk_2.png" alt="Dashboard Progress" /></p>
+<p>Various reports are available</p>
+<p><img src="https://willhart.io/post/gradekeep-coursework-management/gk_3.png" alt="Available Reports" /></p>
+<p>You can install an existing course template</p>
+<p><img src="https://willhart.io/post/gradekeep-coursework-management/gk_4.png" alt="Course Templates" /></p>
+<h2 id="what-next">What next?</h2>
+<p>The current version is 1.0. This is the first release and has all the basic
+functionality. Currently under development for version 2.0 are</p>
+<ul>
+<li>A private API</li>
+<li>An Android app</li>
+</ul>
+</article>
+
+<div class="container col">
+  <h2>Comments</h2>
+  <blockquote>Comments are powered by github and <a href="https://giscus.app">giscus</a></blockquote>
+  <script src="https://giscus.app/client.js"
+        data-repo="will-hart/will-hart.github.io"
+        data-repo-id="MDEwOlJlcG9zaXRvcnkzMjQ2NjY3Mzg="
+        data-category="General"
+        data-category-id="DIC_kwDOE1oFcs4CtiK6"
+        data-mapping="og:title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+  </script>
+</div>
+</div>
+
+  <footer id="footer">
+    <div class="container col">
+      This website was hand-made using Zola and Tera.
+      All text and images are available under CC0 1.0 Universal and code under MIT unless otherwise specified. See <a href="https://github.com/will-hart/willhart.io/blob/main/LICENSE.md">LICENSE.md</a> for more.
+    </div>
+  </footer>
+</body>
+
+</html>

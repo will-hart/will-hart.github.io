@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Python static site generator | willhart.io</title>
+
+
+  <link rel="icon" type="image/x-icon" href="/icons/icon_light_32x32.png">
+
+  
+<meta name="description" content="The source code for my Python static site generator. Posted on https://willhart.io" />
+<meta property="og:description" content="The source code for my Python static site generator" />
+<meta property="og:title" content="Python static site generator" />
+<meta property="og:url" content="https://willhart.io/post/python-static-site-generator/">
+<meta property="og:type" content="article" />
+<meta property="og:locale" content="en_AU" />
+
+
+  <link rel="stylesheet" href="https://willhart.io/global.css?h=f83cd20cd0df26d72c2b" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sono:wght@200..800&display=swap" rel="stylesheet">
+
+  
+
+  <!-- Cloudflare Web Analytics -->
+  <script defer src='https://static.cloudflareinsights.com/beacon.min.js'
+    data-cf-beacon='{"token": "310f93cab66a42c5a328f246cc053025"}'></script>
+  <!-- End Cloudflare Web Analytics -->
+
+  <!-- Light/Dark theme toggling -->
+  <script type="text/javascript">
+    const storageKey = "websiteTheme";
+
+    // apply theme once we have a DOM
+    document.addEventListener("DOMContentLoaded", () => {
+      applyTheme();
+    })
+
+    // a function that toggles between light and dark theme
+    const toggleTheme = () => {
+      localStorage.setItem(storageKey, localStorage.getItem(storageKey) === "d" ? "l" : "d" );
+      applyTheme();
+    }
+
+    // a function that actually applies the theme
+    const applyTheme = () => {
+      const useDarkTheme = localStorage.getItem(storageKey) === "d";
+      document.getElementsByTagName("html")[0].className = useDarkTheme ? "dark" : "";
+      document.getElementById("theme-toggle").textContent = useDarkTheme ? "🔆" : "🌑";
+    }
+  </script>
+
+  <script type="speculationrules">
+  {
+    "prerender": [
+      { "where": { "selector_matches": "a" } }
+    ]
+  }
+  </script></head>
+
+<body>
+  <nav id="header">
+    <a href="/" aria-label="Website Logo and Link to Home Page">
+      <div id="logo" >&nbsp;</div>
+    </a>
+    <span>
+      <button type="button" id="theme-toggle" aria-label="Toggle Theme" onClick="toggleTheme()">🌑</button>
+      <a class="header-item" href="/post">POSTS</a>
+      <a class="header-item" href="/tag">TAGS</a>
+      <span class="header-item hide-when-slim">|</span>
+      <a class="header-item hide-when-slim" href="/tag/projects">PROJECTS</a>
+      <a class="header-item hide-when-slim" href="/tag/gamedev">GAMEDEV</a>
+      <a class="header-item hide-when-slim" href="/tag/electronics">ELECTRONICS</a>
+    </span>
+  </nav>
+
+  
+
+<div class="container col mb mt">
+  <h1>Python static site generator</h1>
+  <div class="col txtsm">
+    <span>Posted by Will Hart on 2015-04-26</span>
+    <div>
+      <span>See also:</span>
+      
+      <a class="txtsm mr" href="https://willhart.io/tag/code/">#code</a>
+      
+      <a class="txtsm mr" href="https://willhart.io/tag/random/">#random</a>
+      
+      <a class="txtsm mr" href="https://willhart.io/tag/projects/">#projects</a>
+      
+    </div>
+  </div>
+</div>
+
+
+
+<article class="container col mblg"><h2 id="about">About</h2>
+<p>The following code is described in <a href="/post/a-simple-static-site-generator-in-python">this blog
+post</a>. It is available under the MIT
+license. You can also see the code <a rel="noopener nofollow noreferrer" target="_blank" href="https://gist.github.com/will-hart/9609188">as a
+gist</a>.</p>
+<h2 id="the-code">The Code</h2>
+<pre data-lang="python" style="background-color:#2b303b;color:#c0c5ce;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#65737e;">&quot;&quot;&quot;
+</span><span style="color:#65737e;">Free to use under the MIT license
+</span><span style="color:#65737e;">
+</span><span style="color:#65737e;">Builds a static site from a list of Markdown source files. The source
+</span><span style="color:#65737e;">files should have the same directory structure as the desired output.
+</span><span style="color:#65737e;">
+</span><span style="color:#65737e;">Files are rendered using Markdown2 and can declare metadata variables:
+</span><span style="color:#65737e;">
+</span><span style="color:#65737e;">    ---
+</span><span style="color:#65737e;">    template: index.html
+</span><span style="color:#65737e;">    title: My Title
+</span><span style="color:#65737e;">    ---
+</span><span style="color:#65737e;">
+</span><span style="color:#65737e;">    # your makdown doc from here on
+</span><span style="color:#65737e;">
+</span><span style="color:#65737e;">Site templates are stored in the `templates` folder and should be Jinja2
+</span><span style="color:#65737e;">templates. Apart from the `template` meta variable in markdown documents, 
+</span><span style="color:#65737e;">any variables supplied in the Markdown meta will be available in the 
+</span><span style="color:#65737e;">template under the same name. The variable `title` given above can therefore
+</span><span style="color:#65737e;">be accessed.
+</span><span style="color:#65737e;">
+</span><span style="color:#65737e;">The static site will be exported to the `build` directory
+</span><span style="color:#65737e;">&quot;&quot;&quot;
+</span><span>
+</span><span style="color:#b48ead;">from </span><span>jinja2 </span><span style="color:#b48ead;">import </span><span>Environment, FileSystemLoader, TemplateNotFound
+</span><span style="color:#b48ead;">import </span><span>markdown2
+</span><span style="color:#b48ead;">import </span><span>os
+</span><span style="color:#b48ead;">import </span><span>shutil
+</span><span>
+</span><span style="color:#65737e;"># include additional markdown 2 extras here (e.g. tables, footnotes etc)
+</span><span style="color:#bf616a;">MARKDOWN_EXTRAS </span><span>= [&#39;</span><span style="color:#a3be8c;">metadata</span><span>&#39;]
+</span><span>
+</span><span style="color:#65737e;"># folders that should be copied from your `src` directory to the `build` directory
+</span><span style="color:#bf616a;">STATIC_DIRS </span><span>= [&#39;</span><span style="color:#a3be8c;">images</span><span>&#39;]
+</span><span>
+</span><span style="color:#b48ead;">def </span><span style="color:#8fa1b3;">files_with_extension</span><span>(</span><span style="color:#bf616a;">dir</span><span>, </span><span style="color:#bf616a;">ext</span><span>):
+</span><span>    </span><span style="color:#65737e;">&quot;&quot;&quot;
+</span><span style="color:#65737e;">    Gets all files in the given directory with the given extension
+</span><span style="color:#65737e;">    &quot;&quot;&quot;
+</span><span>    </span><span style="color:#b48ead;">return </span><span>[x </span><span style="color:#b48ead;">for </span><span>x </span><span style="color:#b48ead;">in </span><span>os.</span><span style="color:#bf616a;">listdir</span><span>(</span><span style="color:#96b5b4;">dir</span><span>) </span><span style="color:#b48ead;">if </span><span>x.</span><span style="color:#bf616a;">endswith</span><span>(ext)]
+</span><span>
+</span><span style="color:#b48ead;">def </span><span style="color:#8fa1b3;">copy_directory</span><span>(</span><span style="color:#bf616a;">src</span><span>, </span><span style="color:#bf616a;">dst</span><span>):
+</span><span>    </span><span style="color:#65737e;">&quot;&quot;&quot;
+</span><span style="color:#65737e;">    Copies all the contents from the source directory to the output directory
+</span><span style="color:#65737e;">    &quot;&quot;&quot;
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">print </span><span>&quot;</span><span style="color:#a3be8c;">Copying </span><span style="color:#d08770;">{0}</span><span style="color:#a3be8c;"> to </span><span style="color:#d08770;">{1}</span><span>&quot;.</span><span style="color:#bf616a;">format</span><span>(src, dst)
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">try</span><span>:
+</span><span>        shutil.</span><span style="color:#bf616a;">copytree</span><span>(src, dst)
+</span><span>    </span><span style="color:#b48ead;">except </span><span>OSError </span><span style="color:#b48ead;">as </span><span>e:
+</span><span>        </span><span style="color:#b48ead;">print </span><span>&quot;</span><span style="color:#a3be8c;">  &gt; There was an error copying the files from </span><span style="color:#d08770;">{0}</span><span style="color:#a3be8c;"> to </span><span style="color:#d08770;">{1}</span><span>&quot;.</span><span style="color:#bf616a;">format</span><span>(src, dst)
+</span><span>        </span><span style="color:#b48ead;">print </span><span>&quot;</span><span style="color:#a3be8c;">  &gt; </span><span style="color:#d08770;">{0}</span><span>&quot;.</span><span style="color:#bf616a;">format</span><span>(e)
+</span><span>
+</span><span style="color:#b48ead;">def </span><span style="color:#8fa1b3;">get_templates</span><span>(</span><span style="color:#bf616a;">path</span><span>):
+</span><span>    </span><span style="color:#65737e;">&quot;&quot;&quot;
+</span><span style="color:#65737e;">    Compiles all the templates in the template directory and
+</span><span style="color:#65737e;">    returns a dictionary of Jinja2 `Template` objects with the
+</span><span style="color:#65737e;">    file names as the keys
+</span><span style="color:#65737e;">    &quot;&quot;&quot;
+</span><span>    </span><span style="color:#b48ead;">return </span><span style="color:#bf616a;">Environment</span><span>(</span><span style="color:#bf616a;">loader</span><span>=</span><span style="color:#bf616a;">FileSystemLoader</span><span>(path))
+</span><span>
+</span><span style="color:#b48ead;">def </span><span style="color:#8fa1b3;">build_directory</span><span>(</span><span style="color:#bf616a;">templates</span><span>, </span><span style="color:#bf616a;">input_path</span><span>):
+</span><span>    </span><span style="color:#65737e;">&quot;&quot;&quot;
+</span><span style="color:#65737e;">    Takes all the *.md files in the given directory, builds them into
+</span><span style="color:#65737e;">    HTML and renders them using the Jinja templates. The rendered markdown
+</span><span style="color:#65737e;">    is available in the Jinja templates as the `content` variable.
+</span><span style="color:#65737e;">
+</span><span style="color:#65737e;">    ::warning:: There can only be one `src` folder in the path, as the script
+</span><span style="color:#65737e;">    directly replaces `src` with `build` once to find the output path
+</span><span style="color:#65737e;">    &quot;&quot;&quot;
+</span><span>    </span><span style="color:#b48ead;">print </span><span>&quot;</span><span style="color:#a3be8c;">Looking for Markdown files in </span><span style="color:#d08770;">{0}</span><span>&quot;.</span><span style="color:#bf616a;">format</span><span>(input_path)
+</span><span>    files = </span><span style="color:#bf616a;">files_with_extension</span><span>(input_path, &quot;</span><span style="color:#a3be8c;">.md</span><span>&quot;)
+</span><span>    op_dir = input_path.</span><span style="color:#bf616a;">replace</span><span>(&quot;</span><span style="color:#a3be8c;">src</span><span>&quot;,&quot;</span><span style="color:#a3be8c;">build</span><span>&quot;, </span><span style="color:#d08770;">1</span><span>)
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">if </span><span>not os.path.</span><span style="color:#bf616a;">isdir</span><span>(op_dir):
+</span><span>        os.</span><span style="color:#bf616a;">mkdir</span><span>(op_dir)
+</span><span>        os.</span><span style="color:#bf616a;">chmod</span><span>(op_dir, </span><span style="color:#d08770;">0o777</span><span>)
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">for </span><span>f </span><span style="color:#b48ead;">in </span><span>files:
+</span><span>        </span><span style="color:#b48ead;">print </span><span>&quot;</span><span style="color:#a3be8c;">Converting </span><span style="color:#d08770;">{0}</span><span>&quot;.</span><span style="color:#bf616a;">format</span><span>(f)
+</span><span>
+</span><span>        ip_path = os.path.</span><span style="color:#bf616a;">join</span><span>(input_path, f)
+</span><span>        </span><span style="color:#b48ead;">with </span><span style="color:#96b5b4;">open</span><span>(ip_path, &#39;</span><span style="color:#a3be8c;">r</span><span>&#39;) </span><span style="color:#b48ead;">as </span><span>ip:
+</span><span>            raw_html = markdown2.</span><span style="color:#bf616a;">markdown</span><span>(ip.</span><span style="color:#bf616a;">read</span><span>(), </span><span style="color:#bf616a;">extras</span><span>=</span><span style="color:#bf616a;">MARKDOWN_EXTRAS</span><span>)
+</span><span>
+</span><span>        </span><span style="color:#b48ead;">try</span><span>:
+</span><span>            template = raw_html.metadata[&#39;</span><span style="color:#a3be8c;">template</span><span>&#39;]
+</span><span>        </span><span style="color:#b48ead;">except </span><span>KeyError:
+</span><span>            </span><span style="color:#b48ead;">print </span><span>&quot;</span><span style="color:#a3be8c;">WARNING: No template specified for </span><span style="color:#d08770;">{0}</span><span style="color:#a3be8c;">, using index.html</span><span>&quot;.</span><span style="color:#bf616a;">format</span><span>(f)
+</span><span>            template = &quot;</span><span style="color:#a3be8c;">index.html</span><span>&quot;
+</span><span>
+</span><span>        </span><span style="color:#b48ead;">try</span><span>:
+</span><span>            tpl = templates.</span><span style="color:#bf616a;">get_template</span><span>(template)
+</span><span>        </span><span style="color:#b48ead;">except </span><span>TemplateNotFound:
+</span><span>            </span><span style="color:#b48ead;">raise </span><span style="color:#bf616a;">Exception</span><span>(&quot;</span><span style="color:#a3be8c;">Unable to locate the template </span><span style="color:#d08770;">{0}</span><span style="color:#a3be8c;"> for file </span><span style="color:#d08770;">{1}</span><span style="color:#a3be8c;">. Aborting</span><span>&quot;.</span><span style="color:#bf616a;">format</span><span>(template, f))
+</span><span>
+</span><span>        context = raw_html.metadata
+</span><span>        context[&#39;</span><span style="color:#a3be8c;">content</span><span>&#39;] = raw_html
+</span><span>        result = tpl.</span><span style="color:#bf616a;">render</span><span>(context)
+</span><span>
+</span><span>        op_path = os.path.</span><span style="color:#bf616a;">join</span><span>(op_dir, f.</span><span style="color:#bf616a;">replace</span><span>(&quot;</span><span style="color:#a3be8c;">.md</span><span>&quot;, &quot;</span><span style="color:#a3be8c;">.html</span><span>&quot;))
+</span><span>        </span><span style="color:#b48ead;">print </span><span>&quot;</span><span style="color:#a3be8c;">Writing to </span><span style="color:#d08770;">{0}</span><span>&quot;.</span><span style="color:#bf616a;">format</span><span>(op_path)
+</span><span>
+</span><span>        </span><span style="color:#b48ead;">with </span><span style="color:#96b5b4;">open</span><span>(op_path, &#39;</span><span style="color:#a3be8c;">w+</span><span>&#39;) </span><span style="color:#b48ead;">as </span><span>op:
+</span><span>            op.</span><span style="color:#bf616a;">write</span><span>(result)
+</span><span>
+</span><span>        </span><span style="color:#b48ead;">print </span><span>&quot;</span><span style="color:#a3be8c;">  &gt; Rendered files at </span><span style="color:#d08770;">{0}</span><span style="color:#a3be8c;"> to </span><span style="color:#d08770;">{1}</span><span>&quot;.</span><span style="color:#bf616a;">format</span><span>(ip_path, op_path)
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">print </span><span>&quot;</span><span style="color:#a3be8c;">Folder complete</span><span>&quot;
+</span><span>
+</span><span style="color:#b48ead;">def </span><span style="color:#8fa1b3;">build_site</span><span>(</span><span style="color:#bf616a;">template_dir</span><span>, </span><span style="color:#bf616a;">ip_dir</span><span>, </span><span style="color:#bf616a;">clean</span><span>=</span><span style="color:#d08770;">True</span><span>):
+</span><span>    </span><span style="color:#65737e;">&quot;&quot;&quot;
+</span><span style="color:#65737e;">    Gets all the markdown files in the `src` directory, renders them using the template
+</span><span style="color:#65737e;">    given in metadata (or `index.html`) if no template given, and then throws them in the
+</span><span style="color:#65737e;">    same directory structure in the `build` folder.
+</span><span style="color:#65737e;">
+</span><span style="color:#65737e;">    Additionally everything in the `templates/static` folder is copied to `build/static`
+</span><span style="color:#65737e;">    &quot;&quot;&quot;
+</span><span>
+</span><span>    </span><span style="color:#65737e;"># delete the old build
+</span><span>    </span><span style="color:#b48ead;">if </span><span>clean:
+</span><span>        op_dir = ip_dir.</span><span style="color:#bf616a;">replace</span><span>(&quot;</span><span style="color:#a3be8c;">src</span><span>&quot;, &quot;</span><span style="color:#a3be8c;">build</span><span>&quot;, </span><span style="color:#d08770;">1</span><span>)
+</span><span>        </span><span style="color:#b48ead;">print </span><span>&quot;</span><span style="color:#a3be8c;">Cleaning out old files from </span><span style="color:#d08770;">{0}</span><span>&quot;.</span><span style="color:#bf616a;">format</span><span>(op_dir)
+</span><span>
+</span><span>        </span><span style="color:#b48ead;">try</span><span>:
+</span><span>            shutil.</span><span style="color:#bf616a;">rmtree</span><span>(op_dir)
+</span><span>        </span><span style="color:#b48ead;">except </span><span>Exception </span><span style="color:#b48ead;">as </span><span>e:
+</span><span>            </span><span style="color:#b48ead;">print </span><span>&quot;</span><span style="color:#a3be8c;">  &gt; ERROR - Unable to clean the old build directory</span><span>&quot;
+</span><span>            </span><span style="color:#b48ead;">print </span><span>&quot;</span><span style="color:#a3be8c;">  &gt; </span><span style="color:#d08770;">{0}</span><span>&quot;.</span><span style="color:#bf616a;">format</span><span>(e)
+</span><span>
+</span><span>        </span><span style="color:#b48ead;">try</span><span>:
+</span><span>            os.</span><span style="color:#bf616a;">mkdir</span><span>(op_dir)
+</span><span>            os.</span><span style="color:#bf616a;">chmod</span><span>(op_dir, </span><span style="color:#d08770;">0o777</span><span>)
+</span><span>            </span><span style="color:#b48ead;">print </span><span>&quot;</span><span style="color:#a3be8c;">Created output directory</span><span>&quot;
+</span><span>        </span><span style="color:#b48ead;">except </span><span>Exception </span><span style="color:#b48ead;">as </span><span>e:
+</span><span>            </span><span style="color:#b48ead;">print </span><span>&quot;</span><span style="color:#a3be8c;">  &gt; ERROR - Unable to create a directory at </span><span style="color:#d08770;">{0}</span><span>&quot;.</span><span style="color:#bf616a;">format</span><span>(op_dir)
+</span><span>            </span><span style="color:#b48ead;">print </span><span>&quot;</span><span style="color:#a3be8c;">  &gt; </span><span style="color:#d08770;">{0}</span><span>&quot;.</span><span style="color:#bf616a;">format</span><span>(e)
+</span><span>
+</span><span>
+</span><span>    </span><span style="color:#65737e;"># copy the `templates/static` folder to `build/static`
+</span><span>    src = os.path.</span><span style="color:#bf616a;">join</span><span>(template_dir, &quot;</span><span style="color:#a3be8c;">static</span><span>&quot;)
+</span><span>    dst = os.path.</span><span style="color:#bf616a;">join</span><span>(ip_dir.</span><span style="color:#bf616a;">replace</span><span>(&quot;</span><span style="color:#a3be8c;">src</span><span>&quot;, &quot;</span><span style="color:#a3be8c;">build</span><span>&quot;, </span><span style="color:#d08770;">1</span><span>), &quot;</span><span style="color:#a3be8c;">static</span><span>&quot;)
+</span><span>    </span><span style="color:#bf616a;">copy_directory</span><span>(src, dst)
+</span><span>
+</span><span>    </span><span style="color:#65737e;"># copy all the static files
+</span><span>    </span><span style="color:#b48ead;">for </span><span>sd </span><span style="color:#b48ead;">in </span><span style="color:#bf616a;">STATIC_DIRS</span><span>:
+</span><span>        src = os.path.</span><span style="color:#bf616a;">join</span><span>(ip_dir, sd)
+</span><span>        dst = os.path.</span><span style="color:#bf616a;">join</span><span>(ip_dir.</span><span style="color:#bf616a;">replace</span><span>(&quot;</span><span style="color:#a3be8c;">src</span><span>&quot;, &quot;</span><span style="color:#a3be8c;">build</span><span>&quot;, </span><span style="color:#d08770;">1</span><span>), sd)
+</span><span>        </span><span style="color:#bf616a;">copy_directory</span><span>(src, dst)
+</span><span>
+</span><span>    </span><span style="color:#65737e;"># load the templates
+</span><span>    templates = </span><span style="color:#bf616a;">get_templates</span><span>(template_dir)
+</span><span>
+</span><span>    </span><span style="color:#65737e;"># Do the root directory
+</span><span>    </span><span style="color:#bf616a;">build_directory</span><span>(templates, ip_dir)
+</span><span>
+</span><span>    </span><span style="color:#65737e;"># get all the source directories
+</span><span>    </span><span style="color:#b48ead;">for </span><span>path, </span><span style="color:#96b5b4;">dir</span><span>, files </span><span style="color:#b48ead;">in </span><span>os.</span><span style="color:#bf616a;">walk</span><span>(ip_dir):
+</span><span>        </span><span style="color:#b48ead;">for </span><span>d </span><span style="color:#b48ead;">in </span><span style="color:#96b5b4;">dir</span><span>:
+</span><span>            </span><span style="color:#bf616a;">build_directory</span><span>(templates, os.path.</span><span style="color:#bf616a;">join</span><span>(path, d))
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">print </span><span>&quot;</span><span style="color:#a3be8c;">Site build complete</span><span>&quot;
+</span><span>
+</span><span>
+</span><span style="color:#b48ead;">if </span><span>__name__ == &#39;</span><span style="color:#a3be8c;">__main__</span><span>&#39;:
+</span><span>
+</span><span>    </span><span style="color:#65737e;"># get the input and template dir paths
+</span><span>    </span><span style="color:#96b5b4;">dir </span><span>= os.</span><span style="color:#bf616a;">getcwd</span><span>()
+</span><span>    template_dir = os.path.</span><span style="color:#bf616a;">join</span><span>(</span><span style="color:#96b5b4;">dir</span><span>, &quot;</span><span style="color:#a3be8c;">templates</span><span>&quot;)
+</span><span>    </span><span style="color:#96b5b4;">input </span><span>= os.path.</span><span style="color:#bf616a;">join</span><span>(</span><span style="color:#96b5b4;">dir</span><span>, &quot;</span><span style="color:#a3be8c;">src</span><span>&quot;)
+</span><span>
+</span><span>    </span><span style="color:#65737e;"># build the site
+</span><span>    </span><span style="color:#bf616a;">build_site</span><span>(template_dir, </span><span style="color:#96b5b4;">input</span><span>)
+</span></code></pre>
+</article>
+
+<div class="container col">
+  <h2>Comments</h2>
+  <blockquote>Comments are powered by github and <a href="https://giscus.app">giscus</a></blockquote>
+  <script src="https://giscus.app/client.js"
+        data-repo="will-hart/will-hart.github.io"
+        data-repo-id="MDEwOlJlcG9zaXRvcnkzMjQ2NjY3Mzg="
+        data-category="General"
+        data-category-id="DIC_kwDOE1oFcs4CtiK6"
+        data-mapping="og:title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+  </script>
+</div>
+</div>
+
+  <footer id="footer">
+    <div class="container col">
+      This website was hand-made using Zola and Tera.
+      All text and images are available under CC0 1.0 Universal and code under MIT unless otherwise specified. See <a href="https://github.com/will-hart/willhart.io/blob/main/LICENSE.md">LICENSE.md</a> for more.
+    </div>
+  </footer>
+</body>
+
+</html>

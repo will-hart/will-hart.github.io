@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>William Hart | willhart.io</title>
+
+
+  <link rel="icon" type="image/x-icon" href="/icons/icon_light_32x32.png">
+
+  
+  <meta name="description"
+    content="The home page of Will Hart, scattered with a few random thoughts about code, electronics and other things.">
+  
+
+  <link rel="stylesheet" href="https://willhart.io/global.css?h=f83cd20cd0df26d72c2b" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sono:wght@200..800&display=swap" rel="stylesheet">
+
+  
+
+  <!-- Cloudflare Web Analytics -->
+  <script defer src='https://static.cloudflareinsights.com/beacon.min.js'
+    data-cf-beacon='{"token": "310f93cab66a42c5a328f246cc053025"}'></script>
+  <!-- End Cloudflare Web Analytics -->
+
+  <!-- Light/Dark theme toggling -->
+  <script type="text/javascript">
+    const storageKey = "websiteTheme";
+
+    // apply theme once we have a DOM
+    document.addEventListener("DOMContentLoaded", () => {
+      applyTheme();
+    })
+
+    // a function that toggles between light and dark theme
+    const toggleTheme = () => {
+      localStorage.setItem(storageKey, localStorage.getItem(storageKey) === "d" ? "l" : "d" );
+      applyTheme();
+    }
+
+    // a function that actually applies the theme
+    const applyTheme = () => {
+      const useDarkTheme = localStorage.getItem(storageKey) === "d";
+      document.getElementsByTagName("html")[0].className = useDarkTheme ? "dark" : "";
+      document.getElementById("theme-toggle").textContent = useDarkTheme ? "🔆" : "🌑";
+    }
+  </script>
+
+  <script type="speculationrules">
+  {
+    "prerender": [
+      { "where": { "selector_matches": "a" } }
+    ]
+  }
+  </script></head>
+
+<body>
+  <nav id="header">
+    <a href="/" aria-label="Website Logo and Link to Home Page">
+      <div id="logo" >&nbsp;</div>
+    </a>
+    <span>
+      <button type="button" id="theme-toggle" aria-label="Toggle Theme" onClick="toggleTheme()">🌑</button>
+      <a class="header-item" href="/post">POSTS</a>
+      <a class="header-item" href="/tag">TAGS</a>
+      <span class="header-item hide-when-slim">|</span>
+      <a class="header-item hide-when-slim" href="/tag/projects">PROJECTS</a>
+      <a class="header-item hide-when-slim" href="/tag/gamedev">GAMEDEV</a>
+      <a class="header-item hide-when-slim" href="/tag/electronics">ELECTRONICS</a>
+    </span>
+  </nav>
+
+  
+<article class="container col">
+  <h1>All post tags</h1>
+
+  
+  <a href="https://willhart.io/tag/code/">
+    <span>#</span><span>code</span>
+  </a>
+  <p class="txtsm">27 articles</p>
+  
+  <a href="https://willhart.io/tag/electronics/">
+    <span>#</span><span>electronics</span>
+  </a>
+  <p class="txtsm">14 articles</p>
+  
+  <a href="https://willhart.io/tag/essay/">
+    <span>#</span><span>essay</span>
+  </a>
+  <p class="txtsm">1 articles</p>
+  
+  <a href="https://willhart.io/tag/gamedev/">
+    <span>#</span><span>gamedev</span>
+  </a>
+  <p class="txtsm">11 articles</p>
+  
+  <a href="https://willhart.io/tag/phd/">
+    <span>#</span><span>phd</span>
+  </a>
+  <p class="txtsm">2 articles</p>
+  
+  <a href="https://willhart.io/tag/projects/">
+    <span>#</span><span>projects</span>
+  </a>
+  <p class="txtsm">17 articles</p>
+  
+  <a href="https://willhart.io/tag/random/">
+    <span>#</span><span>random</span>
+  </a>
+  <p class="txtsm">10 articles</p>
+  
+  <a href="https://willhart.io/tag/tutorials/">
+    <span>#</span><span>tutorials</span>
+  </a>
+  <p class="txtsm">17 articles</p>
+  
+
+</article>
+</div>
+
+  <footer id="footer">
+    <div class="container col">
+      This website was hand-made using Zola and Tera.
+      All text and images are available under CC0 1.0 Universal and code under MIT unless otherwise specified. See <a href="https://github.com/will-hart/willhart.io/blob/main/LICENSE.md">LICENSE.md</a> for more.
+    </div>
+  </footer>
+</body>
+
+</html>

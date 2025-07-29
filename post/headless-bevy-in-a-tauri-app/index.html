@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Headless bevy in a tauri app | willhart.io</title>
+
+
+  <link rel="icon" type="image/x-icon" href="/icons/icon_light_32x32.png">
+
+  
+<meta name="description" content="Use the bevy game engine as a headless backend for a tauri app, for fun and lols. Posted on https://willhart.io" />
+<meta property="og:description" content="Use the bevy game engine as a headless backend for a tauri app, for fun and lols" />
+<meta property="og:title" content="Headless bevy in a tauri app" />
+<meta property="og:url" content="https://willhart.io/post/headless-bevy-in-a-tauri-app/">
+<meta property="og:type" content="article" />
+<meta property="og:locale" content="en_AU" />
+
+
+  <link rel="stylesheet" href="https://willhart.io/global.css?h=f83cd20cd0df26d72c2b" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sono:wght@200..800&display=swap" rel="stylesheet">
+
+  
+
+  <!-- Cloudflare Web Analytics -->
+  <script defer src='https://static.cloudflareinsights.com/beacon.min.js'
+    data-cf-beacon='{"token": "310f93cab66a42c5a328f246cc053025"}'></script>
+  <!-- End Cloudflare Web Analytics -->
+
+  <!-- Light/Dark theme toggling -->
+  <script type="text/javascript">
+    const storageKey = "websiteTheme";
+
+    // apply theme once we have a DOM
+    document.addEventListener("DOMContentLoaded", () => {
+      applyTheme();
+    })
+
+    // a function that toggles between light and dark theme
+    const toggleTheme = () => {
+      localStorage.setItem(storageKey, localStorage.getItem(storageKey) === "d" ? "l" : "d" );
+      applyTheme();
+    }
+
+    // a function that actually applies the theme
+    const applyTheme = () => {
+      const useDarkTheme = localStorage.getItem(storageKey) === "d";
+      document.getElementsByTagName("html")[0].className = useDarkTheme ? "dark" : "";
+      document.getElementById("theme-toggle").textContent = useDarkTheme ? "🔆" : "🌑";
+    }
+  </script>
+
+  <script type="speculationrules">
+  {
+    "prerender": [
+      { "where": { "selector_matches": "a" } }
+    ]
+  }
+  </script></head>
+
+<body>
+  <nav id="header">
+    <a href="/" aria-label="Website Logo and Link to Home Page">
+      <div id="logo" >&nbsp;</div>
+    </a>
+    <span>
+      <button type="button" id="theme-toggle" aria-label="Toggle Theme" onClick="toggleTheme()">🌑</button>
+      <a class="header-item" href="/post">POSTS</a>
+      <a class="header-item" href="/tag">TAGS</a>
+      <span class="header-item hide-when-slim">|</span>
+      <a class="header-item hide-when-slim" href="/tag/projects">PROJECTS</a>
+      <a class="header-item hide-when-slim" href="/tag/gamedev">GAMEDEV</a>
+      <a class="header-item hide-when-slim" href="/tag/electronics">ELECTRONICS</a>
+    </span>
+  </nav>
+
+  
+
+<div class="container col mb mt">
+  <h1>Headless bevy in a tauri app</h1>
+  <div class="col txtsm">
+    <span>Posted by Will Hart on 2022-06-19</span>
+    <div>
+      <span>See also:</span>
+      
+      <a class="txtsm mr" href="https://willhart.io/tag/code/">#code</a>
+      
+      <a class="txtsm mr" href="https://willhart.io/tag/gamedev/">#gamedev</a>
+      
+    </div>
+  </div>
+</div>
+
+
+
+<article class="container col mblg"><p>I want to say right from that start that I’m pretty sure what I’m about to do is
+a terrible idea. But given <a rel="noopener nofollow noreferrer" target="_blank" href="https://tauri.studio">tauri</a> just reached 1.0 and
+it’s been a while since I’ve done anything in <a rel="noopener nofollow noreferrer" target="_blank" href="https://bevyengine.org/">bevy</a>,
+the idea occurred to me that there just <em>must</em> be some way to combine these two
+lovely rust thingies.</p>
+<p>So here it is, my misguided, inappropriate and entirely pointless attempt at
+using bevy as a backend for a tauri app, despite the fact that bevy already
+works perfectly well in web assembly or using its own cross-platform windowing
+solution. Sue me.</p>
+<blockquote>
+<p>If you don’t already know, tauri is a very lightweight and rusty alternative
+to electron, and bevy is a data-driven ECS rust game engine that I’m very much
+a fan of. I’ll skip the intros - if you want to know more follow the links
+above.</p>
+</blockquote>
+<h2 id="creating-a-tauri-app">Creating a tauri app</h2>
+<blockquote>
+<p>The code for this article is available <a rel="noopener nofollow noreferrer" target="_blank" href="https://github.com/will-hart/tauri-plus-bevy">on
+github</a></p>
+</blockquote>
+<p>I’ve already blogged about building a simple tauri app,  <a href="/post/20210826_tauri_create_react_app_tutorial_part1">part 1 can be found
+here</a>, but since then
+things have improved even further and we can get up and running with basically
+one command. After making sure my environment is <a rel="noopener nofollow noreferrer" target="_blank" href="https://tauri.app/v1/guides/getting-started/prerequisites">setup for
+tauri</a>, we can run</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">yarn</span><span> create tauri-app
+</span></code></pre>
+<p>After following the prompts, and selecting the following options:</p>
+<ol>
+<li>A <code>create-vite</code> app,</li>
+<li>Select <code>Y</code> to adding <code>@tauri-apps/api</code></li>
+<li>Selecting <code>react-ts</code> as the library</li>
+</ol>
+<p>we need to wait a bit for all the dependencies to install. Now if we run <code>yarn tauri dev</code> and wait a bit (it takes a while the first time while the tauri/rust
+code compiles), we can see a basic tauri app up and running. Easy!</p>
+<p><img src="https://willhart.io/post/headless-bevy-in-a-tauri-app/initial_setup.png" alt="The initial app after running yarn create tauri-app. (size: 802x632px)" /></p>
+<h2 id="setting-up-bevy">Setting up bevy</h2>
+<p>In this case we’re going to use the <code>react</code> front end to render the bevy app, so
+we want to run bevy in <code>headless</code> mode. Bevy has great examples, and we’re going
+to borrow heavily from the <a rel="noopener nofollow noreferrer" target="_blank" href="https://github.com/bevyengine/bevy/blob/latest/examples/app/headless.rs">headless
+example</a>
+in the bevy repo.</p>
+<p>Firstly we add the bevy dependency to the tauri project, skipping default
+features to remove windowing and rendering. In <code>src-tauri/cargo.toml</code> add a few
+dependencies:</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span>bevy = { version = &quot;</span><span style="color:#a3be8c;">0.7</span><span>&quot;, default-features = </span><span style="color:#d08770;">false </span><span>}
+</span><span>crossbeam-channel = &quot;</span><span style="color:#a3be8c;">0.5</span><span>&quot;
+</span></code></pre>
+<p>Then in <code>src-tarui/main.rs</code> we want to initialise the bevy app:</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#65737e;">// required imports:
+</span><span style="color:#b48ead;">use </span><span>bevy::{app::ScheduleRunnerSettings, prelude::*, utils::Duration};
+</span><span>
+</span><span style="color:#65737e;">// at the start of fn main():
+</span><span>App::new()
+</span><span>    .</span><span style="color:#96b5b4;">insert_resource</span><span>(ScheduleRunnerSettings::run_loop(Duration::from_secs_f64(
+</span><span>        </span><span style="color:#d08770;">1.0 </span><span>/ </span><span style="color:#d08770;">15.0</span><span>,
+</span><span>    )))
+</span><span>    .</span><span style="color:#96b5b4;">add_plugins</span><span>(MinimalPlugins)
+</span><span>    .</span><span style="color:#96b5b4;">run</span><span>();
+</span></code></pre>
+<blockquote>
+<p><strong>NOTE</strong> I find that the <code>src-tauri/main.rs</code> line has an error about missing
+<code>distDir</code> which goes away if I build the front end app using <code>yarn build</code>.</p>
+</blockquote>
+<p>You’ll note that we’ve made a few changes from the example - we’ve set it to run
+at 15fps, and removed the “counter” system from the example (we’ll get back to
+it though).</p>
+<p>Now if we run <code>yarn tauri dev</code> there is a problem - nothing happens! This is
+because the bevy <code>run()</code> function is “blocking”, and never exits, but as we dont
+have a windowing or rendering library nothing is changed. Remove the <code>run()</code>
+call at the end of the bevy App::new() line, tauri automatically recompiles the
+app and the window appears which confirms this is the case. Ok, so we need a bit
+more thinking here, we need to run the bevy app in the background in a
+non-blocking way - enter threads!</p>
+<h2 id="using-separate-threads-for-bevy-and-tauri">Using separate threads for bevy and tauri</h2>
+<p>Looks like we need to spawn the bevy app on a separate thread. There is a pretty
+<a rel="noopener nofollow noreferrer" target="_blank" href="https://github.com/bevyengine/bevy/discussions/1150">good example of that here</a>
+and in <a rel="noopener nofollow noreferrer" target="_blank" href="https://github.com/bevyengine/bevy/blob/latest/examples/async_tasks/external_source_external_thread.rs">this official
+examples</a>,
+so lets adapt those.</p>
+<p>We start by using <code>std::thread</code> and <code>spawning</code> a new thread for the bevy app. We
+can also add the <code>run()</code> call back in. The bevy part of the code at the start of
+<code>src-tauri/main.rs</code> now looks like this:</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#65737e;">// add: use std::thread;
+</span><span>
+</span><span>thread::spawn(</span><span style="color:#b48ead;">move </span><span>|| {
+</span><span>    App::new()
+</span><span>        .</span><span style="color:#96b5b4;">insert_resource</span><span>(ScheduleRunnerSettings::run_loop(Duration::from_secs_f64(
+</span><span>            </span><span style="color:#d08770;">1.0 </span><span>/ </span><span style="color:#d08770;">60.0</span><span>,
+</span><span>        )))
+</span><span>        .</span><span style="color:#96b5b4;">add_plugins</span><span>(MinimalPlugins)
+</span><span>        .</span><span style="color:#96b5b4;">run</span><span>()
+</span><span>});
+</span></code></pre>
+<p>Things load, but now its not particularly useful - the app is running in a
+separate thread but we don’t have any way to communicate between the bevy and
+tauri apps. Rust has a whole lot of channels that can help with this. Here we
+want to be able to send from lots of producers on the bevy side, but only one
+receiver - the tauri app, so a “multi producer single consumer” or <code>mpsc</code> queue
+seems like the right idea.</p>
+<p>In <code>src-tauri/main.rs</code> we first create the channel, setting the type just as a
+number for now. We use crossbeam because as the <code>Receiver</code> is <code>Sync</code> we can more
+easily pass it to tauri:</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#65737e;">// add: use crossbeam_channel::{bounded, Receiver, Sender};
+</span><span>
+</span><span style="color:#b48ead;">let </span><span>(tx, rx) = bounded::&lt;</span><span style="color:#b48ead;">u32</span><span>&gt;(</span><span style="color:#d08770;">1000</span><span>);
+</span></code></pre>
+<blockquote>
+<p><strong>NOTE</strong> the use of bounded here sets a fixed size to the number of messages
+that can be queued up in the channel. This means if we don’t receive the
+messages in the tauri app then eventually the channel will fill up. This
+causes any senders to block until there is space on the channel to send their
+message - this could potentially lock up the bevy app.</p>
+<p>Alternatively, we could use an <code>unbounded</code> channel, which has no capacity.
+Whilst we arne’t likely to allocate enough <code>u32</code>s to fill up my memory in a
+hurry, I’ll leave this is a bounded channel.</p>
+</blockquote>
+<p>This line gives us a sender / transmitter (<code>tx</code>) and a receiver (<code>rx</code>). We can
+clone the sender as often as we want and its thread-safe, but we can only have
+one receiver, which we will pass to the tauri app. Start by creating a new
+struct to hold the <code>Sender</code> in <code>src-tauri/main.rs</code>:</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">struct </span><span>TauriBridge(Sender&lt;</span><span style="color:#b48ead;">u32</span><span>&gt;);
+</span><span style="color:#b48ead;">struct </span><span>BevyBridge(Receiver&lt;</span><span style="color:#b48ead;">u32</span><span>&gt;);
+</span></code></pre>
+<p>Update the app build section in <code>src-tauri/main.rs</code>, before <code>run()</code> to add the
+<code>TauriBridge</code> into the bevy app:</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span>App::new()
+</span><span>  </span><span style="color:#65737e;">// ...
+</span><span>  .</span><span style="color:#96b5b4;">insert_resource</span><span>(TauriBridge(tx))
+</span><span>  .</span><span style="color:#96b5b4;">run</span><span>();
+</span></code></pre>
+<p>Lets create a basic bevy system that increments a <code>u32</code> counter every frame and
+sends a message via the channel with the new counter value. First we’ll create a
+resource to hold the current value in <code>src-tauri/main.rs</code>:</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span>#[</span><span style="color:#bf616a;">derive</span><span>(Default)]
+</span><span style="color:#b48ead;">struct </span><span>CounterValue(</span><span style="color:#b48ead;">u32</span><span>);
+</span></code></pre>
+<p>We derive <code>Default</code> so its easier to use this as <code>Local</code> state for the system
+that increments the counter. The system is quite straightforward and can be
+mostly derived from the “headless” bevy example. We are using a global resource
+rather than the <code>Local</code> resource in the example so we can access it from other
+systems.</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">increment_counter</span><span>(</span><span style="color:#b48ead;">mut </span><span style="color:#bf616a;">state</span><span>: ResMut&lt;CounterValue&gt;) {
+</span><span>    state.</span><span style="color:#d08770;">0 </span><span>= (state.</span><span style="color:#d08770;">0 </span><span>+ </span><span style="color:#d08770;">1</span><span>) % </span><span style="color:#d08770;">1_000_000</span><span style="color:#b48ead;">u32</span><span>;
+</span><span>}
+</span></code></pre>
+<p>We should also create a system that sends the counter to the mpsc channel on
+each frame.</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">send_counter</span><span>(</span><span style="color:#bf616a;">tauri_bridge</span><span>: ResMut&lt;TauriBridge&gt;, </span><span style="color:#bf616a;">counter</span><span>: Res&lt;CounterValue&gt;) {
+</span><span>    tauri_bridge
+</span><span>        .</span><span style="color:#d08770;">0
+</span><span>        .</span><span style="color:#96b5b4;">send</span><span>(counter.</span><span style="color:#d08770;">0</span><span>)
+</span><span>        .</span><span style="color:#96b5b4;">expect</span><span>(&quot;</span><span style="color:#a3be8c;">Failed to send on channel</span><span>&quot;);
+</span><span>}
+</span></code></pre>
+<p>We then need to add the <code>CounterValue</code> resource to the bevy app, plus the two
+systems. That looks like this in <code>src-tauri/main.rs</code>:</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span>  </span><span style="color:#65737e;">// ...
+</span><span>  .</span><span style="color:#96b5b4;">insert_resource</span><span>(CounterValue::default())
+</span><span>  </span><span style="color:#65737e;">// ...
+</span><span>  .</span><span style="color:#96b5b4;">add_system</span><span>(increment_counter)
+</span><span>  .</span><span style="color:#96b5b4;">add_system</span><span>(send_counter)
+</span><span>  </span><span style="color:#65737e;">// ...
+</span></code></pre>
+<h2 id="pulling-data-from-bevy-via-the-front-end">Pulling data from bevy via the front-end</h2>
+<blockquote>
+<p><strong>NOTE</strong> I end up undoing most of the code in this section. I’ve kept it <a rel="noopener nofollow noreferrer" target="_blank" href="https://github.com/will-hart/tauri-plus-bevy/tree/feature/frontend-pull-updates">on a
+branch of the
+repo</a>
+if you are interested.</p>
+</blockquote>
+<p>We then want to pass the receiver to the tauri app. We can do this using
+<a rel="noopener nofollow noreferrer" target="_blank" href="https://tauri.app/v1/guides/features/command#accessing-managed-state">managed
+state</a> and
+the <code>BevyBridge</code> struct we declared above. Modify <code>src-tauri/main.rs</code> where we
+declare the tauri app:</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span>tauri::Builder::default()
+</span><span>  .</span><span style="color:#96b5b4;">manage</span><span>(BevyBridge(rx))
+</span><span>  </span><span style="color:#65737e;">/// ...
+</span></code></pre>
+<blockquote>
+<p><strong>NOTE</strong> if we used <code>std::sync::mpsc</code> here instead of
+<code>crossbeam_channel::bounded</code>, we’d have an error here. Tauri needs its managed
+state to be <code>Send + Sync</code> and the <code>Receiver</code> in <code>std</code> is <code>!Sync</code>. Using a
+<code>Mutex</code> might help here but it seems easier to use a package where this is
+handled by default.</p>
+</blockquote>
+<p>Now seems like a good time to check that bevy is properly sending messages
+through to tauri. We’re left with a bit of a question - should bevy and tauri
+<em>push</em> the updates to the front end, or should the front-end pull them by
+querying for the current application state? For now lets try pulling updates
+when the application is ready.</p>
+<p>In <code>src/App.tsx</code> we’ll modify the app so that we <code>invoke</code> a tauri command (that
+we haven’t yet implemented) to get updated state (i.e. the current counter
+value). After we’re done, the app should look like this:</p>
+<pre data-lang="typescript" style="background-color:#2b303b;color:#c0c5ce;" class="language-typescript "><code class="language-typescript" data-lang="typescript"><span style="color:#b48ead;">function </span><span style="color:#8fa1b3;">App</span><span>() {
+</span><span>  </span><span style="color:#b48ead;">const </span><span>[</span><span style="color:#bf616a;">count</span><span>, </span><span style="color:#bf616a;">setCount</span><span>] = </span><span style="color:#8fa1b3;">useState</span><span>(</span><span style="color:#d08770;">0</span><span>);
+</span><span>
+</span><span>  </span><span style="color:#65737e;">// import { useInterval } from &#39;usehooks-ts&#39;
+</span><span>  </span><span style="color:#8fa1b3;">useInterval</span><span>(</span><span style="color:#b48ead;">async </span><span>() </span><span style="color:#b48ead;">=&gt; </span><span>{
+</span><span>    </span><span style="color:#8fa1b3;">setCount</span><span>(</span><span style="color:#b48ead;">await </span><span style="color:#8fa1b3;">invoke</span><span>(&quot;</span><span style="color:#a3be8c;">get_state</span><span>&quot;));
+</span><span>  }, </span><span style="color:#d08770;">1000</span><span>);
+</span><span>
+</span><span>  </span><span style="color:#b48ead;">return </span><span>(
+</span><span>    &lt;</span><span style="color:#bf616a;">div className</span><span>=&quot;</span><span style="color:#a3be8c;">App</span><span>&quot;&gt;
+</span><span>      &lt;</span><span style="color:#bf616a;">header className</span><span>=&quot;</span><span style="color:#a3be8c;">App-header</span><span>&quot;&gt;
+</span><span>        &lt;p&gt;</span><span style="color:#bf616a;">Hello Tauri </span><span>+ </span><span style="color:#bf616a;">Bevy</span><span>!&lt;/</span><span style="color:#bf616a;">p</span><span>&gt;
+</span><span>        &lt;p&gt;</span><span style="color:#bf616a;">The count is</span><span>: {</span><span style="color:#bf616a;">count</span><span>}&lt;/p&gt;
+</span><span>      &lt;/</span><span style="color:#bf616a;">header</span><span>&gt;
+</span><span>    &lt;/</span><span style="color:#bf616a;">div</span><span>&gt;
+</span><span>  );
+</span><span>}
+</span></code></pre>
+<p>We’ve added the <code>usehooks-ts</code> package just to make things easier (<code>yarn add usehooks-ts</code>). Other than that, we’ve replaced the default button that
+<code>create-vite</code> adds and added a call to <code>invoke</code> the <code>get_state</code> command.</p>
+<p>We need to implement this command in the tauri code. In <code>src-tauri/main.rs</code> we
+need to add a <code>get_state</code> command:</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span>#[</span><span style="color:#bf616a;">tauri</span><span>::</span><span style="color:#bf616a;">command</span><span>]
+</span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">get_state</span><span>(</span><span style="color:#bf616a;">state</span><span>: tauri::State&lt;BevyBridge&gt;) -&gt; </span><span style="color:#b48ead;">u32 </span><span>{
+</span><span>    state.</span><span style="color:#d08770;">0.</span><span style="color:#96b5b4;">try_iter</span><span>().</span><span style="color:#96b5b4;">last</span><span>().</span><span style="color:#96b5b4;">unwrap_or</span><span>(</span><span style="color:#d08770;">0</span><span>)
+</span><span>}
+</span></code></pre>
+<p>This just reads the messages on the <code>bounded</code> queue and returns the last one. We
+also need to add the command to the tauri app,</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span>tauri::Builder::default()
+</span><span>  </span><span style="color:#65737e;">// ...
+</span><span>  .</span><span style="color:#96b5b4;">invoke_handler</span><span>(tauri::generate_handler![get_state])
+</span><span>  </span><span style="color:#65737e;">// ...
+</span></code></pre>
+<p>If we now run the app we should see everything working as expected - the counter
+updates based on the bevy state!</p>
+<p><img src="https://willhart.io/post/headless-bevy-in-a-tauri-app/counter_working.png" alt="The app pulling counter updates from the bevy backend. (size: 802x632px)" /></p>
+<h2 id="pushing-updates-from-bevy-to-tauri-to-react">Pushing updates from bevy to tauri to react</h2>
+<p>What about we try to push updates? To do this we can use use tauri’s
+<a rel="noopener nofollow noreferrer" target="_blank" href="https://tauri.app/v1/guides/features/events">events</a> to trigger an update on
+the client-side. To spawn events periodically, we can use a thread that checks
+the mpsc queue periodically and raises an event with the latest value.</p>
+<p>We can do this in the <code>setup</code> function in the tauri app builder in
+<code>src-tauri/main.rs</code>:</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span>tauri::Builder::default()
+</span><span>  </span><span style="color:#65737e;">// ...
+</span><span>  .</span><span style="color:#96b5b4;">setup</span><span>(|</span><span style="color:#bf616a;">app</span><span>| {
+</span><span>      </span><span style="color:#b48ead;">let</span><span> window = app.</span><span style="color:#96b5b4;">get_window</span><span>(&quot;</span><span style="color:#a3be8c;">main</span><span>&quot;).</span><span style="color:#96b5b4;">unwrap</span><span>();
+</span><span>
+</span><span>      tauri::async_runtime::spawn(async </span><span style="color:#b48ead;">move </span><span>{
+</span><span>          </span><span style="color:#b48ead;">loop </span><span>{
+</span><span>              </span><span style="color:#b48ead;">match</span><span> rx.</span><span style="color:#96b5b4;">try_iter</span><span>().</span><span style="color:#96b5b4;">last</span><span>() {
+</span><span>                  Some(payload) =&gt; {
+</span><span>                      window
+</span><span>                          .</span><span style="color:#96b5b4;">emit</span><span>(&quot;</span><span style="color:#a3be8c;">send_state</span><span>&quot;, payload)
+</span><span>                          .</span><span style="color:#96b5b4;">expect</span><span>(&quot;</span><span style="color:#a3be8c;">Event should be sent</span><span>&quot;);
+</span><span>                  }
+</span><span>                  _ =&gt; {}
+</span><span>              }
+</span><span>
+</span><span>              </span><span style="color:#65737e;">// do once a second
+</span><span>              thread::sleep(Duration::from_millis(</span><span style="color:#d08770;">50</span><span>));
+</span><span>          }
+</span><span>      });
+</span><span>
+</span><span>      Ok(())
+</span><span>  })
+</span><span>  </span><span style="color:#65737e;">// ...
+</span></code></pre>
+<p>This is quite a bit of code, but its similar to the command we had before - we
+spawn a thread that checks the last item on the queue, and if there is something
+it emits a <code>send_state</code> event on the main window. We can also remove the command
+definition and the <code>invoke_handler</code> part of the tauri app builder.</p>
+<p>In <code>src/App.tsx</code> we need to update the function so that we no longer <code>invoke</code>
+the command, but instead should subscribe to the <code>send_state</code> event sent by the
+thread we just spawned. Again this is a bit of code but otherwise
+straightforward - most of the code is to safely unsubcribe from events event
+after the app is unmounted:</p>
+<pre data-lang="typescript" style="background-color:#2b303b;color:#c0c5ce;" class="language-typescript "><code class="language-typescript" data-lang="typescript"><span style="color:#8fa1b3;">useEffect</span><span>(() </span><span style="color:#b48ead;">=&gt; </span><span>{
+</span><span>    </span><span style="color:#b48ead;">let </span><span style="color:#bf616a;">unlisten</span><span>: UnlistenFn | undefined = </span><span style="color:#d08770;">undefined</span><span>;
+</span><span>    </span><span style="color:#8fa1b3;">listen</span><span>(&quot;</span><span style="color:#a3be8c;">send_state</span><span>&quot;, (</span><span style="color:#bf616a;">event</span><span>) </span><span style="color:#b48ead;">=&gt; </span><span>{
+</span><span>      </span><span style="color:#8fa1b3;">setCount</span><span>(event.</span><span style="color:#bf616a;">payload </span><span style="color:#b48ead;">as </span><span>number);
+</span><span>    }).</span><span style="color:#96b5b4;">then</span><span>((</span><span style="color:#bf616a;">r</span><span>) </span><span style="color:#b48ead;">=&gt; </span><span>(</span><span style="color:#bf616a;">unlisten </span><span>= </span><span style="color:#bf616a;">r</span><span>));
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">return </span><span>() </span><span style="color:#b48ead;">=&gt; </span><span>{
+</span><span>      </span><span style="color:#b48ead;">if </span><span>(</span><span style="color:#bf616a;">unlisten</span><span>) </span><span style="color:#8fa1b3;">unlisten</span><span>();
+</span><span>    };
+</span><span>  }, []);
+</span></code></pre>
+<p>Running the app now should perform the same as before, the counter … counts!</p>
+<h2 id="sending-commands-back-to-bevy">Sending commands back to bevy</h2>
+<p>This is all well and good, but if we want to make something interactive then
+ideally we’d be able to send input back to the app. To see how this might work
+we can create a “reset” command which zeroes out the counter. Unfortunately our
+current channel is setup for sending the counter from bevy to tauri, so here
+we’re going to need to send data the other way.</p>
+<p>Let’s take the opportunity to refactor our channels and the <code>TauriBridge</code>
+struct:</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#65737e;">// the struct adds a Receiver&lt;()&gt; field
+</span><span style="color:#b48ead;">struct </span><span>TauriBridge(Sender&lt;</span><span style="color:#b48ead;">u32</span><span>&gt;, Receiver&lt;()&gt;);
+</span><span>
+</span><span style="color:#65737e;">// now we instantiate two channels, and name them appropriately.
+</span><span style="color:#65737e;">// we can also set the `u32` typed channel as unbounded and the other
+</span><span style="color:#65737e;">// channel as bounded with size 1
+</span><span style="color:#b48ead;">let </span><span>(tx_to_tauri, rx_from_bevy) = unbounded::&lt;</span><span style="color:#b48ead;">u32</span><span>&gt;();
+</span><span style="color:#b48ead;">let </span><span>(tx_to_bevy, rx_from_tauri) = bounded::&lt;()&gt;(</span><span style="color:#d08770;">1</span><span>);
+</span><span>
+</span><span style="color:#65737e;">// in our bevy app building code we need to update the struct declaration too
+</span><span>  .</span><span style="color:#96b5b4;">insert_resource</span><span>(TauriBridge(tx_to_tauri, rx_from_tauri))
+</span></code></pre>
+<p>Next we need to add the <code>tx_to_bevy</code> end of the channel as part of <code>State</code> in
+the tauri app. We already did this when we tried pulling updates in the client
+side, so there isn’t anything new here. We create a struct and call <code>manage</code> on
+the tauri app builder.</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#65737e;">// struct declaration
+</span><span style="color:#b48ead;">struct </span><span>BevyBridge(Sender&lt;()&gt;);
+</span><span>
+</span><span style="color:#65737e;">// add as state in the tauri app builder
+</span><span>  .</span><span style="color:#96b5b4;">manage</span><span>(BevyBridge(tx_to_bevy))
+</span></code></pre>
+<p>Now we can create a command that sends an empty message to bevy to reset the
+counter. We will use <code>send</code> rather than <code>try_send</code> because I don’t really care
+about blocking if the queue is full:</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span>#[</span><span style="color:#bf616a;">tauri</span><span>::</span><span style="color:#bf616a;">command</span><span>]
+</span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">reset_counter</span><span>(</span><span style="color:#bf616a;">state</span><span>: tauri::State&lt;BevyBridge&gt;) {
+</span><span>    state
+</span><span>        .</span><span style="color:#d08770;">0
+</span><span>        .</span><span style="color:#96b5b4;">send</span><span>(())
+</span><span>        .</span><span style="color:#96b5b4;">expect</span><span>(&quot;</span><span style="color:#a3be8c;">Unable to send reset message to bevy</span><span>&quot;);
+</span><span>}
+</span></code></pre>
+<p>We should also add this command in an <code>invoke_handler</code> on the tauri app builder
+as we did previously.</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span>.</span><span style="color:#96b5b4;">invoke_handler</span><span>(tauri::generate_handler![reset_counter])
+</span></code></pre>
+<p>We have two more tasks - we need to add a bevy system to listen for the
+messages, and add some UI in the front end to call the command.</p>
+<p>We’ll start with the front end. In <code>src/App.tsx</code>, below the counter add a button
+and the handler calls <code>invoke</code> to run the command:</p>
+<pre data-lang="typescript" style="background-color:#2b303b;color:#c0c5ce;" class="language-typescript "><code class="language-typescript" data-lang="typescript"><span>&lt;</span><span style="color:#bf616a;">button
+</span><span>  </span><span style="color:#bf616a;">onClick</span><span>={() =&gt; {
+</span><span>    </span><span style="color:#8fa1b3;">invoke</span><span>(&quot;</span><span style="color:#a3be8c;">reset_counter</span><span>&quot;);
+</span><span>  }}
+</span><span>&gt;
+</span><span>  </span><span style="color:#bf616a;">Reset
+</span><span>&lt;/</span><span style="color:#bf616a;">button</span><span>&gt;
+</span></code></pre>
+<p>Clicking this button once works, but maybe avoid clicking it a second time for
+now because it freezes the entire app. This is a results of us using a bounded
+queue with size 1, and <code>send</code> instead of <code>try_send</code> (<em>shrugs in
+blog-post-that-is-getting-too-long-already</em>).</p>
+<p>Ok, before we freeze up the app again, lets add the bevy system that handles
+these requests. Actually, I’m getting super lazy, lets just add it to the
+<code>send_counter</code> system, please don’t hate me. To do this we need to change the
+function signature in <code>src-tauri/main.rs</code>:</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">send_counter</span><span>(</span><span style="color:#bf616a;">tauri_bridge</span><span>: ResMut&lt;TauriBridge&gt;, </span><span style="color:#b48ead;">mut </span><span style="color:#bf616a;">counter</span><span>: ResMut&lt;CounterValue&gt;) 
+</span></code></pre>
+<p>We then just need to check the receiver queue for any reset messages. At the
+bottom of the <code>send_counter</code> function, add:</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">match</span><span> tauri_bridge.</span><span style="color:#d08770;">1.</span><span style="color:#96b5b4;">try_recv</span><span>() {
+</span><span>    Ok(_) =&gt; counter.</span><span style="color:#d08770;">0 </span><span>= </span><span style="color:#d08770;">0</span><span>,
+</span><span>    _ =&gt; {}
+</span><span>}
+</span></code></pre>
+<p>Now hitting the “reset” button in the app causes the counter to go back to 0. I
+guess in reality somebody could tap at like 500 clicks per second and fill up
+the queue, resulting in some slightly weird jerkiness in the counter. We can
+mitigate most of this by just adding a few extra items to the queue capacity:</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#65737e;">// used  to be 1
+</span><span style="color:#b48ead;">let </span><span>(tx_to_bevy, rx_from_tauri) = bounded::&lt;()&gt;(</span><span style="color:#d08770;">5</span><span>);
+</span></code></pre>
+<h2 id="in-conclusion">In conclusion</h2>
+<p>I’m not sure why I did this, really. It seemed like an intersting idea and it
+kind of “worked” but wow this involves a lot of code. I’m sure there would be a
+better way to do this if I stopped and thought, who knows, maybe then I’d also
+be able to think of some reasons why this would be a good idea!</p>
+<p>The code for this is available <a rel="noopener nofollow noreferrer" target="_blank" href="https://github.com/will-hart/tauri-plus-bevy">on github</a></p>
+</article>
+
+<div class="container col">
+  <h2>Comments</h2>
+  <blockquote>Comments are powered by github and <a href="https://giscus.app">giscus</a></blockquote>
+  <script src="https://giscus.app/client.js"
+        data-repo="will-hart/will-hart.github.io"
+        data-repo-id="MDEwOlJlcG9zaXRvcnkzMjQ2NjY3Mzg="
+        data-category="General"
+        data-category-id="DIC_kwDOE1oFcs4CtiK6"
+        data-mapping="og:title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+  </script>
+</div>
+</div>
+
+  <footer id="footer">
+    <div class="container col">
+      This website was hand-made using Zola and Tera.
+      All text and images are available under CC0 1.0 Universal and code under MIT unless otherwise specified. See <a href="https://github.com/will-hart/willhart.io/blob/main/LICENSE.md">LICENSE.md</a> for more.
+    </div>
+  </footer>
+</body>
+
+</html>

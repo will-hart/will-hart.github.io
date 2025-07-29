@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>3D printed flexure foot pedal | willhart.io</title>
+
+
+  <link rel="icon" type="image/x-icon" href="/icons/icon_light_32x32.png">
+
+  
+<meta name="description" content="Designing a one-piece 3d printed foot pedal using mechanical flexures. Posted on https://willhart.io" />
+<meta property="og:description" content="Designing a one-piece 3d printed foot pedal using mechanical flexures" />
+<meta property="og:title" content="3D printed flexure foot pedal" />
+<meta property="og:url" content="https://willhart.io/post/3d-printed-flexure-foot-pedal/">
+<meta property="og:type" content="article" />
+<meta property="og:locale" content="en_AU" />
+
+
+  <link rel="stylesheet" href="https://willhart.io/global.css?h=f83cd20cd0df26d72c2b" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sono:wght@200..800&display=swap" rel="stylesheet">
+
+  
+
+  <!-- Cloudflare Web Analytics -->
+  <script defer src='https://static.cloudflareinsights.com/beacon.min.js'
+    data-cf-beacon='{"token": "310f93cab66a42c5a328f246cc053025"}'></script>
+  <!-- End Cloudflare Web Analytics -->
+
+  <!-- Light/Dark theme toggling -->
+  <script type="text/javascript">
+    const storageKey = "websiteTheme";
+
+    // apply theme once we have a DOM
+    document.addEventListener("DOMContentLoaded", () => {
+      applyTheme();
+    })
+
+    // a function that toggles between light and dark theme
+    const toggleTheme = () => {
+      localStorage.setItem(storageKey, localStorage.getItem(storageKey) === "d" ? "l" : "d" );
+      applyTheme();
+    }
+
+    // a function that actually applies the theme
+    const applyTheme = () => {
+      const useDarkTheme = localStorage.getItem(storageKey) === "d";
+      document.getElementsByTagName("html")[0].className = useDarkTheme ? "dark" : "";
+      document.getElementById("theme-toggle").textContent = useDarkTheme ? "🔆" : "🌑";
+    }
+  </script>
+
+  <script type="speculationrules">
+  {
+    "prerender": [
+      { "where": { "selector_matches": "a" } }
+    ]
+  }
+  </script></head>
+
+<body>
+  <nav id="header">
+    <a href="/" aria-label="Website Logo and Link to Home Page">
+      <div id="logo" >&nbsp;</div>
+    </a>
+    <span>
+      <button type="button" id="theme-toggle" aria-label="Toggle Theme" onClick="toggleTheme()">🌑</button>
+      <a class="header-item" href="/post">POSTS</a>
+      <a class="header-item" href="/tag">TAGS</a>
+      <span class="header-item hide-when-slim">|</span>
+      <a class="header-item hide-when-slim" href="/tag/projects">PROJECTS</a>
+      <a class="header-item hide-when-slim" href="/tag/gamedev">GAMEDEV</a>
+      <a class="header-item hide-when-slim" href="/tag/electronics">ELECTRONICS</a>
+    </span>
+  </nav>
+
+  
+
+<div class="container col mb mt">
+  <h1>3D printed flexure foot pedal</h1>
+  <div class="col txtsm">
+    <span>Posted by Will Hart on 2022-02-13</span>
+    <div>
+      <span>See also:</span>
+      
+      <a class="txtsm mr" href="https://willhart.io/tag/projects/">#projects</a>
+      
+      <a class="txtsm mr" href="https://willhart.io/tag/electronics/">#electronics</a>
+      
+    </div>
+  </div>
+</div>
+
+
+
+<article class="container col mblg"><p>Following on from my <a href="/post/custom-gaming-foot-pedals">previous post</a>
+on some custom foot pedals I designed, I decided to try simplifying the design
+using 3D printed mechanical flexures in the place of the three part design with
+springs. This provided to be surprisingly easy to do, although I did play around
+a lot with different types of flexures to find a design I was happy with, mostly
+inspired by <a rel="noopener nofollow noreferrer" target="_blank" href="https://hackaday.com/2021/06/22/print-your-own-flexures/">several</a>
+<a rel="noopener nofollow noreferrer" target="_blank" href="https://hackaday.com/2021/12/14/fabulous-flexure-mechanism-makes-for-resetting-cat-calendar/">posts</a>
+on hackaday and one timely youtube video about <a rel="noopener nofollow noreferrer" target="_blank" href="https://www.youtube.com/watch?v=5MxH1sfJLBQ">mirror actuators on the James
+Webb telescope</a>.</p>
+<p>I also had to experiment with what the printer could handle, and what sort of
+thickenss and joints were required to make sure the plastic didn’t snap when
+actuated. Giving the flexures to my kids to play with was a great way to stress
+test them! I wanted about 10mm of movement and so designing the flexure in a way
+that it stayed out of its own way was part of the challenge. The designs I tried
+are below, each is about 40mm x 30mm, and some of them are missing a few pieces.
+(As a side effect these proved to be great little fidget pieces for long zoom
+meetings.)</p>
+<p><img src="https://willhart.io/post/3d-printed-flexure-foot-pedal/flexures.png" alt="Different flexure designs I trialled before settling on a modified version of the right most design." /></p>
+<p>The left most designs were just test runs to work out the width of cuts and
+beams that my printer and the PLA material could support. The two designs below
+“A” were good at deflecting but tended to permanently deform. The designs under
+“B” had similar issues. In the end I want with a variation on the “C” design,
+this easily deflected 10mm at the end of the beam and reliably returned to its
+original shape.</p>
+<p>The next step was to translate the flexure into a workable design. In this case
+it was also relatively straightforward. From design “C” in the image above, the
+outer rectangular frame would be the main body of the pedal, while the pedal
+button itself would be attached where the red dot is on the image.</p>
+<p><img src="https://willhart.io/post/3d-printed-flexure-foot-pedal/back_view.jpg" alt="The final printed pedal, with a tactile button hot glued in place." /></p>
+<p>To act as a button, I just hot glued a tactile switch with a nice red switch cap
+on it to the frame of the pedal. An interesting feature about this design is
+that the pedal moves very easily when I place my foot on it, but it requires
+quite a positive force to depress the switch. The switch itself has a nice
+tactile click when it is pressed. A side-effect of this design is that its very
+digital, i.e. in its current form it probably couldn’t be used to provide an
+analog signal, while the previous spring-driven design would be much more suited
+to that use case. It also requires quite a lot of support material when
+printing, which seems a bit wasteful and probably increases the risk of damage
+to the pedal while removing it.</p>
+<p>It seems pretty durable in “normal” operation, but I’m not sure how it would go
+if loaded up with excessive force. Overall I think the feel of the pedal is
+nicer and a lot simpler, but I’m not sure if this is the design I’ll “mass
+produce” for my mates. I do like this clicky tactile switch more than the limit
+switches I used on my previous design so I might end up somewhere in the middle
+for the final “rev 3” design.</p>
+</article>
+
+<div class="container col">
+  <h2>Comments</h2>
+  <blockquote>Comments are powered by github and <a href="https://giscus.app">giscus</a></blockquote>
+  <script src="https://giscus.app/client.js"
+        data-repo="will-hart/will-hart.github.io"
+        data-repo-id="MDEwOlJlcG9zaXRvcnkzMjQ2NjY3Mzg="
+        data-category="General"
+        data-category-id="DIC_kwDOE1oFcs4CtiK6"
+        data-mapping="og:title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+  </script>
+</div>
+</div>
+
+  <footer id="footer">
+    <div class="container col">
+      This website was hand-made using Zola and Tera.
+      All text and images are available under CC0 1.0 Universal and code under MIT unless otherwise specified. See <a href="https://github.com/will-hart/willhart.io/blob/main/LICENSE.md">LICENSE.md</a> for more.
+    </div>
+  </footer>
+</body>
+
+</html>

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>CMOS analog clock | willhart.io</title>
+
+
+  <link rel="icon" type="image/x-icon" href="/icons/icon_light_32x32.png">
+
+  
+<meta name="description" content="A custom analog clock using CMOS components and LEDs for the digits. Posted on https://willhart.io" />
+<meta property="og:description" content="A custom analog clock using CMOS components and LEDs for the digits" />
+<meta property="og:title" content="CMOS analog clock" />
+<meta property="og:url" content="https://willhart.io/post/cmos-analog-clock/">
+<meta property="og:type" content="article" />
+<meta property="og:locale" content="en_AU" />
+
+
+  <link rel="stylesheet" href="https://willhart.io/global.css?h=f83cd20cd0df26d72c2b" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sono:wght@200..800&display=swap" rel="stylesheet">
+
+  
+
+  <!-- Cloudflare Web Analytics -->
+  <script defer src='https://static.cloudflareinsights.com/beacon.min.js'
+    data-cf-beacon='{"token": "310f93cab66a42c5a328f246cc053025"}'></script>
+  <!-- End Cloudflare Web Analytics -->
+
+  <!-- Light/Dark theme toggling -->
+  <script type="text/javascript">
+    const storageKey = "websiteTheme";
+
+    // apply theme once we have a DOM
+    document.addEventListener("DOMContentLoaded", () => {
+      applyTheme();
+    })
+
+    // a function that toggles between light and dark theme
+    const toggleTheme = () => {
+      localStorage.setItem(storageKey, localStorage.getItem(storageKey) === "d" ? "l" : "d" );
+      applyTheme();
+    }
+
+    // a function that actually applies the theme
+    const applyTheme = () => {
+      const useDarkTheme = localStorage.getItem(storageKey) === "d";
+      document.getElementsByTagName("html")[0].className = useDarkTheme ? "dark" : "";
+      document.getElementById("theme-toggle").textContent = useDarkTheme ? "🔆" : "🌑";
+    }
+  </script>
+
+  <script type="speculationrules">
+  {
+    "prerender": [
+      { "where": { "selector_matches": "a" } }
+    ]
+  }
+  </script></head>
+
+<body>
+  <nav id="header">
+    <a href="/" aria-label="Website Logo and Link to Home Page">
+      <div id="logo" >&nbsp;</div>
+    </a>
+    <span>
+      <button type="button" id="theme-toggle" aria-label="Toggle Theme" onClick="toggleTheme()">🌑</button>
+      <a class="header-item" href="/post">POSTS</a>
+      <a class="header-item" href="/tag">TAGS</a>
+      <span class="header-item hide-when-slim">|</span>
+      <a class="header-item hide-when-slim" href="/tag/projects">PROJECTS</a>
+      <a class="header-item hide-when-slim" href="/tag/gamedev">GAMEDEV</a>
+      <a class="header-item hide-when-slim" href="/tag/electronics">ELECTRONICS</a>
+    </span>
+  </nav>
+
+  
+
+<div class="container col mb mt">
+  <h1>CMOS analog clock</h1>
+  <div class="col txtsm">
+    <span>Posted by Will Hart on 2022-01-11</span>
+    <div>
+      <span>See also:</span>
+      
+      <a class="txtsm mr" href="https://willhart.io/tag/random/">#random</a>
+      
+      <a class="txtsm mr" href="https://willhart.io/tag/projects/">#projects</a>
+      
+    </div>
+  </div>
+</div>
+
+
+
+<article class="container col mblg"><blockquote>
+<p>The purpose of this project was to build a large 30cm by 20cm clock using CMOS electronics driven from a 32kHz crystal. The project was a housewarming gift that arrived about four years too late and several IOUs later.</p>
+</blockquote>
+<p>I took inspiration from a number of sources for the analog circuitry, but unfortunately most of those links are lost in the mists of time. The basic principle is to take a 32kHz signal and divide it down to the correct signals using analog ICs, mostly a combination of 74HC4040s and 74HC161s mixed with a series of logic gates (the schematics are included below) and then 74HC238s on the outputs. The circuitry was complicated enough that I breadboarded it:</p>
+<p><img src="https://willhart.io/post/cmos-analog-clock/breadboard.png" alt="The clock circuitry built on a breadboard prior to ordering the PCBs. (size: 340x411px)" /></p>
+<p>This would have gone a lot better if I’d had an oscilloscope or decent logic probe for debugging, but I developed a system of LEDs logic probes and used the Arduino to inject signals at arbitrary frequencies and got there in the end.</p>
+<p>Once the clock circuitry was set, it was time to design the layout itself. I wanted something that combined the blocky, industrial vibe of the analog circuitry with softer, more natural lines of timber. Luckily my Dad is very into furniture making, and was very keen to help out by supplying a piece of French Oak he had spare and as much of his highly specialised woodworking skills as I needed. I came up with a design (supported by my design consultant a.k.a. my Wife) with separate “clock” and “main board” sections, each contrasted by rough and clean cuts of the oak.</p>
+<p>The digits were small circuit boards mounted on brass standoffs with the cables drilled through the oak. There were twelve, to display 1 hour and 5 minute intervals using LEDs that were mounted on the back of the digit board and shone through slots. Having only a five minute tick may be a detractor for some, but this is as much a piece of wall art as it is a Swiss timepiece and it makes actually building the circuitry somewhat feasible.</p>
+<p><img src="https://willhart.io/post/cmos-analog-clock/digit.png" alt="A close up of the clock digit, seen mounted on the oak with brass standoffs and a drilled hole for routing cables through. (size: 1386x927px)" /></p>
+<p>The main board contained all the clock logic, with the ICs mounted in “industrial” rows, with as much many of the traces as possible routed on the back. At the other end to the ICs was a simple eucalpyt design I drew in inkscape and cut out of the solder mask in Kicad.</p>
+<p><img src="https://willhart.io/post/cmos-analog-clock/main_board.png" alt="A close up of the CMOS logic ICs mounted on the rough finished oak board. (size: 790x1036px)" /></p>
+<p>Overall I’m pleased with the design of the clock, and I like the contrast between the electronics and the timber.</p>
+<p><img src="https://willhart.io/post/cmos-analog-clock/clock.png" alt="An overall view of the clock. (size: 1600x800px)" /></p>
+<h2 id="what-i-learned">What I learned</h2>
+<p>The clock took about three years longer to complete than I’d planned. Partly this was doing the work while spending basically every waking moment working on my PhD, but partly I ran into a few snags that blocked me while I came up with a solution. Overall I feel like I learned an awful lot about analog circuitry, packaging and the challenges of creating a (hopefully) visually appealing but functional PCB design.</p>
+<p>The main issues were around routing the cables on the back and having proper connectors that would secure the cables from the back of the main board to the digits. Each digit required a ground and two signal cables, and for some reason I struggled to find appropriate “JST” connectors when I first built the boards. I then spent an awful lot of time playing around with adapter boards, weird pin header connectors and ribbon cables to get some solid connections, before I finally found some premade 3-pin JST cables and SMD headers off ebay.</p>
+<p>I also had some issues with assembling the main PCBs. Some of the smaller logic chips were at the limit of my hand soldering ability, and I didn’t yet have a proper heat gun. The board was a bit too large for my regular home reflow methods. This meant a few reworks before I got it right. Luckily as the most expensive components were in the DIP sockets, there wasn’t much wastage in terms of ICs.</p>
+<p>This was a very satisfying project to finish up, and not pictured is a CNC cut and laser engraved back plate to guide and constrain the cables on the back. This project was stressful at times, and holds the dubious record of being the only thing that has ever given me an instantaneous migraine!</p>
+<h2 id="schematics">Schematics</h2>
+<p>Below are images of the schematics for the clock circuitry.</p>
+<blockquote>
+<p>Right click and save as or open in a new tab for <em>slightly</em> higher resolution.</p>
+</blockquote>
+<p><img src="https://willhart.io/post/cmos-analog-clock/schematic_1.png" alt="Page 1 of the CMOS clock schematics (size: 1492x1049px)" />
+<img src="https://willhart.io/post/cmos-analog-clock/schematic_2.png" alt="Page 2 of the CMOS clock schematics (size: 1506x1054px)" /></p>
+</article>
+
+<div class="container col">
+  <h2>Comments</h2>
+  <blockquote>Comments are powered by github and <a href="https://giscus.app">giscus</a></blockquote>
+  <script src="https://giscus.app/client.js"
+        data-repo="will-hart/will-hart.github.io"
+        data-repo-id="MDEwOlJlcG9zaXRvcnkzMjQ2NjY3Mzg="
+        data-category="General"
+        data-category-id="DIC_kwDOE1oFcs4CtiK6"
+        data-mapping="og:title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+  </script>
+</div>
+</div>
+
+  <footer id="footer">
+    <div class="container col">
+      This website was hand-made using Zola and Tera.
+      All text and images are available under CC0 1.0 Universal and code under MIT unless otherwise specified. See <a href="https://github.com/will-hart/willhart.io/blob/main/LICENSE.md">LICENSE.md</a> for more.
+    </div>
+  </footer>
+</body>
+
+</html>

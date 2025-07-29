@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Zenobit&#x27;s Unity ECS (part 1) | willhart.io</title>
+
+
+  <link rel="icon" type="image/x-icon" href="/icons/icon_light_32x32.png">
+
+  
+<meta name="description" content="Part 1 of a look into a custom ECS for Unity. Posted on https://willhart.io" />
+<meta property="og:description" content="Part 1 of a look into a custom ECS for Unity" />
+<meta property="og:title" content="Zenobit&#x27;s Unity ECS (part 1)" />
+<meta property="og:url" content="https://willhart.io/post/zenobits-unity-ecs-part-1/">
+<meta property="og:type" content="article" />
+<meta property="og:locale" content="en_AU" />
+
+
+  <link rel="stylesheet" href="https://willhart.io/global.css?h=f83cd20cd0df26d72c2b" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sono:wght@200..800&display=swap" rel="stylesheet">
+
+  
+
+  <!-- Cloudflare Web Analytics -->
+  <script defer src='https://static.cloudflareinsights.com/beacon.min.js'
+    data-cf-beacon='{"token": "310f93cab66a42c5a328f246cc053025"}'></script>
+  <!-- End Cloudflare Web Analytics -->
+
+  <!-- Light/Dark theme toggling -->
+  <script type="text/javascript">
+    const storageKey = "websiteTheme";
+
+    // apply theme once we have a DOM
+    document.addEventListener("DOMContentLoaded", () => {
+      applyTheme();
+    })
+
+    // a function that toggles between light and dark theme
+    const toggleTheme = () => {
+      localStorage.setItem(storageKey, localStorage.getItem(storageKey) === "d" ? "l" : "d" );
+      applyTheme();
+    }
+
+    // a function that actually applies the theme
+    const applyTheme = () => {
+      const useDarkTheme = localStorage.getItem(storageKey) === "d";
+      document.getElementsByTagName("html")[0].className = useDarkTheme ? "dark" : "";
+      document.getElementById("theme-toggle").textContent = useDarkTheme ? "🔆" : "🌑";
+    }
+  </script>
+
+  <script type="speculationrules">
+  {
+    "prerender": [
+      { "where": { "selector_matches": "a" } }
+    ]
+  }
+  </script></head>
+
+<body>
+  <nav id="header">
+    <a href="/" aria-label="Website Logo and Link to Home Page">
+      <div id="logo" >&nbsp;</div>
+    </a>
+    <span>
+      <button type="button" id="theme-toggle" aria-label="Toggle Theme" onClick="toggleTheme()">🌑</button>
+      <a class="header-item" href="/post">POSTS</a>
+      <a class="header-item" href="/tag">TAGS</a>
+      <span class="header-item hide-when-slim">|</span>
+      <a class="header-item hide-when-slim" href="/tag/projects">PROJECTS</a>
+      <a class="header-item hide-when-slim" href="/tag/gamedev">GAMEDEV</a>
+      <a class="header-item hide-when-slim" href="/tag/electronics">ELECTRONICS</a>
+    </span>
+  </nav>
+
+  
+
+<div class="container col mb mt">
+  <h1>Zenobit&#x27;s Unity ECS (part 1)</h1>
+  <div class="col txtsm">
+    <span>Posted by Will Hart on 2017-01-16</span>
+    <div>
+      <span>See also:</span>
+      
+      <a class="txtsm mr" href="https://willhart.io/tag/code/">#code</a>
+      
+      <a class="txtsm mr" href="https://willhart.io/tag/gamedev/">#gamedev</a>
+      
+    </div>
+  </div>
+</div>
+
+
+
+<article class="container col mblg"><p><img src="https://willhart.io/post/zenobits-unity-ecs-part-1/ecs-background-2.png" alt="Zenobit ECS header (size: 1176x663px)" /></p>
+<blockquote>
+<p>I’ve recently started a collaboration with Zentropy under the name Zenobit
+Studios - for now you can find us at @ZenobitStudios on Twitter if you want to
+know more.</p>
+</blockquote>
+<p>Our first project was the November 2016 GitHub Game Jam, where we spent a month
+creating a very basic RTS. The game wasn’t that great (and our artist went AWOL
+which didn’t help), but we had a working RTS with a multilevel enemy AI by the
+end of it.</p>
+<p>For the game jam, our RTS was built on the back of an “ECS Architecture”, and I
+want to describe here why we both thought that this was a good approach for game
+architectural design that can be applied to many different game genres.</p>
+<blockquote>
+<p>I should probably point out at this point that I don’t believe there is any
+such thing as “the best” architecture in software. In fact, the following is
+100% subjective and opinion based. Your opinion may differ, which is fine. If
+you do want to chat about it, hit us up on Twitter or the comments below.</p>
+</blockquote>
+<p>As this post turned out to be quite long, I think I’ll break it up into three
+parts. In this first part I’m going to give some background on ECS
+architectures, and some of the decisions which lead us to write our own. In the
+second part I’m going to go into why we thought a pure (non-Unity) ECS was
+worthwhile, and I’ll finish off in the third part with a practical example.</p>
+<h2 id="what-is-an-ecs">What is an ECS?</h2>
+<p>ECS stands for Entity Component System, which refers to an architectural
+pattern. I’ll just put this here from
+<a rel="noopener nofollow noreferrer" target="_blank" href="https://en.wikipedia.org/wiki/Entity%E2%80%93component%E2%80%93system">Wikipedia</a>:</p>
+<blockquote>
+<p>Entity-component system (ECS) is an architectural pattern … [that uses]
+composition over inheritance… Every Entity consists of one or more
+components which add additional behavior or functionality. Therefore, the
+behavior of an entity can be changed at runtime by adding or removing
+components.</p>
+</blockquote>
+<p>In other words, a generic ECS system is just an approach to structuring the code
+of a game which uses:</p>
+<ul>
+<li><strong>Components</strong> to hold data and compose the way an Entity acts,</li>
+<li><strong>Entities</strong> to bundle together components, and</li>
+<li><strong>Systems</strong> to apply game logic to the data</li>
+</ul>
+<p>For example, an <code>Entity</code> can be composed by adding <code>Components</code> together. An
+enemy could be made up from <code>Health</code>, <code>Movement</code>, and <code>Shield</code> components.</p>
+<p>Various systems perform mutations on that data, (although some purists may
+prefer Components to be immutable) for instance a <code>MovementSystem</code> might find
+all the <code>Movement</code> Components and update them to move the entity around the game
+world.</p>
+<p>While there are many different ways to build an ECS, generally a key criteria is
+that components are very loosely coupled. This means there are few links between
+them, and each in theory is only responsible for its own particular area of
+interest, such as tracking Health, or Shield status.</p>
+<h2 id="why-not-just-use-unity-s-standard-approach">Why not just use Unity’s standard approach?</h2>
+<p>At this point I picture you yelling at your screen. What I described above was
+very similar to Unity’s standard approach of <code>GameObjects</code> (entities) and
+<code>MonoBehaviours</code> (components and systems). Unity’s approach could certainly be
+viewed as a brand of ECS, and in fact most of the things you can do with a
+“pure” ECS you can do within Unity’s structure. However, as I hope I’ll show in
+this series, doing it in plain C# is just a bit less… well, a bit less <em>ugly</em>
+and a lot more flexible.</p>
+<p>I’m going to take a simple example, and consider it from a number of angles
+below. Say you have an enemy Entity with <code>Health</code> and <code>Shield</code> Components (or
+MonoBehaviours). <code>Shield</code>s have <code>Energy</code> which reduces damage, but not every
+enemy has a shield.</p>
+<p>In the traditional Unity approach you would put the <code>Health</code> and <code>Shield</code>
+components on the same <code>GameObject</code>, then either link them in the Inspector or
+cache references to the other <code>MonoBehaviours</code> in the <code>Awake</code> or <code>Start</code>
+methods.</p>
+<blockquote>
+<p>Caching MonoBehaviours is pretty much standard practice in Unity because
+people say that GetComponent is a little slow, although its not clear that this
+is still true. FindXXX on the other hand should be used with caution as it
+iterates over every GameObject and Component in the scene!</p>
+</blockquote>
+<p>In the “pure” ECS approach you may have a <code>HealthSystem</code> and the enemies would
+be represented by Entities, some of which just have a <code>HealthComponent</code>, while
+others have a <code>HealthComponent</code> and a <code>ShieldComponent</code>. This is the composition
+part both Unity and pure ECS systems offer - if the Entity has a
+<code>ShieldComponent</code>, then it adds the “shield behaviour”.</p>
+<p>The Unity version might look like this:</p>
+<pre data-lang="cs" style="background-color:#2b303b;color:#c0c5ce;" class="language-cs "><code class="language-cs" data-lang="cs"><span style="color:#b48ead;">public class </span><span style="color:#ebcb8b;">HealthComponent </span><span style="color:#eff1f5;">: </span><span style="color:#a3be8c;">MonoBehaviour
+</span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public float </span><span style="color:#bf616a;">Health</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public float </span><span style="color:#bf616a;">MaxHealth</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    [</span><span style="color:#bf616a;">SerializeField</span><span style="color:#eff1f5;">] </span><span style="color:#b48ead;">private </span><span style="color:#eff1f5;">ShieldComponent </span><span style="color:#bf616a;">shield</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public void </span><span style="color:#8fa1b3;">TakeDamage</span><span style="color:#eff1f5;">(</span><span style="color:#b48ead;">float </span><span style="color:#bf616a;">damageCaused</span><span style="color:#eff1f5;">)
+</span><span style="color:#eff1f5;">    {
+</span><span style="color:#eff1f5;">        </span><span style="color:#bf616a;">Health </span><span>-= </span><span style="color:#bf616a;">shield </span><span>== </span><span style="color:#d08770;">null </span><span>? </span><span style="color:#bf616a;">damageCaused </span><span>: </span><span style="color:#bf616a;">shield</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">GetDamage</span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">damageCaused</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">private void </span><span style="color:#8fa1b3;">Update</span><span style="color:#eff1f5;">()  { </span><span style="color:#65737e;">// regeneration logic }
+</span><span style="color:#eff1f5;">}
+</span><span style="color:#eff1f5;">
+</span><span style="color:#b48ead;">public class </span><span style="color:#ebcb8b;">ShieldComponent </span><span style="color:#eff1f5;">: </span><span style="color:#a3be8c;">MonoBehaviour
+</span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public float </span><span style="color:#bf616a;">Energy</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public float </span><span style="color:#8fa1b3;">GetDamage</span><span style="color:#eff1f5;">(</span><span style="color:#b48ead;">float </span><span style="color:#bf616a;">damageCaused</span><span style="color:#eff1f5;">) { </span><span style="color:#65737e;">// logic }
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">private void </span><span style="color:#8fa1b3;">Update</span><span style="color:#eff1f5;">()  { </span><span style="color:#65737e;">// regeneration logic }
+</span><span style="color:#eff1f5;">}
+</span></code></pre>
+<p>It’s relatively easy to follow, however there is a dependency between the Health
+and Shield logic, and the logic is spread out over two classes.</p>
+<p>The “pure” ECS implementation on the other hand may look like this:</p>
+<pre data-lang="cs" style="background-color:#2b303b;color:#c0c5ce;" class="language-cs "><code class="language-cs" data-lang="cs"><span style="color:#65737e;">// The System
+</span><span style="color:#b48ead;">public </span><span>HealthSystem : </span><span style="color:#bf616a;">AbstractEcsSystem
+</span><span>{
+</span><span>   </span><span style="color:#b48ead;">public void </span><span style="color:#8fa1b3;">Update</span><span>()
+</span><span>   {
+</span><span>      </span><span style="color:#65737e;">// find damage, shield energy and current health
+</span><span>      </span><span style="color:#65737e;">// reduce shield energy and health as required
+</span><span>      </span><span style="color:#65737e;">// set DamageReceived to 0 once handled
+</span><span>   }
+</span><span>}
+</span><span>
+</span><span style="color:#65737e;">// The Components
+</span><span>[</span><span style="color:#bf616a;">Serializable</span><span>]
+</span><span style="color:#b48ead;">public </span><span>HealthComponent : </span><span style="color:#bf616a;">AbstractEcsComponent
+</span><span>{
+</span><span>   </span><span style="color:#b48ead;">public float </span><span style="color:#bf616a;">Health </span><span>{</span><span style="color:#bf616a;">get</span><span>; </span><span style="color:#bf616a;">set</span><span>;}
+</span><span>   </span><span style="color:#b48ead;">public float </span><span style="color:#bf616a;">MaxHealth </span><span>{</span><span style="color:#bf616a;">get</span><span>; </span><span style="color:#bf616a;">set</span><span>;}
+</span><span>   </span><span style="color:#b48ead;">public float </span><span style="color:#bf616a;">DamageReceived </span><span>{</span><span style="color:#bf616a;">get</span><span>; </span><span style="color:#bf616a;">set</span><span>;}
+</span><span>}
+</span><span>
+</span><span>[</span><span style="color:#bf616a;">Serializable</span><span>]
+</span><span style="color:#b48ead;">public </span><span>ShieldComponent : </span><span style="color:#bf616a;">AbstractEcsComponent
+</span><span>{
+</span><span>   </span><span style="color:#b48ead;">public float </span><span style="color:#bf616a;">Energy </span><span>{</span><span style="color:#bf616a;">get</span><span>; </span><span style="color:#bf616a;">set</span><span>;}
+</span><span>}
+</span></code></pre>
+<p>Interestingly, we are no longer exposing public methods - all the logic is done
+in Update. This reduces the “surface area” of our API, making it much easier to
+debug - if something goes wrong, we generally only need to look at one method.</p>
+<p>To replace public methods, such as weapons calling
+<code>healthComponent.TakeDamage(4f)</code>, we now modify component data, for instance by
+executing <code>healthComponent.DamageReceived += 4f</code>. When the system runs, it uses
+these values to allocate damage.</p>
+<p>If logic and data are separated, and each System is responsible for only doing
+one thing, then its very hard to have 1,000 line mega classes. Our longest
+system is 167 lines long including comments, file headers and so on, but the
+majority are a lot less than 50-100 lines all up. These systems are standalone,
+responsible for only one thing, located in the same place in our namespace
+hierarchy, and are generally trivial to understand.</p>
+<p>@@ Aren’t there already ECS systems?</p>
+<p>Both @Zentropy and I (the two parts of Zenobit) were familiar with Unity, but
+uncomfortable with a lot of the design decisions in the underlying framework, or
+at least with the way that Unity encourages you to design your code.</p>
+<p>We had both briefly considered other mature ECS solutions such as
+<a rel="noopener nofollow noreferrer" target="_blank" href="https://github.com/sschmid/Entitas-CSharp">Entitas</a>, however there were aspects
+of most systems that we weren’t happy with and they seemed quite heavyweight for
+what we were after.</p>
+<p>We had both independently started developing our own very lightweight ECS
+frameworks in plain C# before we started making games. Mine grew from <a rel="noopener nofollow noreferrer" target="_blank" href="https://gist.github.com/will-hart/4dce1335d05d34dfbc32d61d32e56b5b">this
+snippet</a>.
+When we began to collaborate, we brought the best of our systems together, and
+what we’ve ended up with what we think is a fairly robust, lightweight
+architecture for developing games. Of course, we are only developing our second
+game using the system so it’s possible we will totally change our mind in a few
+months!</p>
+<h2 id="in-conclusion">In Conclusion</h2>
+<p>Ok, I think that’s enough setup for now! In <a href="/post/zenobits-unity-ecs-part-2">Part 2</a>
+of this series, I’m going to step through some different scenarios where we
+think a “pure” ECS approach provides some benefits.</p>
+</article>
+
+<div class="container col">
+  <h2>Comments</h2>
+  <blockquote>Comments are powered by github and <a href="https://giscus.app">giscus</a></blockquote>
+  <script src="https://giscus.app/client.js"
+        data-repo="will-hart/will-hart.github.io"
+        data-repo-id="MDEwOlJlcG9zaXRvcnkzMjQ2NjY3Mzg="
+        data-category="General"
+        data-category-id="DIC_kwDOE1oFcs4CtiK6"
+        data-mapping="og:title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+  </script>
+</div>
+</div>
+
+  <footer id="footer">
+    <div class="container col">
+      This website was hand-made using Zola and Tera.
+      All text and images are available under CC0 1.0 Universal and code under MIT unless otherwise specified. See <a href="https://github.com/will-hart/willhart.io/blob/main/LICENSE.md">LICENSE.md</a> for more.
+    </div>
+  </footer>
+</body>
+
+</html>

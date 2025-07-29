@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>A very switchy button, LD34 Post-Mortem | willhart.io</title>
+
+
+  <link rel="icon" type="image/x-icon" href="/icons/icon_light_32x32.png">
+
+  
+<meta name="description" content="A look at my Ludum Dare 34 entry, a game to scratch that switch switching itch.. Posted on https://willhart.io" />
+<meta property="og:description" content="A look at my Ludum Dare 34 entry, a game to scratch that switch switching itch." />
+<meta property="og:title" content="A very switchy button, LD34 Post-Mortem" />
+<meta property="og:url" content="https://willhart.io/post/a-very-switchy-button-ld34-post-mortem/">
+<meta property="og:type" content="article" />
+<meta property="og:locale" content="en_AU" />
+
+
+  <link rel="stylesheet" href="https://willhart.io/global.css?h=f83cd20cd0df26d72c2b" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sono:wght@200..800&display=swap" rel="stylesheet">
+
+  
+
+  <!-- Cloudflare Web Analytics -->
+  <script defer src='https://static.cloudflareinsights.com/beacon.min.js'
+    data-cf-beacon='{"token": "310f93cab66a42c5a328f246cc053025"}'></script>
+  <!-- End Cloudflare Web Analytics -->
+
+  <!-- Light/Dark theme toggling -->
+  <script type="text/javascript">
+    const storageKey = "websiteTheme";
+
+    // apply theme once we have a DOM
+    document.addEventListener("DOMContentLoaded", () => {
+      applyTheme();
+    })
+
+    // a function that toggles between light and dark theme
+    const toggleTheme = () => {
+      localStorage.setItem(storageKey, localStorage.getItem(storageKey) === "d" ? "l" : "d" );
+      applyTheme();
+    }
+
+    // a function that actually applies the theme
+    const applyTheme = () => {
+      const useDarkTheme = localStorage.getItem(storageKey) === "d";
+      document.getElementsByTagName("html")[0].className = useDarkTheme ? "dark" : "";
+      document.getElementById("theme-toggle").textContent = useDarkTheme ? "🔆" : "🌑";
+    }
+  </script>
+
+  <script type="speculationrules">
+  {
+    "prerender": [
+      { "where": { "selector_matches": "a" } }
+    ]
+  }
+  </script></head>
+
+<body>
+  <nav id="header">
+    <a href="/" aria-label="Website Logo and Link to Home Page">
+      <div id="logo" >&nbsp;</div>
+    </a>
+    <span>
+      <button type="button" id="theme-toggle" aria-label="Toggle Theme" onClick="toggleTheme()">🌑</button>
+      <a class="header-item" href="/post">POSTS</a>
+      <a class="header-item" href="/tag">TAGS</a>
+      <span class="header-item hide-when-slim">|</span>
+      <a class="header-item hide-when-slim" href="/tag/projects">PROJECTS</a>
+      <a class="header-item hide-when-slim" href="/tag/gamedev">GAMEDEV</a>
+      <a class="header-item hide-when-slim" href="/tag/electronics">ELECTRONICS</a>
+    </span>
+  </nav>
+
+  
+
+<div class="container col mb mt">
+  <h1>A very switchy button, LD34 Post-Mortem</h1>
+  <div class="col txtsm">
+    <span>Posted by Will Hart on 2015-12-20</span>
+    <div>
+      <span>See also:</span>
+      
+      <a class="txtsm mr" href="https://willhart.io/tag/gamedev/">#gamedev</a>
+      
+    </div>
+  </div>
+</div>
+
+
+
+<article class="container col mblg"><p><img src="https://willhart.io/post/a-very-switchy-button-ld34-post-mortem/switchy-button-ld34.png" alt="Screenshot of the game in action (size: 798x602px)" /></p>
+<p><a rel="noopener nofollow noreferrer" target="_blank" href="http://ludumdare.com/compo/ludum-dare-34/?action=preview&amp;uid=50407">Play the game here</a> | <a rel="noopener nofollow noreferrer" target="_blank" href="https://github.com/will-hart/ludum_react_boilerplate/tree/ld34">View the source code here</a></p>
+<h2 id="the-concept">The Concept</h2>
+<p>I had the idea for Button Simulator, my LD34 entry, while watching a crappy
+science fiction movie. The characters sat at their space ship consoles, flicking
+switches and pressing buttons. There was something strangely entertaining about
+the experience - the link between human and machine - a sense of power, and a
+satisfaction in being able to control the world around you with just a flick of
+your fingers.</p>
+<p>I suppose its also the same little itch that DCS A-10 and its hard-core
+simulator siblings scratch, or <a rel="noopener nofollow noreferrer" target="_blank" href="https://www.youtube.com/watch?v=j6zseFi070E">this mission control
+desk</a>. But how to translate a
+switch flicking simulation into something that was fun to play and could be
+completed in a weekend?</p>
+<p>I suppose I completed the process back to front - instead of using the theme to
+generate a game idea, I used the theme to flavour the game idea I already had!
+In the final days leading up to the theme announcement I took the 20 final
+themes and wrote a short paragraph - a “hook” - for as many themes as I could
+that set out how my game idea would fit into each theme. My hook for the
+“growing” theme was:</p>
+<blockquote>
+<p>“Last year’s crop wasn’t that great,
+and unfortunately we had to let Freddy go…
+…from altitude.
+Don’t let the crop die”</p>
+</blockquote>
+<p>This turned out to be pretty close to the final intro text. Even if my approach
+was back to front it meant that although I wasn’t ecstatic about the themes that
+were announced, at least I had something ready to go.</p>
+<h2 id="making-the-game">Making the game</h2>
+<p>My last Ludum Dare entry was probably the worst thing I have ever publicly
+released. I wasn’t happy with it at all, and I think it was because I didn’t
+have a solid concept in mind before I started, and as such was a bit all over
+the place. This time I decided to do a lot more planning and so I spent the
+morning of the first day jotting down some thoughts and scribbling out the UI.
+My idea was that there was a relatively old fashioned computer terminal that
+controlled the growth of a crop. You had to flick switches and turn dials to
+manage light, food and water, and keep the crop growing.</p>
+<p>I had decided ahead of time to make the game using React.js and Redux. I’ve
+played around with web interfaces using these technologies, but I was curious to
+apply the Redux/Flux methodology to a game. (If you aren’t aware of React/Flux
+then its worth reading up on, if nothing else as another way to approach
+application design) As it turned out React was very well suited to the type of
+game I made and I felt it helped me develop very rapidly and relatively bug
+free. Hot reloading (i.e. when you save the source the changes get immediately
+injected into the browser) is a massive productivity increase, particularly when
+playing around with styles and layout.</p>
+<p>I could probably have made more use of ES6 and javascript features, in
+particular a lot of my game logic could have been simplified using a few calls
+to Array.reduce(), and I should probably have used selectors for some of my UI
+code, however overall I’m happy with the way the code base turned out. Would I
+use React again for another LD entry? Depending on the type of game, yes I
+probably would.</p>
+<p>I used Inkscape for the graphics and Audacity to make the sounds. The sounds
+effects were all bundled in a single file and I used Howler.js to treat them as
+a sound sprite. I think the buttons have a really nice tactile feel to them, and
+at least some of you agree.</p>
+<h2 id="how-it-was-received">How it was received</h2>
+<p>Most comments have been positive, although time will tell what people have
+actually rated the game!</p>
+<p>I did wonder a bit about the difficulty level. As I made it and am aware of the
+logic, I can win quite easily. However for other players (although its not meant
+to be an easy game) a lot of the comments have been that its a bit confusing and
+challenging. I did put in some help tucked away in one corner which explains a
+lot of the mechanics (and one of the game screenshots shows the help screen),
+but many players didn’t seem to find the option.</p>
+<p>I’m a bit torn about this feedback - the “plot” of the game is that you have no
+idea what you are doing, so providing any sort of help is kind of breaking that
+premise. At the same time the game is meant to be fun. I think in future I’ll
+make the help button a bit more prominent.</p>
+<h2 id="what-now">What now?</h2>
+<p>I’m thinking of making the game into a sort of multiplayer party game that I can
+play with my mates. This could probably be done in React using RethinkDB and
+websockets, however in this case I think I’ll do it in Unity as I want to try
+out Forge Networking. I do want to bring a lot of the React/Flux mentality to
+the C# version though, where appropriate, particularly the idea of a single
+global state - although I think I’ll discard some of the immutability Flux
+favours for its state.</p>
+<p><a rel="noopener nofollow noreferrer" target="_blank" href="http://ludumdare.com/compo/ludum-dare-34/?action=preview&amp;uid=50407">Play the game here</a> | <a rel="noopener nofollow noreferrer" target="_blank" href="https://github.com/will-hart/ludum_react_boilerplate/tree/ld34">View the source code here</a></p>
+</article>
+
+<div class="container col">
+  <h2>Comments</h2>
+  <blockquote>Comments are powered by github and <a href="https://giscus.app">giscus</a></blockquote>
+  <script src="https://giscus.app/client.js"
+        data-repo="will-hart/will-hart.github.io"
+        data-repo-id="MDEwOlJlcG9zaXRvcnkzMjQ2NjY3Mzg="
+        data-category="General"
+        data-category-id="DIC_kwDOE1oFcs4CtiK6"
+        data-mapping="og:title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+  </script>
+</div>
+</div>
+
+  <footer id="footer">
+    <div class="container col">
+      This website was hand-made using Zola and Tera.
+      All text and images are available under CC0 1.0 Universal and code under MIT unless otherwise specified. See <a href="https://github.com/will-hart/willhart.io/blob/main/LICENSE.md">LICENSE.md</a> for more.
+    </div>
+  </footer>
+</body>
+
+</html>

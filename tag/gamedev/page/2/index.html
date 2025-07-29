@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>William Hart | willhart.io</title>
+
+
+  <link rel="icon" type="image/x-icon" href="/icons/icon_light_32x32.png">
+
+  
+  <meta name="description"
+    content="The home page of Will Hart, scattered with a few random thoughts about code, electronics and other things.">
+  
+
+  <link rel="stylesheet" href="https://willhart.io/global.css?h=f83cd20cd0df26d72c2b" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sono:wght@200..800&display=swap" rel="stylesheet">
+
+  
+
+  <!-- Cloudflare Web Analytics -->
+  <script defer src='https://static.cloudflareinsights.com/beacon.min.js'
+    data-cf-beacon='{"token": "310f93cab66a42c5a328f246cc053025"}'></script>
+  <!-- End Cloudflare Web Analytics -->
+
+  <!-- Light/Dark theme toggling -->
+  <script type="text/javascript">
+    const storageKey = "websiteTheme";
+
+    // apply theme once we have a DOM
+    document.addEventListener("DOMContentLoaded", () => {
+      applyTheme();
+    })
+
+    // a function that toggles between light and dark theme
+    const toggleTheme = () => {
+      localStorage.setItem(storageKey, localStorage.getItem(storageKey) === "d" ? "l" : "d" );
+      applyTheme();
+    }
+
+    // a function that actually applies the theme
+    const applyTheme = () => {
+      const useDarkTheme = localStorage.getItem(storageKey) === "d";
+      document.getElementsByTagName("html")[0].className = useDarkTheme ? "dark" : "";
+      document.getElementById("theme-toggle").textContent = useDarkTheme ? "🔆" : "🌑";
+    }
+  </script>
+
+  <script type="speculationrules">
+  {
+    "prerender": [
+      { "where": { "selector_matches": "a" } }
+    ]
+  }
+  </script></head>
+
+<body>
+  <nav id="header">
+    <a href="/" aria-label="Website Logo and Link to Home Page">
+      <div id="logo" >&nbsp;</div>
+    </a>
+    <span>
+      <button type="button" id="theme-toggle" aria-label="Toggle Theme" onClick="toggleTheme()">🌑</button>
+      <a class="header-item" href="/post">POSTS</a>
+      <a class="header-item" href="/tag">TAGS</a>
+      <span class="header-item hide-when-slim">|</span>
+      <a class="header-item hide-when-slim" href="/tag/projects">PROJECTS</a>
+      <a class="header-item hide-when-slim" href="/tag/gamedev">GAMEDEV</a>
+      <a class="header-item hide-when-slim" href="/tag/electronics">ELECTRONICS</a>
+    </span>
+  </nav>
+
+  
+
+
+
+
+<article class="container col">
+  <h1>Posts tagged as "gamedev"</h1>
+
+  <div class="txtsm mb">
+    <a href="\tag">See all tags</a>
+    
+<nav>
+  
+  <a href="https:&#x2F;&#x2F;willhart.io&#x2F;tag&#x2F;gamedev&#x2F;">ᐊ Previous</a>
+  
+
+  |
+
+  
+  Next ᐅ
+  
+</nav>
+
+  </div>
+
+  
+  
+<div class="mb">
+  <div>
+      <h3>
+        <a title="View post: Ludum Dare 32 Postmortem - Colour Rocket" href="https://willhart.io/post/ludum-dare-32-postmortem-colour-rocket/">
+          Ludum Dare 32 Postmortem - Colour Rocket
+        </a>
+      </h3>
+      <div class="row">
+        
+        <a class="txtsm mr" href="https://willhart.io/tag/gamedev/">#gamedev</a>
+        
+      </div>
+      <p>A post mortem of the game I build for Ludum Dare 32 - Colour Rocket</p>
+  </div>
+</div>
+
+  
+
+  <div class="txtsm">
+    
+<nav>
+  
+  <a href="https:&#x2F;&#x2F;willhart.io&#x2F;tag&#x2F;gamedev&#x2F;">ᐊ Previous</a>
+  
+
+  |
+
+  
+  Next ᐅ
+  
+</nav>
+
+  </div>
+</article>
+</div>
+
+  <footer id="footer">
+    <div class="container col">
+      This website was hand-made using Zola and Tera.
+      All text and images are available under CC0 1.0 Universal and code under MIT unless otherwise specified. See <a href="https://github.com/will-hart/willhart.io/blob/main/LICENSE.md">LICENSE.md</a> for more.
+    </div>
+  </footer>
+</body>
+
+</html>

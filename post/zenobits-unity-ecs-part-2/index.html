@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Zenobit&#x27;s Unity ECS (part 2) | willhart.io</title>
+
+
+  <link rel="icon" type="image/x-icon" href="/icons/icon_light_32x32.png">
+
+  
+<meta name="description" content="Part 2 of a look into a custom ECS for Unity. Posted on https://willhart.io" />
+<meta property="og:description" content="Part 2 of a look into a custom ECS for Unity" />
+<meta property="og:title" content="Zenobit&#x27;s Unity ECS (part 2)" />
+<meta property="og:url" content="https://willhart.io/post/zenobits-unity-ecs-part-2/">
+<meta property="og:type" content="article" />
+<meta property="og:locale" content="en_AU" />
+
+
+  <link rel="stylesheet" href="https://willhart.io/global.css?h=f83cd20cd0df26d72c2b" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sono:wght@200..800&display=swap" rel="stylesheet">
+
+  
+
+  <!-- Cloudflare Web Analytics -->
+  <script defer src='https://static.cloudflareinsights.com/beacon.min.js'
+    data-cf-beacon='{"token": "310f93cab66a42c5a328f246cc053025"}'></script>
+  <!-- End Cloudflare Web Analytics -->
+
+  <!-- Light/Dark theme toggling -->
+  <script type="text/javascript">
+    const storageKey = "websiteTheme";
+
+    // apply theme once we have a DOM
+    document.addEventListener("DOMContentLoaded", () => {
+      applyTheme();
+    })
+
+    // a function that toggles between light and dark theme
+    const toggleTheme = () => {
+      localStorage.setItem(storageKey, localStorage.getItem(storageKey) === "d" ? "l" : "d" );
+      applyTheme();
+    }
+
+    // a function that actually applies the theme
+    const applyTheme = () => {
+      const useDarkTheme = localStorage.getItem(storageKey) === "d";
+      document.getElementsByTagName("html")[0].className = useDarkTheme ? "dark" : "";
+      document.getElementById("theme-toggle").textContent = useDarkTheme ? "🔆" : "🌑";
+    }
+  </script>
+
+  <script type="speculationrules">
+  {
+    "prerender": [
+      { "where": { "selector_matches": "a" } }
+    ]
+  }
+  </script></head>
+
+<body>
+  <nav id="header">
+    <a href="/" aria-label="Website Logo and Link to Home Page">
+      <div id="logo" >&nbsp;</div>
+    </a>
+    <span>
+      <button type="button" id="theme-toggle" aria-label="Toggle Theme" onClick="toggleTheme()">🌑</button>
+      <a class="header-item" href="/post">POSTS</a>
+      <a class="header-item" href="/tag">TAGS</a>
+      <span class="header-item hide-when-slim">|</span>
+      <a class="header-item hide-when-slim" href="/tag/projects">PROJECTS</a>
+      <a class="header-item hide-when-slim" href="/tag/gamedev">GAMEDEV</a>
+      <a class="header-item hide-when-slim" href="/tag/electronics">ELECTRONICS</a>
+    </span>
+  </nav>
+
+  
+
+<div class="container col mb mt">
+  <h1>Zenobit&#x27;s Unity ECS (part 2)</h1>
+  <div class="col txtsm">
+    <span>Posted by Will Hart on 2017-01-20</span>
+    <div>
+      <span>See also:</span>
+      
+      <a class="txtsm mr" href="https://willhart.io/tag/code/">#code</a>
+      
+      <a class="txtsm mr" href="https://willhart.io/tag/gamedev/">#gamedev</a>
+      
+    </div>
+  </div>
+</div>
+
+
+
+<article class="container col mblg"><p>In the <a href="/post/zenobits-unity-ecs-part-1">first part</a>, we introduced the ECS
+architecture and explained a bit about why we chose to avoid Unity’s standard
+architectural approach. We also set up an example, using entities with both a
+<code>HealthComponent</code> and an optional <code>ShieldComponent</code>.</p>
+<p><img src="https://willhart.io/post/zenobits-unity-ecs-part-2/ecs-background-2.png" alt="Zenobit ECS header (size: 1176x663px)" /></p>
+<p>In this part I’ll go into some more detail, using this example, of some specific
+areas where we thought a pure ECS offered some benefits. Zentropy has provided
+some value suggestions for this article, and again I’d like to point out that
+this is purely our opinion, and we’d welcome discussion!</p>
+<h2 id="separation-of-logic-and-data">Separation of Logic and Data</h2>
+<p>As I touched on in the first part, a major difference between a pure ECS and
+Unity’s approach to ECS is that Unity encourages merging components and systems
+into the same class, that is: data and logic are in the same place. This
+approach works quite well for small or simple projects, however as the project
+grows in complexity, I’d argue that it can quickly lead to a code base that is
+tangled up and confusing.</p>
+<p>Already we can see a potential confusion in our Health / Shield example. We have
+placed our logic in the <code>HealthComponent</code>, but in order to determine how much
+damage to take, the <code>HealthComponent</code> has to access the <code>ShieldComponent</code>.
+However, the <code>ShieldComponent</code> may also need its own logic to determine how much
+damage it saves.</p>
+<p>All of a sudden, our components are no longer standalone, and there is a
+dependency between them which looks like the following:</p>
+<p><img src="https://willhart.io/post/zenobits-unity-ecs-part-2/unity_dependencies-1.png" alt="Interdependencies in Unity’s Approach to ECS" /></p>
+<p>This is usually resolved by making everything public on MonoBehaviours, or
+exposing public methods, which isn’t too different to the ECS approach.</p>
+<p>However, two issues remain. Either:</p>
+<ol>
+<li>Our damage logic is spread over two (or more) files, or</li>
+<li>Components are responsible for setting values on other components, which
+violates the single responsibility principle.</li>
+</ol>
+<p>In the pure ECS approach, this problem is resolved by moving logic “up” a level.
+The logic is placed in a <code>HealthSystem</code>, which reads in the component data, and
+allocates the appropriate amount of damage to shield energy and current health.
+The dependencies now look a little like this (assuming current shield and health
+levels are accessed publicly)</p>
+<p><img src="https://willhart.io/post/zenobits-unity-ecs-part-2/ecs_dependencies-1.png" alt="Interdependencies in a pure ECS Approach" /></p>
+<p>Now arguably there isn’t a huge difference between ECS and Unity here in this
+simplistic example, but in my mind the ECS approach is considerably cleaner -
+the logic is all in one place, and the Components don’t do <em>anything</em> except
+hold data.</p>
+<p>When all our logic is in standalone systems, our game itself (i.e. not just the
+entities) becomes composable. For instance we can build up our game from
+systems:</p>
+<pre data-lang="cs" style="background-color:#2b303b;color:#c0c5ce;" class="language-cs "><code class="language-cs" data-lang="cs"><span style="color:#bf616a;">Ecs</span><span>.</span><span style="color:#bf616a;">AddSystem</span><span>(</span><span style="color:#bf616a;">DamageSystem</span><span>);
+</span><span style="color:#bf616a;">Ecs</span><span>.</span><span style="color:#bf616a;">AddSystem</span><span>(</span><span style="color:#bf616a;">HealthRegenerationSystem</span><span>);
+</span><span style="color:#bf616a;">Ecs</span><span>.</span><span style="color:#bf616a;">AddSystem</span><span>(</span><span style="color:#bf616a;">MovementSystem</span><span>);
+</span></code></pre>
+<p>Functionality can then be turned on or off in one place in the code base, by
+adding or removing a single line where we “bootstrap” our ECS. This is much
+harder to do when the logic is scattered throughout MonoBehaviours and prefabs.</p>
+<h2 id="managing-links-between-components">Managing Links Between Components</h2>
+<p>Writing our own ECS let us have complete control over the lifecycle of the
+classes that it contains via their constructors. We can use this to provide
+efficient methods for accessing either specific components on an entity, all
+instances of a component type, or a subset of components.</p>
+<p>If we wanted all Components of a given type currently in the game with Unity, we
+would need to do something like this:</p>
+<pre data-lang="cs" style="background-color:#2b303b;color:#c0c5ce;" class="language-cs "><code class="language-cs" data-lang="cs"><span style="color:#b48ead;">var </span><span style="color:#bf616a;">healthComps </span><span>= </span><span style="color:#bf616a;">Object</span><span>.</span><span style="color:#bf616a;">FindObjectsOfType</span><span>(
+</span><span>    typeof(HealthComponent)) as HealthComponent[];
+</span></code></pre>
+<p>This approach loops through every game object and component in the scene, which
+quickly becomes performance prohibitive.</p>
+<p>In our ECS, we can do:</p>
+<pre data-lang="cs" style="background-color:#2b303b;color:#c0c5ce;" class="language-cs "><code class="language-cs" data-lang="cs"><span style="color:#b48ead;">var </span><span style="color:#bf616a;">healthComps </span><span>= </span><span style="color:#bf616a;">_ecsEngine</span><span>.</span><span style="color:#bf616a;">Get</span><span>&lt;HealthComp&gt;();
+</span></code></pre>
+<p>Internally, our ECS approach uses a Dictionary lookup, which in the normal, best
+case is <code>O(1)</code> - i.e. it takes the same amount of time no matter how many
+Components we have.</p>
+<p>As we have complete control over the construction of Components and Entities, we
+can also trigger <code>Events</code> when Components are added or removed from the ECS
+system.</p>
+<p>This lets us do neat things; we can create lazily evaluated <code>Matcher</code> classes
+that retrieve components based on a specific criteria, and only update when the
+underlying ECS data changes. In our example, we can use this to track all
+Entities with a <code>HealthComp</code> but not a <code>ShieldComp</code>, and be guaranteed that this
+is up to date:</p>
+<pre data-lang="cs" style="background-color:#2b303b;color:#c0c5ce;" class="language-cs "><code class="language-cs" data-lang="cs"><span style="color:#65737e;">// field declaration
+</span><span style="color:#b48ead;">private </span><span>Matcher </span><span style="color:#bf616a;">_noShieldEntities </span><span>= new Matcher()
+</span><span>        .</span><span style="color:#bf616a;">AllOf</span><span>(</span><span style="color:#bf616a;">ComponentTypes</span><span>.</span><span style="color:#bf616a;">HealthComponent</span><span>)
+</span><span>        .</span><span style="color:#bf616a;">NoneOf</span><span>(</span><span style="color:#bf616a;">ComponentTypes</span><span>.</span><span style="color:#bf616a;">ShieldComponent</span><span>);
+</span></code></pre>
+<p>These can then be accessed by calling <code>_noShields.GetMatches()</code>, which returns
+<code>IEnumerable&lt;EcsEntity&gt;</code> and is evaluated lazily, and only if the underlying
+data structure is “dirty”.</p>
+<p>This gives us improved performance and flexibility relative to Unity’s standard
+approach, but perhaps more importantly the logic for this is hidden inside the
+ECS implementation, and doesn’t clutter up our Components themselves.</p>
+<h2 id="serialisation">Serialisation</h2>
+<p>Taking our <code>Health</code> and <code>Shield</code> entities again, lets assume there are 10 different
+types of enemies. Half of them have shields, but all of them have different
+shield energy and maximum health values. How do we handle this in Unity?</p>
+<p>We could manage this with prefabs, however as we can’t use inheritance here,
+this approach scales very poorly. Unity’s built in serialisation is a bit hit
+and miss, but luckily there are several decent external libraries. We could load
+data from file (XML, YAML or JSON), and then somehow overwrite, or manually
+populate MonoBehaviours. Again this scales poorly for any sort of moderately
+complex data structure and needs a fair bit of hand written logic if we want to
+dynamically add or remove components.</p>
+<p>By contrast, the ECS approach has the following structure</p>
+<p><img src="https://willhart.io/post/zenobits-unity-ecs-part-2/ecs_serialisation_approach.png" alt="Serialising Entity Data - the ECS Way" /></p>
+<p>The key here is that we are just serialising / deserialising data structures. As
+we have complete control over the process we can determine when and how Unity’s
+game objects are created, pooled or destroyed. Unity has become a <em>GUI</em> for our
+game. It is trivial to serialise an entire Entity, or a group of Entities, load
+them in and attach “display” game objects to them.</p>
+<p>As our entire ECS is serializable and housed in a single location, saving games
+suddenly becomes a lot simpler - we just serialize our ECS system to file (see
+note 1).</p>
+<h2 id="portability">Portability</h2>
+<p>The way our ECS is designed, we essentially use Unity as a GUI, which overlays
+our game architecture. Unity does a couple of things:</p>
+<ol>
+<li>Handles user input,</li>
+<li>Provide a physics engine (i.e. notifying the ECS when a collision occurs,
+handling projectile ballistics, etc),</li>
+<li>Displays the current state of the game to the player</li>
+</ol>
+<p>In specific instances, such as collision handling, or UI we use “bridging”
+MonoBehaviours, which inject data from Unity methods such as <code>OnCollisionEnter</code>
+into our ECS. These are the only Unity specific aspects of the game architecture
+and are usually very simple 1-2 line methods.</p>
+<p>In theory, this means we are less bound to the Unity ecosystem. If we decided to
+move to Godot once C# support landed, we would only have to replace the
+“bridging” classes and the rest of our game logic could remain almost the same
+(see note 2).</p>
+<h2 id="performance">Performance</h2>
+<p>This may be a bit of stretch, but by Unity’s <a rel="noopener nofollow noreferrer" target="_blank" href="https://blogs.unity3d.com/2015/12/23/1k-update-calls/">own
+analysis</a> (and admittedly
+on iPhone builds), using Unity’s Update magic method was $5-20\times$ slower
+than just calling a bare update method. This may not add more than a few
+milliseconds per frame (2-18ms added with <em>10,000</em> <code>MonoBehaviour</code> instances) so
+the impact is not huge, but if the MonoBehaviour’s can be avoided than that’s an
+easy performance pickup. At the end of the day, why carry around the whole
+MonoBehaviour or ScriptableObject baggage when in these instances the
+functionality isn’t being used?</p>
+<p>(Of course, it possible that this performance gap will decrease over time as
+Unity optimises further).</p>
+<h2 id="refactoring-and-adding-features">Refactoring and Adding Features</h2>
+<p>A side effect of following the single responsibility principle, is that when its
+time to refactor code it becomes a lot simpler. If we want to change the way
+that damage logic works, we just go to the DamageSystem and edit that file, with
+no need to hunt through any other classes. This is true of both Unity and pure
+ECS approaches, but as we’ve seen the Unity approach sometimes leads to logic
+being spread out amongst different classes.</p>
+<p>Similarly, adding new features becomes relatively easy. Say we want to introduce
+a system which can take energy from shields and add it to health. All we need to
+do is create a system that looks a little bit like our health system, runs after
+it, and transfers shield energy to health.</p>
+<p>We could of course add these same lines to our <code>HealthComponent</code> in a Unity
+approach, (although as noted this creates interdependencies in our components),
+but under the ECS approach, we don’t have to touch any of our other code to make
+these changes, which reduces the chance of introducing unwanted bugs.</p>
+<p>One potential pitfall here is that if we add a lot of systems like this you can
+see that we might end up looping through the lists of shield or health
+components a lot. For very large games, perhaps this might cause unwanted
+performance issues. My usual mantra here is to implement it first, then if the
+profiler suggests we are spending too much time looping through components, we
+can start to consolidate and otherwise optimise our systems.</p>
+<h2 id="having-a-single-source-of-truth">Having a single source of truth</h2>
+<p>Actually, it turns out that having a single source of truth - i.e. a container
+which holds all relevant information is extremely useful for certain features.
+In particular I’m thinking of AI. Our in-house AI system is based on GOAP (see
+note 3), and to make sensible decisions it needs to be able to efficiently query
+the game state and ask a wide variety of questions. Our AI would be several
+orders of magnitude more difficult to implement if we weren’t able to use our
+ECS to find / match and interrogate game state through the ECS.</p>
+<h2 id="its-not-all-bad-right">Its not all bad, right?</h2>
+<p>I wouldn’t say the Unity design approach doesn’t work, in fact I’ve happily used
+this type of architecture on lots of other projects.</p>
+<p>There are some definite weaknesses of our ECS approach:</p>
+<ol>
+<li>A lot of our performance gains in terms of querying for Components and
+Entities comes at the expense of increased memory usage</li>
+<li>Using Unity’s physics and colliders etc requires a level of indirection to
+work</li>
+<li>The ECS approach probably requires more overall code to be written, even if
+the individual methods and classes are small(er).</li>
+</ol>
+<p>In our case, and despite these compromises, we felt that our custom ECS offered
+a cleaner, more reusable architecture that we could apply to multiple different
+game styles. Hopefully I’ve given you a bit of an insight into our reasoning.</p>
+<p>In the <a href="/post/zenobits-unity-ecs-part-3">third and final instalment</a> of this series,
+I’m going to give an example of how we implemented a particular feature in our
+ECS for our current game project so you can see how this would work “irl”.</p>
+<h2 id="notes">Notes</h2>
+<ol>
+<li>In theory :) In practice we aren’t at this stage yet…</li>
+<li>Again… in theory :) In practice, this is probably unlikely, but its nice to
+be less dependent on one particular ecosystem.</li>
+<li>GOAP stands for Goal Oriented Action Planning. Read more about it
+<a rel="noopener nofollow noreferrer" target="_blank" href="http://alumni.media.mit.edu/~jorkin/goap.html">here</a></li>
+</ol>
+</article>
+
+<div class="container col">
+  <h2>Comments</h2>
+  <blockquote>Comments are powered by github and <a href="https://giscus.app">giscus</a></blockquote>
+  <script src="https://giscus.app/client.js"
+        data-repo="will-hart/will-hart.github.io"
+        data-repo-id="MDEwOlJlcG9zaXRvcnkzMjQ2NjY3Mzg="
+        data-category="General"
+        data-category-id="DIC_kwDOE1oFcs4CtiK6"
+        data-mapping="og:title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+  </script>
+</div>
+</div>
+
+  <footer id="footer">
+    <div class="container col">
+      This website was hand-made using Zola and Tera.
+      All text and images are available under CC0 1.0 Universal and code under MIT unless otherwise specified. See <a href="https://github.com/will-hart/willhart.io/blob/main/LICENSE.md">LICENSE.md</a> for more.
+    </div>
+  </footer>
+</body>
+
+</html>

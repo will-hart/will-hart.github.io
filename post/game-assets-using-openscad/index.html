@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Making game assets using OpenSCAD | willhart.io</title>
+
+
+  <link rel="icon" type="image/x-icon" href="/icons/icon_light_32x32.png">
+
+  
+<meta name="description" content="Using a surprising tool to build game assets, based on some work I did building samples for experiments at the Australian Synchrotron. Posted on https://willhart.io" />
+<meta property="og:description" content="Using a surprising tool to build game assets, based on some work I did building samples for experiments at the Australian Synchrotron" />
+<meta property="og:title" content="Making game assets using OpenSCAD" />
+<meta property="og:url" content="https://willhart.io/post/game-assets-using-openscad/">
+<meta property="og:type" content="article" />
+<meta property="og:locale" content="en_AU" />
+
+
+  <link rel="stylesheet" href="https://willhart.io/global.css?h=f83cd20cd0df26d72c2b" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sono:wght@200..800&display=swap" rel="stylesheet">
+
+  
+
+  <!-- Cloudflare Web Analytics -->
+  <script defer src='https://static.cloudflareinsights.com/beacon.min.js'
+    data-cf-beacon='{"token": "310f93cab66a42c5a328f246cc053025"}'></script>
+  <!-- End Cloudflare Web Analytics -->
+
+  <!-- Light/Dark theme toggling -->
+  <script type="text/javascript">
+    const storageKey = "websiteTheme";
+
+    // apply theme once we have a DOM
+    document.addEventListener("DOMContentLoaded", () => {
+      applyTheme();
+    })
+
+    // a function that toggles between light and dark theme
+    const toggleTheme = () => {
+      localStorage.setItem(storageKey, localStorage.getItem(storageKey) === "d" ? "l" : "d" );
+      applyTheme();
+    }
+
+    // a function that actually applies the theme
+    const applyTheme = () => {
+      const useDarkTheme = localStorage.getItem(storageKey) === "d";
+      document.getElementsByTagName("html")[0].className = useDarkTheme ? "dark" : "";
+      document.getElementById("theme-toggle").textContent = useDarkTheme ? "🔆" : "🌑";
+    }
+  </script>
+
+  <script type="speculationrules">
+  {
+    "prerender": [
+      { "where": { "selector_matches": "a" } }
+    ]
+  }
+  </script></head>
+
+<body>
+  <nav id="header">
+    <a href="/" aria-label="Website Logo and Link to Home Page">
+      <div id="logo" >&nbsp;</div>
+    </a>
+    <span>
+      <button type="button" id="theme-toggle" aria-label="Toggle Theme" onClick="toggleTheme()">🌑</button>
+      <a class="header-item" href="/post">POSTS</a>
+      <a class="header-item" href="/tag">TAGS</a>
+      <span class="header-item hide-when-slim">|</span>
+      <a class="header-item hide-when-slim" href="/tag/projects">PROJECTS</a>
+      <a class="header-item hide-when-slim" href="/tag/gamedev">GAMEDEV</a>
+      <a class="header-item hide-when-slim" href="/tag/electronics">ELECTRONICS</a>
+    </span>
+  </nav>
+
+  
+
+<div class="container col mb mt">
+  <h1>Making game assets using OpenSCAD</h1>
+  <div class="col txtsm">
+    <span>Posted by Will Hart on 2017-02-12</span>
+    <div>
+      <span>See also:</span>
+      
+      <a class="txtsm mr" href="https://willhart.io/tag/tutorials/">#tutorials</a>
+      
+      <a class="txtsm mr" href="https://willhart.io/tag/code/">#code</a>
+      
+      <a class="txtsm mr" href="https://willhart.io/tag/gamedev/">#gamedev</a>
+      
+    </div>
+  </div>
+</div>
+
+
+
+<article class="container col mblg"><p>In my day job, I have a task to <a rel="noopener nofollow noreferrer" target="_blank" href="https://www.osapublishing.org/abstract.cfm?uri=BGPPM-2018-JTh4A.2">design some 3D printed parts in a variety of
+repeating
+patterns</a>,
+but with each part being just slightly different. I didn’t really want to mess
+about in SolidWorks making them in all sorts of different sizes and then
+maintaining them every time the design specs changed. I decided what I really
+wanted was a procedural CAD program so I could code the outputs.</p>
+<p><img src="https://willhart.io/post/game-assets-using-openscad/header.png" alt="A preview of what we are going to make in this tutorial (size: 1918x768px)" /></p>
+<p>After some messing about I found <a rel="noopener nofollow noreferrer" target="_blank" href="http://www.openscad.org/">OpenSCAD</a> which is
+billed as “the Programmer’s Solid 3D CAD modeller”. Basically you can script 3D
+models using basic boolean operations like <code>union</code>, <code>difference</code> and <code>intersect</code>
+as well as primitive shapes like <code>cube</code>, <code>cylinder</code> and <code>sphere</code>. The language
+allows basic scripting including variables, <code>for</code> and <code>if</code> control statements. A
+minimal example is a cube, which you make like this:</p>
+<p><img src="https://willhart.io/post/game-assets-using-openscad/a_basic_openscad_cube.png" alt="A basic OpenSCAD box (size: 785x510px)" /></p>
+<p>I wondered if I could use this as a really simple way to make game assets,
+particularly building up a lot of basic shapes very quickly. I think the
+technique is naturally suited to making things like castle walls which are
+basically a <code>union</code> of lots of primitive shapes. So, lets begin!</p>
+<h2 id="blocking-out-the-basic-structure">Blocking out the basic structure</h2>
+<p>Firstly, we can block out the structure of our wall. I’ll just specify some
+proportions, then use a scale value to <code>scale</code> it up to our preferred size:</p>
+<pre data-lang="python" style="background-color:#2b303b;color:#c0c5ce;" class="language-python "><code class="language-python" data-lang="python"><span>// scale the wall up
+</span><span>wall_scale = </span><span style="color:#d08770;">10</span><span>;
+</span><span>
+</span><span>// set wall proportions
+</span><span>wall_length = </span><span style="color:#d08770;">1</span><span>;
+</span><span>wall_thickness = </span><span style="color:#d08770;">0.3</span><span>;
+</span><span>wall_height = </span><span style="color:#d08770;">0.8</span><span>;
+</span></code></pre>
+<p>Here we are specifying a base wall is 1 unit long, 0.3 units thick and 0.8 units
+tall. We also want to scale the whole wall up by 10 units (A “unit” in OpenSCAD
+is one millimetre, but that doesn’t really matter here). We can scale and draw
+our cube the same was as before, except now we use the variable values instead
+of hard coding:</p>
+<pre data-lang="python" style="background-color:#2b303b;color:#c0c5ce;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#bf616a;">scale</span><span>(wall_scale) </span><span style="color:#bf616a;">cube</span><span>([wall_length, wall_thickness, wall_height]);
+</span></code></pre>
+<h2 id="making-crenelations">Making crenelations</h2>
+<p>The next thing a castle wall needs is crenelation, something for our archers to
+hide behind. We need a few variables here…</p>
+<pre data-lang="python" style="background-color:#2b303b;color:#c0c5ce;" class="language-python "><code class="language-python" data-lang="python"><span>// crenelation properties
+</span><span>cren_duty_cycle = </span><span style="color:#d08770;">0.5</span><span>;
+</span><span>cren_period = </span><span style="color:#d08770;">0.1</span><span>;
+</span><span>cren_height = cren_duty_cycle \</span><span style="background-color:#bf616a;color:#2b303b;">* cren_period;</span><span>
+</span></code></pre>
+<p>A diagram may help:</p>
+<p><img src="https://willhart.io/post/game-assets-using-openscad/crennelation_dimensions.png" alt="The attributes of crenellations" /></p>
+<p>The <em>period</em> is the length of one “on and off” crenelation, the height is the
+height of a crenelation and the duty cycle is the percentage of on vs off of
+the crenellations, so <code>0.5</code> here indicates for each period 50% is crenelation
+and 50% is air. For simplicity we are going to assume that crenelations are
+cubes, so we can define the thickness as:</p>
+<pre data-lang="c" style="background-color:#2b303b;color:#c0c5ce;" class="language-c "><code class="language-c" data-lang="c"><span>cren_thickness = cren_duty_cycle * cren_period;
+</span></code></pre>
+<p>Now we can use a <code>for</code>, <code>translate</code> and <code>cube</code> to draw our crenelations:</p>
+<pre data-lang="c" style="background-color:#2b303b;color:#c0c5ce;" class="language-c "><code class="language-c" data-lang="c"><span style="color:#b48ead;">for </span><span>(x = [</span><span style="color:#d08770;">0 </span><span>: cren_period : wall_length - cren_period]) {
+</span><span>    </span><span style="color:#bf616a;">translate</span><span>([x, </span><span style="color:#d08770;">0</span><span>, wall_height]) {
+</span><span>        </span><span style="color:#bf616a;">cube</span><span>(cren_thickness);
+</span><span>    }
+</span><span>}
+</span></code></pre>
+<p>The first line is just the notation for a <code>for</code> loop in OpenSCAD. It loops from
+<code>0</code> to <code>wall_length - cren_period</code>, taking steps of <code>cren_period</code>. By default, the
+cube will be drawn at <code>(0,0,0)</code>, but actually we want them to be placed on top of
+the wall. To achieve this we use a <code>translate</code> statement to wrap our <code>cube</code>
+primitive drawing statement. We provide the x, y and z coordinates where we want
+our cube to be drawn.</p>
+<p>To join the crenelations to our base wall, we can wrap the whole lot in a <code>union</code>
+statement. Our model code now looks like this:</p>
+<pre data-lang="c" style="background-color:#2b303b;color:#c0c5ce;" class="language-c "><code class="language-c" data-lang="c"><span style="color:#bf616a;">scale</span><span>(wall_scale) {
+</span><span>    </span><span style="color:#b48ead;">union</span><span>() {
+</span><span>        </span><span style="color:#65737e;">// wall base
+</span><span>        </span><span style="color:#bf616a;">cube</span><span>([wall_length, wall_thickness, wall_height]);
+</span><span>
+</span><span>        </span><span style="color:#65737e;">// crenelations
+</span><span>        </span><span style="color:#b48ead;">for </span><span>(x = [</span><span style="color:#d08770;">0 </span><span>: cren_period : wall_length - cren_period]) {
+</span><span>            </span><span style="color:#bf616a;">translate</span><span>([x, </span><span style="color:#d08770;">0</span><span>, wall_height]) {
+</span><span>                </span><span style="color:#bf616a;">cube</span><span>([cren_duty_cycle * cren_period, cren_thickness, cren_height]);
+</span><span>            }
+</span><span>        }
+</span><span>    }
+</span><span>}
+</span></code></pre>
+<p>Which produces:</p>
+<p><img src="https://willhart.io/post/game-assets-using-openscad/model_with_crennelation.png" alt="The first attempt at a castle wall (size: 477x440px)" /></p>
+<h2 id="reusing-our-wall">Reusing our wall</h2>
+<p>Now we have a fairly basic castle wall, but it would be really great if we could
+draw a bunch of wall really easily. Luckily OpenSCAD provides <code>modules</code>, which are
+essentially functions for this purpose. We can wrap our wall drawing code in a
+module like this:</p>
+<pre data-lang="c" style="background-color:#2b303b;color:#c0c5ce;" class="language-c "><code class="language-c" data-lang="c"><span>module </span><span style="color:#8fa1b3;">drawWall</span><span>() {
+</span><span>    </span><span style="color:#65737e;">// our wall drawing code from above in here,
+</span><span>    </span><span style="color:#65737e;">// except for the &quot;scale&quot; command
+</span><span>}
+</span></code></pre>
+<p>I’ll also move the <code>scale</code> out of the module, as we want to wrap our entire castle
+in this later on, not just wall pieces one at a time.</p>
+<blockquote>
+<p><strong>NOTE</strong> You can provide function arguments to modules, but for simplicity I’m
+just letting modules access the global variables declared at the top of the file</p>
+</blockquote>
+<p>We can then draw multiple wall segments using a for loop like this:</p>
+<pre data-lang="c" style="background-color:#2b303b;color:#c0c5ce;" class="language-c "><code class="language-c" data-lang="c"><span>num_walls = </span><span style="color:#d08770;">3</span><span>;
+</span><span>
+</span><span style="color:#bf616a;">scale</span><span>(wall_scale) {
+</span><span>  </span><span style="color:#b48ead;">union</span><span>() {
+</span><span>    </span><span style="color:#b48ead;">for</span><span>(x = [</span><span style="color:#d08770;">0 </span><span>: wall_length : (num_walls - </span><span style="color:#d08770;">1</span><span>) * wall_length]) {
+</span><span>      </span><span style="color:#bf616a;">translate</span><span>([x, </span><span style="color:#d08770;">0</span><span>, </span><span style="color:#d08770;">0</span><span>]) </span><span style="color:#bf616a;">drawWall</span><span>();
+</span><span>    }
+</span><span>  }
+</span><span>}
+</span></code></pre>
+<p><img src="https://willhart.io/post/game-assets-using-openscad/multiple_walls_in_loop.png" alt="Repeating wall sections using a module (size: 504x314px)" /></p>
+<p>We might also want to draw walls at different angles, so lets wrap that code in
+a module with a couple of arguments:</p>
+<pre data-lang="c" style="background-color:#2b303b;color:#c0c5ce;" class="language-c "><code class="language-c" data-lang="c"><span>module </span><span style="color:#8fa1b3;">drawLongWall</span><span>(</span><span style="color:#bf616a;">rotation</span><span>, </span><span style="color:#bf616a;">num_walls</span><span>) {
+</span><span>    </span><span style="color:#bf616a;">rotate</span><span>([</span><span style="color:#d08770;">0</span><span>, </span><span style="color:#d08770;">0</span><span>, rotation]) </span><span style="color:#b48ead;">union</span><span>() {
+</span><span>        </span><span style="color:#b48ead;">for</span><span>(x = [</span><span style="color:#d08770;">0 </span><span>: wall_length : (num_walls - </span><span style="color:#d08770;">1</span><span>) * wall_length]) {
+</span><span>            </span><span style="color:#bf616a;">translate</span><span>([x, </span><span style="color:#d08770;">0</span><span>, </span><span style="color:#d08770;">0</span><span>]) </span><span style="color:#bf616a;">drawWall</span><span>();
+</span><span>        }
+</span><span>    }
+</span><span>}
+</span></code></pre>
+<p>The only new part here is the <code>rotate</code> command, which rotates everything by the
+given x, y and z euler angles. Now we have this command, we can easily draw an
+entire enclosed wall inside another module:</p>
+<pre data-lang="c" style="background-color:#2b303b;color:#c0c5ce;" class="language-c "><code class="language-c" data-lang="c"><span>module </span><span style="color:#8fa1b3;">drawEnclosedWall</span><span>(</span><span style="color:#bf616a;">num_walls</span><span>) {
+</span><span>   </span><span style="color:#b48ead;">union</span><span>() {
+</span><span>        </span><span style="color:#bf616a;">drawLongWall</span><span>(</span><span style="color:#d08770;">0</span><span>, num_walls);
+</span><span>
+</span><span>        </span><span style="color:#bf616a;">translate</span><span>([
+</span><span>            num_walls * wall_length, </span><span style="color:#d08770;">0</span><span>, </span><span style="color:#d08770;">0
+</span><span>        ]) </span><span style="color:#bf616a;">drawLongWall</span><span>(</span><span style="color:#d08770;">90</span><span>, num_walls);
+</span><span>
+</span><span>        </span><span style="color:#bf616a;">translate</span><span>([
+</span><span>            num_walls * wall_length,
+</span><span>            num_walls * wall_length, </span><span style="color:#d08770;">0
+</span><span>        ]) </span><span style="color:#bf616a;">drawLongWall</span><span>(</span><span style="color:#d08770;">180</span><span>, num_walls);
+</span><span>
+</span><span>        </span><span style="color:#bf616a;">translate</span><span>([
+</span><span>            </span><span style="color:#d08770;">0</span><span>, num_walls * wall_length, </span><span style="color:#d08770;">0
+</span><span>        ]) </span><span style="color:#bf616a;">drawLongWall</span><span>(</span><span style="color:#d08770;">270</span><span>, num_walls);
+</span><span>    }
+</span><span>}
+</span></code></pre>
+<p>All this does is draw four different <code>longWalls</code>, with the correct offsets and
+rotations. We can then draw a wall enclosure by writing</p>
+<pre data-lang="c" style="background-color:#2b303b;color:#c0c5ce;" class="language-c "><code class="language-c" data-lang="c"><span style="color:#bf616a;">scale</span><span>(wall_scale) {
+</span><span>    </span><span style="color:#bf616a;">drawEnclosedWall</span><span>(</span><span style="color:#d08770;">5</span><span>);
+</span><span>}
+</span></code></pre>
+<p><img src="https://willhart.io/post/game-assets-using-openscad/enclosed_wall.png" alt="Repeating wall sections to draw a closed wall (size: 641x453px)" /></p>
+<p>Phew, that was actually “relatively” easy! Of course that’s only the basics, and
+we still would need to export to STL, then do UV unwrapping, texturing and so on
+in our modelling program. The main advantage of this kind of approach is that it
+is really easy to generate a whole range of different geometry very fast.</p>
+<blockquote>
+<p><strong>NOTE</strong> For my day job, I built a command line tool that can generate tonnes
+of different geometry and export to STL at once. In the game dev world, this
+kind of approach could be used to generate castles of all different sizes in a
+batch process.</p>
+</blockquote>
+<p>Of course, our castle above lacks a whole lot of things like a gate, a keep and
+towers… and it is debatable how useful this technique will be once things get
+a lot more complicated, but its an interesting experiment!</p>
+<p>Here is something I put together with maybe twenty minutes more effort (you can
+see the code for it below):</p>
+<p><img src="https://willhart.io/post/game-assets-using-openscad/castle.png" alt="An example castle built using OpenSCAD (size: 521x404px)" /></p>
+<h2 id="the-code">The Code</h2>
+<pre data-lang="c" style="background-color:#2b303b;color:#c0c5ce;" class="language-c "><code class="language-c" data-lang="c"><span style="color:#65737e;">// castle.scad
+</span><span style="color:#65737e;">// scale the wall up
+</span><span>wall_scale = </span><span style="color:#d08770;">10</span><span>;
+</span><span>
+</span><span style="color:#65737e;">// set wall proportions
+</span><span>wall_length = </span><span style="color:#d08770;">1</span><span>;
+</span><span>wall_thickness = </span><span style="color:#d08770;">0.3</span><span>;
+</span><span>wall_height = </span><span style="color:#d08770;">0.8</span><span>;
+</span><span>
+</span><span style="color:#65737e;">// crenelation properties
+</span><span>cren_duty_cycle = </span><span style="color:#d08770;">0.5</span><span>;
+</span><span>cren_period = </span><span style="color:#d08770;">0.1</span><span>;
+</span><span>cren_height = cren_duty_cycle * cren_period;
+</span><span>cren_thickness = cren_duty_cycle * cren_period;
+</span><span>
+</span><span style="color:#bf616a;">scale</span><span>(wall_scale) {
+</span><span>    walls_to_draw = </span><span style="color:#d08770;">5</span><span>;
+</span><span>
+</span><span>    </span><span style="color:#bf616a;">color</span><span>(&quot;</span><span style="color:#a3be8c;">DarkGray</span><span>&quot;) </span><span style="color:#b48ead;">union</span><span>() {
+</span><span>        </span><span style="color:#bf616a;">drawEnclosedWall</span><span>(walls_to_draw);
+</span><span>
+</span><span>        </span><span style="color:#b48ead;">for </span><span>(x = [</span><span style="color:#d08770;">0 </span><span>: </span><span style="color:#d08770;">1</span><span>]) {
+</span><span>            </span><span style="color:#b48ead;">for </span><span>(y = [</span><span style="color:#d08770;">0 </span><span>: </span><span style="color:#d08770;">1</span><span>]) {
+</span><span>                </span><span style="color:#bf616a;">translate</span><span>([
+</span><span>                    x * walls_to_draw * wall_length - x * </span><span style="color:#d08770;">2 </span><span>* wall_thickness,
+</span><span>                    y * walls_to_draw * wall_length - y * </span><span style="color:#d08770;">2 </span><span>* wall_thickness, </span><span style="color:#d08770;">0</span><span>]) </span><span style="color:#bf616a;">drawTower</span><span>(</span><span style="color:#d08770;">2</span><span>, </span><span style="color:#d08770;">1.5</span><span>);
+</span><span>            }
+</span><span>        }
+</span><span>
+</span><span>        </span><span style="color:#bf616a;">translate</span><span>([
+</span><span>            </span><span style="color:#d08770;">0.5 </span><span>* walls_to_draw * wall_length - </span><span style="color:#d08770;">3 </span><span>* wall_thickness,
+</span><span>            </span><span style="color:#d08770;">0.5 </span><span>* walls_to_draw * wall_length - </span><span style="color:#d08770;">3 </span><span>* wall_thickness, </span><span style="color:#d08770;">0</span><span>]) </span><span style="color:#bf616a;">drawTower</span><span>(</span><span style="color:#d08770;">6</span><span>, </span><span style="color:#d08770;">2</span><span>);
+</span><span>    }
+</span><span>
+</span><span>    </span><span style="color:#bf616a;">translate</span><span>([-</span><span style="color:#d08770;">25</span><span>, -</span><span style="color:#d08770;">25</span><span>, -</span><span style="color:#d08770;">0.1</span><span>]) </span><span style="color:#bf616a;">color</span><span>(&quot;</span><span style="color:#a3be8c;">MediumSeaGreen</span><span>&quot;) </span><span style="color:#bf616a;">cube</span><span>([</span><span style="color:#d08770;">50</span><span>, </span><span style="color:#d08770;">50</span><span>, </span><span style="color:#d08770;">0.1</span><span>]);
+</span><span>
+</span><span>    </span><span style="color:#bf616a;">translate</span><span>([</span><span style="color:#d08770;">0.5 </span><span>* walls_to_draw * wall_length, </span><span style="color:#d08770;">0.5 </span><span>* walls_to_draw * wall_length, </span><span style="color:#d08770;">2 </span><span>* wall_height]) {
+</span><span>        </span><span style="color:#b48ead;">union</span><span>() {
+</span><span>            </span><span style="color:#bf616a;">color</span><span>(&quot;</span><span style="color:#a3be8c;">DarkGoldenrod</span><span>&quot;)
+</span><span>                </span><span style="color:#bf616a;">cylinder</span><span>(h = </span><span style="color:#d08770;">2.5 </span><span>* wall_height, r = </span><span style="color:#d08770;">0.05</span><span>, $fn = </span><span style="color:#d08770;">30</span><span>);
+</span><span>            </span><span style="color:#bf616a;">color</span><span>(&quot;</span><span style="color:#a3be8c;">Crimson</span><span>&quot;) </span><span style="color:#bf616a;">translate</span><span>([</span><span style="color:#d08770;">0</span><span>, </span><span style="color:#d08770;">0</span><span>, </span><span style="color:#d08770;">2.2 </span><span>* wall_height]) </span><span style="color:#bf616a;">cube</span><span>([</span><span style="color:#d08770;">0.5</span><span>, </span><span style="color:#d08770;">0.05</span><span>, </span><span style="color:#d08770;">0.2</span><span>]);
+</span><span>        }
+</span><span>    }
+</span><span>}
+</span><span>
+</span><span>
+</span><span>module </span><span style="color:#8fa1b3;">drawEnclosedWall</span><span>(</span><span style="color:#bf616a;">num_walls</span><span>) {
+</span><span>    </span><span style="color:#bf616a;">difference</span><span>() {
+</span><span>       </span><span style="color:#b48ead;">union</span><span>() {
+</span><span>            </span><span style="color:#bf616a;">drawLongWall</span><span>(</span><span style="color:#d08770;">0</span><span>, num_walls);
+</span><span>            </span><span style="color:#bf616a;">translate</span><span>([num_walls * wall_length, </span><span style="color:#d08770;">0</span><span>, </span><span style="color:#d08770;">0</span><span>])
+</span><span>                </span><span style="color:#bf616a;">drawLongWall</span><span>(</span><span style="color:#d08770;">90</span><span>, num_walls);
+</span><span>            </span><span style="color:#bf616a;">translate</span><span>([num_walls * wall_length, num_walls * wall_length, </span><span style="color:#d08770;">0</span><span>])
+</span><span>                </span><span style="color:#bf616a;">drawLongWall</span><span>(</span><span style="color:#d08770;">180</span><span>, num_walls);
+</span><span>            </span><span style="color:#bf616a;">translate</span><span>([</span><span style="color:#d08770;">0</span><span>, num_walls * wall_length, </span><span style="color:#d08770;">0</span><span>])
+</span><span>                </span><span style="color:#bf616a;">drawLongWall</span><span>(</span><span style="color:#d08770;">270</span><span>, num_walls);
+</span><span>        }
+</span><span>
+</span><span>        </span><span style="color:#bf616a;">drawEntrance</span><span>(</span><span style="color:#d08770;">0.5 </span><span>* num_walls * wall_length);
+</span><span>    }
+</span><span>}
+</span><span>
+</span><span>module </span><span style="color:#8fa1b3;">drawTower</span><span>(</span><span style="color:#bf616a;">dim_scale</span><span>, </span><span style="color:#bf616a;">tower_height</span><span>) {
+</span><span>    dim = dim_scale * wall_thickness;
+</span><span>    </span><span style="color:#bf616a;">difference</span><span>() {
+</span><span>        </span><span style="color:#b48ead;">union</span><span>() {
+</span><span>            </span><span style="color:#bf616a;">cube</span><span>([dim, dim, tower_height]);
+</span><span>            </span><span style="color:#bf616a;">drawCrennelations</span><span>(dim_scale * wall_thickness, tower_height);
+</span><span>            </span><span style="color:#bf616a;">translate</span><span>([dim, </span><span style="color:#d08770;">0</span><span>, </span><span style="color:#d08770;">0</span><span>]) </span><span style="color:#bf616a;">rotate</span><span>([</span><span style="color:#d08770;">0</span><span>, </span><span style="color:#d08770;">0</span><span>, </span><span style="color:#d08770;">90</span><span>]) </span><span style="color:#bf616a;">drawCrennelations</span><span>(dim_scale * wall_thickness, tower_height);
+</span><span>            </span><span style="color:#bf616a;">translate</span><span>([dim, dim, </span><span style="color:#d08770;">0</span><span>]) </span><span style="color:#bf616a;">rotate</span><span>([</span><span style="color:#d08770;">0</span><span>, </span><span style="color:#d08770;">0</span><span>, </span><span style="color:#d08770;">180</span><span>]) </span><span style="color:#bf616a;">drawCrennelations</span><span>(dim_scale * wall_thickness, tower_height);
+</span><span>            </span><span style="color:#bf616a;">translate</span><span>([</span><span style="color:#d08770;">0</span><span>, dim, </span><span style="color:#d08770;">0</span><span>]) </span><span style="color:#bf616a;">rotate</span><span>([</span><span style="color:#d08770;">0</span><span>, </span><span style="color:#d08770;">0</span><span>, </span><span style="color:#d08770;">270</span><span>]) </span><span style="color:#bf616a;">drawCrennelations</span><span>(dim_scale * wall_thickness, tower_height);
+</span><span>        }
+</span><span>        </span><span style="color:#bf616a;">translate</span><span>([</span><span style="color:#d08770;">0.45 </span><span>* dim, -</span><span style="color:#d08770;">0.01 </span><span>* dim, </span><span style="color:#d08770;">0.7 </span><span>* tower_height]) </span><span style="color:#bf616a;">cube</span><span>([</span><span style="color:#d08770;">0.1 </span><span>* dim, </span><span style="color:#d08770;">1.1 </span><span>* dim, </span><span style="color:#d08770;">0.1 </span><span>* tower_height]);
+</span><span>        </span><span style="color:#bf616a;">rotate</span><span>([</span><span style="color:#d08770;">0</span><span>, </span><span style="color:#d08770;">0</span><span>, </span><span style="color:#d08770;">90</span><span>]) </span><span style="color:#bf616a;">translate</span><span>([</span><span style="color:#d08770;">0.45 </span><span>* dim, -</span><span style="color:#d08770;">1.01 </span><span>* dim, </span><span style="color:#d08770;">0.7 </span><span>* tower_height]) </span><span style="color:#bf616a;">cube</span><span>([</span><span style="color:#d08770;">0.1 </span><span>* dim, </span><span style="color:#d08770;">1.1 </span><span>* dim, </span><span style="color:#d08770;">0.1 </span><span>* tower_height]);
+</span><span>    }
+</span><span>}
+</span><span>
+</span><span>module </span><span style="color:#8fa1b3;">drawEntrance</span><span>(</span><span style="color:#bf616a;">x_offset</span><span>) {
+</span><span>    x = x_offset - </span><span style="color:#d08770;">0.4 </span><span>* wall_length;
+</span><span>    y = -</span><span style="color:#d08770;">0.1 </span><span>* wall_thickness;
+</span><span>    z = -</span><span style="color:#d08770;">0.1 </span><span>* wall_height;
+</span><span>
+</span><span>    </span><span style="color:#bf616a;">translate</span><span>([</span><span style="color:#d08770;">0</span><span>, </span><span style="color:#d08770;">0</span><span>, -</span><span style="color:#d08770;">0.2 </span><span>* wall_height]) </span><span style="color:#b48ead;">union</span><span>() {
+</span><span>        </span><span style="color:#bf616a;">translate</span><span>([x, y, z]) </span><span style="color:#bf616a;">cube</span><span>([</span><span style="color:#d08770;">0.8 </span><span>* wall_length, </span><span style="color:#d08770;">1.2 </span><span>* wall_thickness, </span><span style="color:#d08770;">0.6 </span><span>* wall_height]);
+</span><span>        </span><span style="color:#bf616a;">translate</span><span>([x_offset, </span><span style="color:#d08770;">1.1 </span><span>* wall_thickness, </span><span style="color:#d08770;">0.5 </span><span>* wall_height]) {
+</span><span>            </span><span style="color:#bf616a;">rotate</span><span>([</span><span style="color:#d08770;">90</span><span>, </span><span style="color:#d08770;">0</span><span>, </span><span style="color:#d08770;">0</span><span>]) {
+</span><span>                </span><span style="color:#bf616a;">cylinder</span><span>(h = </span><span style="color:#d08770;">1.2 </span><span>* wall_thickness, r = </span><span style="color:#d08770;">0.4 </span><span>* wall_length, $fn = </span><span style="color:#d08770;">25</span><span>, centre = </span><span style="color:#d08770;">true</span><span>);
+</span><span>            }
+</span><span>        }
+</span><span>    }
+</span><span>}
+</span><span>
+</span><span>module </span><span style="color:#8fa1b3;">drawLongWall</span><span>(</span><span style="color:#bf616a;">rotation</span><span>, </span><span style="color:#bf616a;">num_walls</span><span>) {
+</span><span>    </span><span style="color:#bf616a;">rotate</span><span>([</span><span style="color:#d08770;">0</span><span>, </span><span style="color:#d08770;">0</span><span>, rotation]) </span><span style="color:#b48ead;">union</span><span>() {
+</span><span>        </span><span style="color:#b48ead;">for</span><span>(x = [</span><span style="color:#d08770;">0 </span><span>: wall_length : (num_walls - </span><span style="color:#d08770;">1</span><span>) * wall_length]) {
+</span><span>            </span><span style="color:#bf616a;">translate</span><span>([x, </span><span style="color:#d08770;">0</span><span>, </span><span style="color:#d08770;">0</span><span>]) </span><span style="color:#bf616a;">drawWall</span><span>();
+</span><span>        }
+</span><span>    }
+</span><span>}
+</span><span>
+</span><span>module </span><span style="color:#8fa1b3;">drawWall</span><span>() {
+</span><span>    </span><span style="color:#b48ead;">union</span><span>() {
+</span><span>        </span><span style="color:#65737e;">// wall base
+</span><span>        </span><span style="color:#bf616a;">cube</span><span>([wall_length, wall_thickness, wall_height]);
+</span><span>        </span><span style="color:#bf616a;">drawCrennelations</span><span>(wall_length, wall_height);
+</span><span>    }
+</span><span>}
+</span><span>
+</span><span>module </span><span style="color:#8fa1b3;">drawCrennelations</span><span>(</span><span style="color:#bf616a;">cren_length</span><span>, </span><span style="color:#bf616a;">cren_z_offset</span><span>) {
+</span><span>    </span><span style="color:#b48ead;">for </span><span>(x = [</span><span style="color:#d08770;">0 </span><span>: cren_period : cren_length - cren_period]) {
+</span><span>        </span><span style="color:#bf616a;">translate</span><span>([x, </span><span style="color:#d08770;">0</span><span>, cren_z_offset]) {
+</span><span>            </span><span style="color:#bf616a;">cube</span><span>([cren_duty_cycle * cren_period, cren_thickness, cren_height]);
+</span><span>        }
+</span><span>    }
+</span><span>}
+</span></code></pre>
+<pre data-lang="c" style="background-color:#2b303b;color:#c0c5ce;" class="language-c "><code class="language-c" data-lang="c"><span style="color:#65737e;">// castle_wall.scad
+</span><span>
+</span><span style="color:#65737e;">// scale the wall up
+</span><span>wall_scale = </span><span style="color:#d08770;">10</span><span>;
+</span><span>
+</span><span style="color:#65737e;">// set wall proportions
+</span><span>wall_length = </span><span style="color:#d08770;">1</span><span>;
+</span><span>wall_thickness = </span><span style="color:#d08770;">0.3</span><span>;
+</span><span>wall_height = </span><span style="color:#d08770;">0.8</span><span>;
+</span><span>
+</span><span style="color:#65737e;">// crenelation properties
+</span><span>cren_duty_cycle = </span><span style="color:#d08770;">0.5</span><span>;
+</span><span>cren_period = </span><span style="color:#d08770;">0.1</span><span>;
+</span><span>cren_height = cren_duty_cycle * cren_period;
+</span><span>cren_thickness = cren_duty_cycle * cren_period;
+</span><span>
+</span><span style="color:#bf616a;">scale</span><span>(wall_scale) {
+</span><span>    </span><span style="color:#bf616a;">drawEnclosedWall</span><span>(</span><span style="color:#d08770;">5</span><span>);
+</span><span>}
+</span><span>
+</span><span>module </span><span style="color:#8fa1b3;">drawEnclosedWall</span><span>(</span><span style="color:#bf616a;">num_walls</span><span>) {
+</span><span>   </span><span style="color:#b48ead;">union</span><span>() {
+</span><span>        </span><span style="color:#bf616a;">drawLongWall</span><span>(</span><span style="color:#d08770;">0</span><span>, num_walls);
+</span><span>        </span><span style="color:#bf616a;">translate</span><span>([num_walls * wall_length, </span><span style="color:#d08770;">0</span><span>, </span><span style="color:#d08770;">0</span><span>])
+</span><span>            </span><span style="color:#bf616a;">drawLongWall</span><span>(</span><span style="color:#d08770;">90</span><span>, num_walls);
+</span><span>        </span><span style="color:#bf616a;">translate</span><span>([num_walls * wall_length, num_walls * wall_length, </span><span style="color:#d08770;">0</span><span>])
+</span><span>            </span><span style="color:#bf616a;">drawLongWall</span><span>(</span><span style="color:#d08770;">180</span><span>, num_walls);
+</span><span>        </span><span style="color:#bf616a;">translate</span><span>([</span><span style="color:#d08770;">0</span><span>, num_walls * wall_length, </span><span style="color:#d08770;">0</span><span>])
+</span><span>            </span><span style="color:#bf616a;">drawLongWall</span><span>(</span><span style="color:#d08770;">270</span><span>, num_walls);
+</span><span>    }
+</span><span>}
+</span><span>
+</span><span>module </span><span style="color:#8fa1b3;">drawLongWall</span><span>(</span><span style="color:#bf616a;">rotation</span><span>, </span><span style="color:#bf616a;">num_walls</span><span>) {
+</span><span>    </span><span style="color:#bf616a;">rotate</span><span>([</span><span style="color:#d08770;">0</span><span>, </span><span style="color:#d08770;">0</span><span>, rotation]) </span><span style="color:#b48ead;">union</span><span>() {
+</span><span>        </span><span style="color:#b48ead;">for</span><span>(x = [</span><span style="color:#d08770;">0 </span><span>: wall_length : (num_walls - </span><span style="color:#d08770;">1</span><span>) * wall_length]) {
+</span><span>            </span><span style="color:#bf616a;">translate</span><span>([x, </span><span style="color:#d08770;">0</span><span>, </span><span style="color:#d08770;">0</span><span>]) </span><span style="color:#bf616a;">drawWall</span><span>();
+</span><span>        }
+</span><span>    }
+</span><span>}
+</span><span>
+</span><span>module </span><span style="color:#8fa1b3;">drawWall</span><span>() {
+</span><span>    </span><span style="color:#b48ead;">union</span><span>() {
+</span><span>        </span><span style="color:#65737e;">// wall base
+</span><span>        </span><span style="color:#bf616a;">cube</span><span>([wall_length, wall_thickness, wall_height]);
+</span><span>
+</span><span>        </span><span style="color:#65737e;">// crenelations
+</span><span>        </span><span style="color:#b48ead;">for </span><span>(x = [</span><span style="color:#d08770;">0 </span><span>: cren_period : wall_length - cren_period]) {
+</span><span>            </span><span style="color:#bf616a;">translate</span><span>([x, </span><span style="color:#d08770;">0</span><span>, wall_height]) {
+</span><span>                </span><span style="color:#bf616a;">cube</span><span>([cren_duty_cycle * cren_period, cren_thickness, cren_height]);
+</span><span>            }
+</span><span>        }
+</span><span>    }
+</span><span>}
+</span></code></pre>
+</article>
+
+<div class="container col">
+  <h2>Comments</h2>
+  <blockquote>Comments are powered by github and <a href="https://giscus.app">giscus</a></blockquote>
+  <script src="https://giscus.app/client.js"
+        data-repo="will-hart/will-hart.github.io"
+        data-repo-id="MDEwOlJlcG9zaXRvcnkzMjQ2NjY3Mzg="
+        data-category="General"
+        data-category-id="DIC_kwDOE1oFcs4CtiK6"
+        data-mapping="og:title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+  </script>
+</div>
+</div>
+
+  <footer id="footer">
+    <div class="container col">
+      This website was hand-made using Zola and Tera.
+      All text and images are available under CC0 1.0 Universal and code under MIT unless otherwise specified. See <a href="https://github.com/will-hart/willhart.io/blob/main/LICENSE.md">LICENSE.md</a> for more.
+    </div>
+  </footer>
+</body>
+
+</html>

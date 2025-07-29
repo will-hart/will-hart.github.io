@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Moving away from Arduino | willhart.io</title>
+
+
+  <link rel="icon" type="image/x-icon" href="/icons/icon_light_32x32.png">
+
+  
+<meta name="description" content="A quick checklist of things to know when considering moving from Arduino to a lower level microcontroller. Posted on https://willhart.io" />
+<meta property="og:description" content="A quick checklist of things to know when considering moving from Arduino to a lower level microcontroller" />
+<meta property="og:title" content="Moving away from Arduino" />
+<meta property="og:url" content="https://willhart.io/post/moving-away-from-arduino/">
+<meta property="og:type" content="article" />
+<meta property="og:locale" content="en_AU" />
+
+
+  <link rel="stylesheet" href="https://willhart.io/global.css?h=f83cd20cd0df26d72c2b" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sono:wght@200..800&display=swap" rel="stylesheet">
+
+  
+
+  <!-- Cloudflare Web Analytics -->
+  <script defer src='https://static.cloudflareinsights.com/beacon.min.js'
+    data-cf-beacon='{"token": "310f93cab66a42c5a328f246cc053025"}'></script>
+  <!-- End Cloudflare Web Analytics -->
+
+  <!-- Light/Dark theme toggling -->
+  <script type="text/javascript">
+    const storageKey = "websiteTheme";
+
+    // apply theme once we have a DOM
+    document.addEventListener("DOMContentLoaded", () => {
+      applyTheme();
+    })
+
+    // a function that toggles between light and dark theme
+    const toggleTheme = () => {
+      localStorage.setItem(storageKey, localStorage.getItem(storageKey) === "d" ? "l" : "d" );
+      applyTheme();
+    }
+
+    // a function that actually applies the theme
+    const applyTheme = () => {
+      const useDarkTheme = localStorage.getItem(storageKey) === "d";
+      document.getElementsByTagName("html")[0].className = useDarkTheme ? "dark" : "";
+      document.getElementById("theme-toggle").textContent = useDarkTheme ? "🔆" : "🌑";
+    }
+  </script>
+
+  <script type="speculationrules">
+  {
+    "prerender": [
+      { "where": { "selector_matches": "a" } }
+    ]
+  }
+  </script></head>
+
+<body>
+  <nav id="header">
+    <a href="/" aria-label="Website Logo and Link to Home Page">
+      <div id="logo" >&nbsp;</div>
+    </a>
+    <span>
+      <button type="button" id="theme-toggle" aria-label="Toggle Theme" onClick="toggleTheme()">🌑</button>
+      <a class="header-item" href="/post">POSTS</a>
+      <a class="header-item" href="/tag">TAGS</a>
+      <span class="header-item hide-when-slim">|</span>
+      <a class="header-item hide-when-slim" href="/tag/projects">PROJECTS</a>
+      <a class="header-item hide-when-slim" href="/tag/gamedev">GAMEDEV</a>
+      <a class="header-item hide-when-slim" href="/tag/electronics">ELECTRONICS</a>
+    </span>
+  </nav>
+
+  
+
+<div class="container col mb mt">
+  <h1>Moving away from Arduino</h1>
+  <div class="col txtsm">
+    <span>Posted by Will Hart on 2012-02-24</span>
+    <div>
+      <span>See also:</span>
+      
+      <a class="txtsm mr" href="https://willhart.io/tag/electronics/">#electronics</a>
+      
+    </div>
+  </div>
+</div>
+
+
+
+<article class="container col mblg"><p>Arduinos are great for getting started, they’re easy to use, relatively cheap
+and you can find a tonne of information, ideas and support online. For most
+people, however, there comes a time when they feel they have outgrown the
+Arduino’s capabilities, or want something a bit more flexible, or they just want
+to build their own circuits from scratch. Moving away from an Arduino into the
+big bad world of “proper” micros can be a bit daunting, so I’ve collected a kind
+of (work in progress) top ten list of the things you need to consider when
+moving away from the Arduino.</p>
+<h2 id="what-brand-of-microcontroller">What brand of microcontroller?</h2>
+<h3 id="the-confusing-bit">The Confusing Bit</h3>
+<p>Any search online about “which microcontroller should I start with” will give
+you about a thousand different chips brands, chip types and about twice as many
+differing opinions. Where on earth do you start?</p>
+<h3 id="the-skinny">The Skinny</h3>
+<p>It doesn’t matter - just pick one that looks appealing to you and get on with it!</p>
+<h3 id="thats-it">Thats it?</h3>
+<p>Kind of… you can narrow down your search a bit. The most popular micros are
+Atmel’s or PICs. There are other brands (i.e. TI make some pretty cheap “dev
+boards”) but these are the ones where you will find the most online support and
+experience. The Arduino has an Atmel chip inside it, so many people start there,
+but I personally chose PIC to start with because … well, I don’t really
+remember to be honest!</p>
+<h3 id="anything-else-to-read">Anything else to read?</h3>
+<p><a rel="noopener nofollow noreferrer" target="_blank" href="http://www.ladyada.net/library/picvsavr.html">Lady Ada Smackdown</a> (PIC vs AVR)<br />
+Hmmm… just use google I guess.</p>
+<h2 id="which-microcontroller">Which microcontroller?</h2>
+<h3 id="the-confusing-bit-1">The Confusing Bit</h3>
+<p>OK, you’ve chosen which brand of microcontroller you would like to use, now to
+choose which particular chip! So you visit the manufacturers home page and
+there’s a hundred thousand different parts! Where do you start?</p>
+<h3 id="the-skinny-1">The Skinny</h3>
+<p>Again, it almost doesn’t matter - just pick one that looks appealing to you and
+get on with it!</p>
+<h3 id="thats-it-1">Thats it?</h3>
+<p>Again, kind of… there are certainly some chips that are better than others. If
+you’ve chosen Atmel then its probably worth having a look at the ATmega328 which
+is inside the Arduino Uno. If you are looking at a PIC, then something like the
+PIC16F628A is a great starting point as it has an internal oscillator (see below
+for what that means!) making it dead easy to hook up.</p>
+<p>If you know a bit more about what you are doing, then there are online part
+selectors which let you put in some parameters and it lists the chips that
+match. See the links below.</p>
+<p>Another viable option is to check out your favourite electronics store and find
+out what they have in stock. Check out the features of the chip online and if
+you are happy, just buy it!</p>
+<h3 id="anything-else-to-read-1">Anything else to read?</h3>
+<p><a rel="noopener nofollow noreferrer" target="_blank" href="http://www.atmel.com/devices/ATMEGA328.aspx">ATmega328 web page</a><br />
+<a rel="noopener nofollow noreferrer" target="_blank" href="http://www.microchip.com/wwwproducts/Devices.aspx?dDocName=en010210">PIC16F628A web page</a><br />
+<a rel="noopener nofollow noreferrer" target="_blank" href="http://www.microchip.com/productselector/MCUProductSelector.html">Microchip Product Selector</a></p>
+<h2 id="eeeek-your-datasheet-is-huge">Eeeek, your datasheet is huge!</h2>
+<h3 id="the-confusing-bit-2">The Confusing Bit</h3>
+<p>You’ve chosen your chip, put your hard earned down and its arrived in the mail.
+Time to jump online and work out to use the silly thing! You browse to the
+product home page and click on the “datasheet” link. Up pops a 300 page document
+written by a electrical engineer with a PhD in confusing the lights out of you.
+What the hell, was that really necessary?</p>
+<h3 id="the-skinny-2">The Skinny</h3>
+<p>The short answer is yes… (almost) everything you will ever need is in this
+document. Read it, print it out, sleep with it under your pillow and you’ll be
+fine.</p>
+<h3 id="thats-it-2">Thats it?</h3>
+<p>Not really. In reality, there are only a few things that are really important in
+a datasheet - you really need to know</p>
+<ul>
+<li>what registers (see below) the device has and what the different bits do</li>
+<li>how to configure the device</li>
+<li>what features to turn on or off</li>
+<li>what to connect to which pins</li>
+<li>how much power to put into the device</li>
+</ul>
+<p>Thats all well and good, but where do you find these mysterious things. Well,
+er… glad you asked. The best way to find these things is to … (drum roll)
+read the datasheet!</p>
+<h3 id="anything-else-to-read-2">Anything else to read?</h3>
+<p><a rel="noopener nofollow noreferrer" target="_blank" href="http://www.atmel.com/devices/ATMEGA328.aspx">ATmega328 web page</a><br />
+<a rel="noopener nofollow noreferrer" target="_blank" href="http://www.microchip.com/wwwproducts/Devices.aspx?dDocName=en010210">PIC16F628A web page</a></p>
+<h2 id="do-i-need-a-development-board">Do I need a development board?</h2>
+<h3 id="the-confusing-bit-3">The Confusing Bit</h3>
+<p>Egad, there are more options! I’m ready to go, should I get a development board,
+with buttons, LCDs etc, or should I just use a breadboard?</p>
+<h3 id="the-skinny-3">The Skinny</h3>
+<p>No, it is not compulsory to have a dev board.</p>
+<h3 id="thats-it-3">Thats it?</h3>
+<p>Well this one is really up to you. The cheapest and most flexible way is to buy
+the individual components from someone like mouser, digikey or farnell and
+breadboard a circuit. If you build on a breadboard (or even your own custom PCB)
+there is the added advantage of being able to learn more about the hardware at
+the same time. You can always use google to find sample circuits (or open source
+dev boards) and build those yourself.</p>
+<p>Its quite a bit more expensive, but possible simpler and faster to buy a
+prebuilt development board from someone like Olimex, Mikro Elektroinica, ebay,
+etc. You can select a board with the features you want to learn and the hardware
+part is all built for you. Many people would say that you aren’t getting the
+full learning experience by doing this and I would tend to agree!</p>
+<h3 id="anything-else-to-read-3">Anything else to read?</h3>
+<p>Google is your friend</p>
+<h2 id="do-i-need-to-make-my-own-pcb">Do I need to make my own PCB?</h2>
+<h3 id="the-confusing-bit-4">The Confusing Bit</h3>
+<p>With the Arduino I only have to plug things in to the pin headers, or into a
+shield. With another microcontroller, do I have to make my own PCB?</p>
+<h3 id="the-skinny-4">The Skinny</h3>
+<p>No, it is not really compulsory to have your own PCB made.</p>
+<h3 id="thats-it-4">Thats it?</h3>
+<p>This is a similar answer to the previous question, and it depends on your
+application. If you use through-hole components, then you will be able to use a
+breadboard to build a working circuit. If you want something more permanent,
+then veroboard or perfboard is a good option.</p>
+<p>Of course, I like nothing more than to have a custom made PCB fitting perfectly
+into the enclosure I designed for it. Here you can either make your own (plenty
+of tutorials about that on the internet - I use acetate sheets, a laminator for
+toner transfer and ammonium persulphate but there are tonnes of other/better
+methods around) or get someone like Seeedstudio, iTead Studio, pcb cart etc to
+make you a couple of prototypes.</p>
+<h3 id="anything-else-to-read-4">Anything else to read?</h3>
+<p>Google is your friend</p>
+</article>
+
+<div class="container col">
+  <h2>Comments</h2>
+  <blockquote>Comments are powered by github and <a href="https://giscus.app">giscus</a></blockquote>
+  <script src="https://giscus.app/client.js"
+        data-repo="will-hart/will-hart.github.io"
+        data-repo-id="MDEwOlJlcG9zaXRvcnkzMjQ2NjY3Mzg="
+        data-category="General"
+        data-category-id="DIC_kwDOE1oFcs4CtiK6"
+        data-mapping="og:title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+  </script>
+</div>
+</div>
+
+  <footer id="footer">
+    <div class="container col">
+      This website was hand-made using Zola and Tera.
+      All text and images are available under CC0 1.0 Universal and code under MIT unless otherwise specified. See <a href="https://github.com/will-hart/willhart.io/blob/main/LICENSE.md">LICENSE.md</a> for more.
+    </div>
+  </footer>
+</body>
+
+</html>

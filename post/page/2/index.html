@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>William Hart | willhart.io</title>
+
+
+  <link rel="icon" type="image/x-icon" href="/icons/icon_light_32x32.png">
+
+  
+  <meta name="description"
+    content="The home page of Will Hart, scattered with a few random thoughts about code, electronics and other things.">
+  
+
+  <link rel="stylesheet" href="https://willhart.io/global.css?h=f83cd20cd0df26d72c2b" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sono:wght@200..800&display=swap" rel="stylesheet">
+
+  
+
+  <!-- Cloudflare Web Analytics -->
+  <script defer src='https://static.cloudflareinsights.com/beacon.min.js'
+    data-cf-beacon='{"token": "310f93cab66a42c5a328f246cc053025"}'></script>
+  <!-- End Cloudflare Web Analytics -->
+
+  <!-- Light/Dark theme toggling -->
+  <script type="text/javascript">
+    const storageKey = "websiteTheme";
+
+    // apply theme once we have a DOM
+    document.addEventListener("DOMContentLoaded", () => {
+      applyTheme();
+    })
+
+    // a function that toggles between light and dark theme
+    const toggleTheme = () => {
+      localStorage.setItem(storageKey, localStorage.getItem(storageKey) === "d" ? "l" : "d" );
+      applyTheme();
+    }
+
+    // a function that actually applies the theme
+    const applyTheme = () => {
+      const useDarkTheme = localStorage.getItem(storageKey) === "d";
+      document.getElementsByTagName("html")[0].className = useDarkTheme ? "dark" : "";
+      document.getElementById("theme-toggle").textContent = useDarkTheme ? "🔆" : "🌑";
+    }
+  </script>
+
+  <script type="speculationrules">
+  {
+    "prerender": [
+      { "where": { "selector_matches": "a" } }
+    ]
+  }
+  </script></head>
+
+<body>
+  <nav id="header">
+    <a href="/" aria-label="Website Logo and Link to Home Page">
+      <div id="logo" >&nbsp;</div>
+    </a>
+    <span>
+      <button type="button" id="theme-toggle" aria-label="Toggle Theme" onClick="toggleTheme()">🌑</button>
+      <a class="header-item" href="/post">POSTS</a>
+      <a class="header-item" href="/tag">TAGS</a>
+      <span class="header-item hide-when-slim">|</span>
+      <a class="header-item hide-when-slim" href="/tag/projects">PROJECTS</a>
+      <a class="header-item hide-when-slim" href="/tag/gamedev">GAMEDEV</a>
+      <a class="header-item hide-when-slim" href="/tag/electronics">ELECTRONICS</a>
+    </span>
+  </nav>
+
+  
+<article class="container col">
+  <h1>All posts</h1>
+
+  <div class="mb">
+    
+<nav>
+  
+  <a href="https:&#x2F;&#x2F;willhart.io&#x2F;post&#x2F;">ᐊ Previous</a>
+  
+
+  |
+
+  
+  <a href="https:&#x2F;&#x2F;willhart.io&#x2F;post&#x2F;page&#x2F;3&#x2F;">Next ᐅ</a>
+  
+</nav>
+
+  </div>
+
+  
+  
+<div class="mb">
+  <div>
+      <h3>
+        <a title="View post: Tauri and Create React App Part 3 - Commands as hooks" href="https://willhart.io/post/tauri-create-react-app-tutorial-part3/">
+          Tauri and Create React App Part 3 - Commands as hooks
+        </a>
+      </h3>
+      <div class="row">
+        
+        <a class="txtsm mr" href="https://willhart.io/tag/tutorials/">#tutorials</a>
+        
+        <a class="txtsm mr" href="https://willhart.io/tag/code/">#code</a>
+        
+      </div>
+      <p>Part 3 of a tutorial for setting up Tauri (an electron alternative) and Create React App. Here we create a hook for invoking &#x27;get&#x2F;set&#x27; commands using the `useSWR` package.</p>
+  </div>
+</div>
+
+  
+  
+<div class="mb">
+  <div>
+      <h3>
+        <a title="View post: Tauri and Create React App Part 2 - Commands" href="https://willhart.io/post/tauri-create-react-app-tutorial-part2/">
+          Tauri and Create React App Part 2 - Commands
+        </a>
+      </h3>
+      <div class="row">
+        
+        <a class="txtsm mr" href="https://willhart.io/tag/code/">#code</a>
+        
+        <a class="txtsm mr" href="https://willhart.io/tag/tutorials/">#tutorials</a>
+        
+      </div>
+      <p>Part 2 of a tutorial for setting up Tauri (an electron alternative) and Create React App. Here we run through setting up and invoking a command written in rust.</p>
+  </div>
+</div>
+
+  
+  
+<div class="mb">
+  <div>
+      <h3>
+        <a title="View post: Tauri and Create React App Part 1 - Setup" href="https://willhart.io/post/tauri-create-react-app-tutorial-part1/">
+          Tauri and Create React App Part 1 - Setup
+        </a>
+      </h3>
+      <div class="row">
+        
+        <a class="txtsm mr" href="https://willhart.io/tag/code/">#code</a>
+        
+        <a class="txtsm mr" href="https://willhart.io/tag/tutorials/">#tutorials</a>
+        
+      </div>
+      <p>Part 1 of a tutorial for setting up Tauri (an electron alternative) and Create React App. Here we set up tauri and CRA ready for dev.</p>
+  </div>
+</div>
+
+  
+  
+<div class="mb">
+  <div>
+      <h3>
+        <a title="View post: Recreating the blog in NextJS" href="https://willhart.io/post/recreating-the-blog-in-nextjs/">
+          Recreating the blog in NextJS
+        </a>
+      </h3>
+      <div class="row">
+        
+        <a class="txtsm mr" href="https://willhart.io/tag/random/">#random</a>
+        
+        <a class="txtsm mr" href="https://willhart.io/tag/projects/">#projects</a>
+        
+      </div>
+      <p>Its that time again when I rewrite my blog, but this time its statically generated using NextJS</p>
+  </div>
+</div>
+
+  
+  
+<div class="mb">
+  <div>
+      <h3>
+        <a title="View post: Thesis writing in Markdown - pandemic and pandoc" href="https://willhart.io/post/thesis-writing-in-markdown-pandoc-and-pandemic/">
+          Thesis writing in Markdown - pandemic and pandoc
+        </a>
+      </h3>
+      <div class="row">
+        
+        <a class="txtsm mr" href="https://willhart.io/tag/tutorials/">#tutorials</a>
+        
+        <a class="txtsm mr" href="https://willhart.io/tag/phd/">#phd</a>
+        
+      </div>
+      <p>A description of the build system I&#x27;m using to build my PhD thesis in markdown and LaTeX</p>
+  </div>
+</div>
+
+  
+  
+<div class="mb">
+  <div>
+      <h3>
+        <a title="View post: Replacing Electron with C# WebView (Windows Only)" href="https://willhart.io/post/replacing-electron-with-c-sharp-edge-webviews-on-windows/">
+          Replacing Electron with C# WebView (Windows Only)
+        </a>
+      </h3>
+      <div class="row">
+        
+        <a class="txtsm mr" href="https://willhart.io/tag/tutorials/">#tutorials</a>
+        
+        <a class="txtsm mr" href="https://willhart.io/tag/phd/">#phd</a>
+        
+      </div>
+      <p>A brief look at the WebView libraries coming to C# WPF</p>
+  </div>
+</div>
+
+  
+  
+<div class="mb">
+  <div>
+      <h3>
+        <a title="View post: Creating a REPL for hacking on a firestore backend" href="https://willhart.io/post/creating-a-repl-for-hacking-on-a-firestore-backend/">
+          Creating a REPL for hacking on a firestore backend
+        </a>
+      </h3>
+      <div class="row">
+        
+        <a class="txtsm mr" href="https://willhart.io/tag/code/">#code</a>
+        
+        <a class="txtsm mr" href="https://willhart.io/tag/tutorials/">#tutorials</a>
+        
+      </div>
+      <p>Using a node REPL to simplify playing around with a firestore backend.</p>
+  </div>
+</div>
+
+  
+  
+<div class="mb">
+  <div>
+      <h3>
+        <a title="View post: First impressions: converting a React&#x2F;Firebase project to GraphQL" href="https://willhart.io/post/first-impressions-converting-a-firebase-project-to-graphql/">
+          First impressions: converting a React&#x2F;Firebase project to GraphQL
+        </a>
+      </h3>
+      <div class="row">
+        
+        <a class="txtsm mr" href="https://willhart.io/tag/code/">#code</a>
+        
+      </div>
+      <p>I&#x27;ve recently moved a firebase project to GraphQL, here I talk about the my first impressions of migrating to GraphQL.</p>
+  </div>
+</div>
+
+  
+  
+<div class="mb">
+  <div>
+      <h3>
+        <a title="View post: Connecting Players with Firebase and Unity [Part 2]" href="https://willhart.io/post/firebase-and-unity-part-2/">
+          Connecting Players with Firebase and Unity [Part 2]
+        </a>
+      </h3>
+      <div class="row">
+        
+        <a class="txtsm mr" href="https://willhart.io/tag/code/">#code</a>
+        
+        <a class="txtsm mr" href="https://willhart.io/tag/gamedev/">#gamedev</a>
+        
+      </div>
+      <p>Part 2 of a tutorial on hacking firebase support into Unity (for desktop builds)</p>
+  </div>
+</div>
+
+  
+  
+<div class="mb">
+  <div>
+      <h3>
+        <a title="View post: Connecting Players with Firebase and Unity [Part 1]" href="https://willhart.io/post/firebase-and-unity-part-1/">
+          Connecting Players with Firebase and Unity [Part 1]
+        </a>
+      </h3>
+      <div class="row">
+        
+        <a class="txtsm mr" href="https://willhart.io/tag/code/">#code</a>
+        
+        <a class="txtsm mr" href="https://willhart.io/tag/gamedev/">#gamedev</a>
+        
+      </div>
+      <p>Part 1 of a tutorial on hacking firebase support into Unity (for desktop builds)</p>
+  </div>
+</div>
+
+  
+
+  <div>
+    
+<nav>
+  
+  <a href="https:&#x2F;&#x2F;willhart.io&#x2F;post&#x2F;">ᐊ Previous</a>
+  
+
+  |
+
+  
+  <a href="https:&#x2F;&#x2F;willhart.io&#x2F;post&#x2F;page&#x2F;3&#x2F;">Next ᐅ</a>
+  
+</nav>
+
+  </div>
+</article>
+</div>
+
+  <footer id="footer">
+    <div class="container col">
+      This website was hand-made using Zola and Tera.
+      All text and images are available under CC0 1.0 Universal and code under MIT unless otherwise specified. See <a href="https://github.com/will-hart/willhart.io/blob/main/LICENSE.md">LICENSE.md</a> for more.
+    </div>
+  </footer>
+</body>
+
+</html>

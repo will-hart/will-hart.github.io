@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Ludum Dare 32 Postmortem - Colour Rocket | willhart.io</title>
+
+
+  <link rel="icon" type="image/x-icon" href="/icons/icon_light_32x32.png">
+
+  
+<meta name="description" content="A post mortem of the game I build for Ludum Dare 32 - Colour Rocket. Posted on https://willhart.io" />
+<meta property="og:description" content="A post mortem of the game I build for Ludum Dare 32 - Colour Rocket" />
+<meta property="og:title" content="Ludum Dare 32 Postmortem - Colour Rocket" />
+<meta property="og:url" content="https://willhart.io/post/ludum-dare-32-postmortem-colour-rocket/">
+<meta property="og:type" content="article" />
+<meta property="og:locale" content="en_AU" />
+
+
+  <link rel="stylesheet" href="https://willhart.io/global.css?h=f83cd20cd0df26d72c2b" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sono:wght@200..800&display=swap" rel="stylesheet">
+
+  
+
+  <!-- Cloudflare Web Analytics -->
+  <script defer src='https://static.cloudflareinsights.com/beacon.min.js'
+    data-cf-beacon='{"token": "310f93cab66a42c5a328f246cc053025"}'></script>
+  <!-- End Cloudflare Web Analytics -->
+
+  <!-- Light/Dark theme toggling -->
+  <script type="text/javascript">
+    const storageKey = "websiteTheme";
+
+    // apply theme once we have a DOM
+    document.addEventListener("DOMContentLoaded", () => {
+      applyTheme();
+    })
+
+    // a function that toggles between light and dark theme
+    const toggleTheme = () => {
+      localStorage.setItem(storageKey, localStorage.getItem(storageKey) === "d" ? "l" : "d" );
+      applyTheme();
+    }
+
+    // a function that actually applies the theme
+    const applyTheme = () => {
+      const useDarkTheme = localStorage.getItem(storageKey) === "d";
+      document.getElementsByTagName("html")[0].className = useDarkTheme ? "dark" : "";
+      document.getElementById("theme-toggle").textContent = useDarkTheme ? "🔆" : "🌑";
+    }
+  </script>
+
+  <script type="speculationrules">
+  {
+    "prerender": [
+      { "where": { "selector_matches": "a" } }
+    ]
+  }
+  </script></head>
+
+<body>
+  <nav id="header">
+    <a href="/" aria-label="Website Logo and Link to Home Page">
+      <div id="logo" >&nbsp;</div>
+    </a>
+    <span>
+      <button type="button" id="theme-toggle" aria-label="Toggle Theme" onClick="toggleTheme()">🌑</button>
+      <a class="header-item" href="/post">POSTS</a>
+      <a class="header-item" href="/tag">TAGS</a>
+      <span class="header-item hide-when-slim">|</span>
+      <a class="header-item hide-when-slim" href="/tag/projects">PROJECTS</a>
+      <a class="header-item hide-when-slim" href="/tag/gamedev">GAMEDEV</a>
+      <a class="header-item hide-when-slim" href="/tag/electronics">ELECTRONICS</a>
+    </span>
+  </nav>
+
+  
+
+<div class="container col mb mt">
+  <h1>Ludum Dare 32 Postmortem - Colour Rocket</h1>
+  <div class="col txtsm">
+    <span>Posted by Will Hart on 2015-04-27</span>
+    <div>
+      <span>See also:</span>
+      
+      <a class="txtsm mr" href="https://willhart.io/tag/gamedev/">#gamedev</a>
+      
+    </div>
+  </div>
+</div>
+
+
+
+<article class="container col mblg"><p>A couple of weekends ago I participated in my first <a rel="noopener nofollow noreferrer" target="_blank" href="http://www.ludumdare.com/">Ludum
+Dare</a> - LD32. The theme for the event was “<em>an
+unconventional weapon</em>”. If you aren’t familiar, Ludum Dare is basically a
+weekend long game jam where you make a game from scratch in 48 hours. In the
+“compo” version you need to make all assets - art, code, music and gameplay -
+within the 48 hours… oh yeah and you have to do it on your own.</p>
+<p>My game was called <a rel="noopener nofollow noreferrer" target="_blank" href="http://ludumdare.com/compo/ludum-dare-32/?action=preview&amp;uid=50407">Colour
+Rocket</a> and
+the concept was an “infinite runner” inspired asteroid dodger, where you aim was
+to guide a rocket to an enemy planet through flying asteroids, and use it to
+return colour to a darkened universe.</p>
+<p>At about 5pm on the final day of Ludum Dare, I decided I’d had enough. I put
+down my keyboard and picked up my baby daughter for a cuddle. She has since
+forgiven me for ignoring her for the best part of a day. This left me with a
+fully functional, complete but very minimal game with only three levels. I’m
+pretty happy that I was able to get that far.</p>
+<h2 id="toolset">Toolset</h2>
+<p>I picked a fairly standard free toolset early on:</p>
+<ul>
+<li>Unity to make the game,</li>
+<li>Blender for artwork, and</li>
+<li>Sunvox for music</li>
+</ul>
+<h2 id="what-worked">What worked</h2>
+<h3 id="music">Music</h3>
+<p>With the exception of one or two minor volume issues, I’m pretty happy with the
+music I made. There is a different song for each menu screen or level, and
+although they aren’t going to win any prizes, given its the first time I’ve
+tried to make music I don’t think the songs are too horrendous.</p>
+<h3 id="artwork">Artwork</h3>
+<p>The artwork was very basic low poly stuff and I quite like the look of the black and white planets before colour is returned to the universe. Its very basic as a few comments have noted, but yeah “programmer art”.</p>
+<p><img src="https://willhart.io/post/ludum-dare-32-postmortem-colour-rocket/ld32-colour-rocket.png" alt="Programmer art at its finest (size: 900x500px)" /></p>
+<h3 id="controller">Controller</h3>
+<p>I tried something a bit different with the player controller. The player’s
+rocket is always at <code>(0,0,0)</code>, and the asteroids move around the player. I can’t
+really say I have a logical reason for doing it this way other than it meant I
+didn’t have to think about the camera or moving cleanup/spawn regions. In the
+end I think this worked ok.</p>
+<h2 id="what-didn-t-work">What didn’t work</h2>
+<p>There were a couple of areas where the game clearly fell short. Although its
+promising to think that most of these would have been easily solved if I’d spent
+more time on them! In no particular order…</p>
+<h3 id="obstacles">Obstacles</h3>
+<p>My method for slinging asteroids towards the player was to spawn a whole lot at the back of the screen. However this lead to disconcerting “pop in” in the background as asteroids were recycled. As the asteroids were rigid bodies with collisions, it also meant that the target planet effectively carved a tunnel in to the asteroid field that would sometimes let the player travel through the whole level without touching the controls… oops!</p>
+<p><img src="https://willhart.io/post/ludum-dare-32-postmortem-colour-rocket/ld32-colour-rocket-2.png" alt="Going through an asteroid tunnel (size: 900x500px)" /></p>
+<p>I fixed the pop in issue by running a coroutine to gradually scale asteroids up
+from 0 to 1 as they were spawned in, but the difficulty and asteroid placement
+proved to be a bit more difficult. I tried adding some pre-existing asteroids
+which improved things a bit, but I think if I’d had more time I should have:</p>
+<ul>
+<li>created some more larger static obstacles,</li>
+<li>created more asteroid spawn points to the sides, shooting asteroids across the
+player’s path</li>
+<li>had the target planets move around instead of sitting still</li>
+</ul>
+<h3 id="user-feedback-and">User Feedback and</h3>
+<p>UI Many of the comments so far have been along the lines of “the controls
+stopped working”. At first I thought this was a weird bug I hadn’t seen, then I
+realised that it was probably related to one of the game mechanics I’d
+implemented.</p>
+<p>So that players can’t just mash the controls non-stop, the rocket has a limited
+amount of fuel. The idea was to make the player chose between getting hit by an
+asteroid and running out of fuel by moving too much. (Move around too much and
+you lose the ability to manoeuvre).</p>
+<p>On realising that players were thinking of a game mechanic as a big, my first
+reaction was in truth a bit defensive…</p>
+<blockquote>
+<p>well, it mentions fuel on the first screen and there is a fuel bar on the GUI,
+so it should be obvious, right? RIGHT?!?!?!!?!“.</p>
+</blockquote>
+<p>Then I realised that the comments were actually letting me know that the game
+mechanic was a bit too obscure. To be “intuitive”, every important player action
+in the game needs to have visual or audio feedback.</p>
+<p>It wasn’t enough to hope the player read three paragraphs of text, or noticed a
+small fuel bar in one corner of the screen - I needed flashing text, colour or
+sounds to notify the user they were about to run afoul of a crucial game
+mechanic.</p>
+<p>This is even more important in something like Ludum Dare where players may only
+spend a minute or two with your game.</p>
+<h2 id="what-i-learned">What I learned</h2>
+<p>To summarise, there were two main lessons for me from this Ludum Dare entry:</p>
+<ol>
+<li>Don’t get defensive about feedback - listen to what the players are saying,
+and try to work out why they are saying it.</li>
+<li>Audio and visual cues are critical for communicating game mechanics.</li>
+</ol>
+<p>I enjoyed the weekend a lot, and I’ve been playing and enjoying some of the
+other entries. Bring on the next Ludum Dare!</p>
+</article>
+
+<div class="container col">
+  <h2>Comments</h2>
+  <blockquote>Comments are powered by github and <a href="https://giscus.app">giscus</a></blockquote>
+  <script src="https://giscus.app/client.js"
+        data-repo="will-hart/will-hart.github.io"
+        data-repo-id="MDEwOlJlcG9zaXRvcnkzMjQ2NjY3Mzg="
+        data-category="General"
+        data-category-id="DIC_kwDOE1oFcs4CtiK6"
+        data-mapping="og:title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+  </script>
+</div>
+</div>
+
+  <footer id="footer">
+    <div class="container col">
+      This website was hand-made using Zola and Tera.
+      All text and images are available under CC0 1.0 Universal and code under MIT unless otherwise specified. See <a href="https://github.com/will-hart/willhart.io/blob/main/LICENSE.md">LICENSE.md</a> for more.
+    </div>
+  </footer>
+</body>
+
+</html>

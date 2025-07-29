@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Creating a REPL for hacking on a firestore backend | willhart.io</title>
+
+
+  <link rel="icon" type="image/x-icon" href="/icons/icon_light_32x32.png">
+
+  
+<meta name="description" content="Using a node REPL to simplify playing around with a firestore backend.. Posted on https://willhart.io" />
+<meta property="og:description" content="Using a node REPL to simplify playing around with a firestore backend." />
+<meta property="og:title" content="Creating a REPL for hacking on a firestore backend" />
+<meta property="og:url" content="https://willhart.io/post/creating-a-repl-for-hacking-on-a-firestore-backend/">
+<meta property="og:type" content="article" />
+<meta property="og:locale" content="en_AU" />
+
+
+  <link rel="stylesheet" href="https://willhart.io/global.css?h=f83cd20cd0df26d72c2b" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sono:wght@200..800&display=swap" rel="stylesheet">
+
+  
+
+  <!-- Cloudflare Web Analytics -->
+  <script defer src='https://static.cloudflareinsights.com/beacon.min.js'
+    data-cf-beacon='{"token": "310f93cab66a42c5a328f246cc053025"}'></script>
+  <!-- End Cloudflare Web Analytics -->
+
+  <!-- Light/Dark theme toggling -->
+  <script type="text/javascript">
+    const storageKey = "websiteTheme";
+
+    // apply theme once we have a DOM
+    document.addEventListener("DOMContentLoaded", () => {
+      applyTheme();
+    })
+
+    // a function that toggles between light and dark theme
+    const toggleTheme = () => {
+      localStorage.setItem(storageKey, localStorage.getItem(storageKey) === "d" ? "l" : "d" );
+      applyTheme();
+    }
+
+    // a function that actually applies the theme
+    const applyTheme = () => {
+      const useDarkTheme = localStorage.getItem(storageKey) === "d";
+      document.getElementsByTagName("html")[0].className = useDarkTheme ? "dark" : "";
+      document.getElementById("theme-toggle").textContent = useDarkTheme ? "🔆" : "🌑";
+    }
+  </script>
+
+  <script type="speculationrules">
+  {
+    "prerender": [
+      { "where": { "selector_matches": "a" } }
+    ]
+  }
+  </script></head>
+
+<body>
+  <nav id="header">
+    <a href="/" aria-label="Website Logo and Link to Home Page">
+      <div id="logo" >&nbsp;</div>
+    </a>
+    <span>
+      <button type="button" id="theme-toggle" aria-label="Toggle Theme" onClick="toggleTheme()">🌑</button>
+      <a class="header-item" href="/post">POSTS</a>
+      <a class="header-item" href="/tag">TAGS</a>
+      <span class="header-item hide-when-slim">|</span>
+      <a class="header-item hide-when-slim" href="/tag/projects">PROJECTS</a>
+      <a class="header-item hide-when-slim" href="/tag/gamedev">GAMEDEV</a>
+      <a class="header-item hide-when-slim" href="/tag/electronics">ELECTRONICS</a>
+    </span>
+  </nav>
+
+  
+
+<div class="container col mb mt">
+  <h1>Creating a REPL for hacking on a firestore backend</h1>
+  <div class="col txtsm">
+    <span>Posted by Will Hart on 2018-11-03</span>
+    <div>
+      <span>See also:</span>
+      
+      <a class="txtsm mr" href="https://willhart.io/tag/code/">#code</a>
+      
+      <a class="txtsm mr" href="https://willhart.io/tag/tutorials/">#tutorials</a>
+      
+    </div>
+  </div>
+</div>
+
+
+
+<article class="container col mblg"><p>When developing firestore based apps (especially for the server) I often find it
+a bit tricky to inspect “intermediate” query results, or just to play around
+with data, test queries and so on. I found a few admin interfaces but they
+generally appear to be for the realtime database and almost universally have no
+commits for 1-2 years.</p>
+<p><img src="https://willhart.io/post/creating-a-repl-for-hacking-on-a-firestore-backend/firestore-repl.png" alt="A custom firestore REPL running in a node console" /></p>
+<p>Ideally I’d just be able to type commands into a terminal and try queries out.
+It turns out using a node repl this is very easy to do. I found some
+instructions for <a rel="noopener nofollow noreferrer" target="_blank" href="https://derickbailey.com/2014/07/02/build-your-own-app-specific-repl-for-your-nodejs-app/">building your own
+REPL</a>,
+and adapted them for firestore admin.</p>
+<p>Here is what my REPL looks like:</p>
+<pre data-lang="typescript" style="background-color:#2b303b;color:#c0c5ce;" class="language-typescript "><code class="language-typescript" data-lang="typescript"><span style="color:#65737e;">//repl.ts
+</span><span>
+</span><span style="color:#b48ead;">import </span><span style="color:#d08770;">* </span><span style="color:#b48ead;">as </span><span style="color:#bf616a;">repl </span><span style="color:#b48ead;">from </span><span>&quot;</span><span style="color:#a3be8c;">repl</span><span>&quot;
+</span><span style="color:#b48ead;">import </span><span style="color:#bf616a;">initFirestoreAdmin </span><span style="color:#b48ead;">from </span><span>&quot;</span><span style="color:#a3be8c;">./src/initAdmin</span><span>&quot;
+</span><span style="color:#65737e;">// used by my functions to init admin with credentials etc
+</span><span>
+</span><span style="color:#b48ead;">const </span><span style="color:#bf616a;">admin </span><span>= </span><span style="color:#8fa1b3;">initFirestoreAdmin</span><span>()
+</span><span style="color:#b48ead;">const </span><span style="color:#bf616a;">firestore </span><span>= </span><span style="color:#bf616a;">admin</span><span>.</span><span style="color:#8fa1b3;">firestore</span><span>()
+</span><span>
+</span><span style="color:#b48ead;">const </span><span style="color:#bf616a;">replServer </span><span>= </span><span style="color:#bf616a;">repl</span><span>.</span><span style="color:#8fa1b3;">start</span><span>({
+</span><span>  prompt: &quot;</span><span style="color:#a3be8c;">fb &gt; </span><span>&quot;,
+</span><span>})
+</span><span>
+</span><span style="color:#bf616a;">replServer</span><span>.</span><span style="color:#bf616a;">context</span><span>.</span><span style="color:#bf616a;">firestore </span><span>= </span><span style="color:#bf616a;">firestore
+</span><span style="color:#bf616a;">replServer</span><span>.</span><span style="color:#bf616a;">context</span><span>.</span><span style="color:#bf616a;">admin </span><span>= </span><span style="color:#bf616a;">admin
+</span><span>
+</span><span style="color:#65737e;">// I can also save typing by doing things like:
+</span><span style="color:#bf616a;">replServer</span><span>.</span><span style="color:#bf616a;">context</span><span>.</span><span style="color:#bf616a;">userId </span><span>= &quot;</span><span style="color:#a3be8c;">my_firestore_user_id</span><span>&quot;
+</span><span>
+</span><span style="color:#65737e;">// or by adding functions
+</span><span style="color:#bf616a;">replServer</span><span>.</span><span style="color:#bf616a;">context</span><span>.</span><span style="color:#8fa1b3;">withUser </span><span>= (</span><span style="color:#bf616a;">query</span><span>) </span><span style="color:#b48ead;">=&gt;
+</span><span>  </span><span style="color:#bf616a;">query</span><span>.</span><span style="color:#8fa1b3;">where</span><span>(&quot;</span><span style="color:#a3be8c;">userId</span><span>&quot;, &quot;</span><span style="color:#a3be8c;">==</span><span>&quot;, </span><span style="color:#bf616a;">replServer</span><span>.</span><span style="color:#bf616a;">context</span><span>.</span><span style="color:#bf616a;">userId</span><span>)
+</span></code></pre>
+<p>I’m coding in typescript, so I also <code>yarn add --dev ts-node</code> so I don’t have to
+bother with compiling the ts file. I can then add a script to my <code>package.json</code>:</p>
+<pre data-lang="json" style="background-color:#2b303b;color:#c0c5ce;" class="language-json "><code class="language-json" data-lang="json"><span>&quot;</span><span style="color:#a3be8c;">scripts</span><span>&quot;: {
+</span><span>  </span><span style="background-color:#bf616a;color:#2b303b;">...,</span><span>
+</span><span>  &quot;</span><span style="color:#a3be8c;">repl</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">./node_modules/.bin/ts-node repl.ts</span><span style="background-color:#bf616a;color:#2b303b;">
+</span><span>}
+</span></code></pre>
+<p>I can start the repl from the root directory with <code>yarn repl</code>. A prompt appears,
+and I can start typing in firestore queries:</p>
+<pre data-lang="typescript" style="background-color:#2b303b;color:#c0c5ce;" class="language-typescript "><code class="language-typescript" data-lang="typescript"><span style="color:#65737e;">// get the pages collection
+</span><span style="color:#bf616a;">fb </span><span>&gt;
+</span><span>  </span><span style="color:#bf616a;">firestore
+</span><span>    .</span><span style="color:#8fa1b3;">collection</span><span>(&quot;</span><span style="color:#a3be8c;">pages</span><span>&quot;)
+</span><span>    .</span><span style="color:#96b5b4;">get</span><span>()
+</span><span>    .</span><span style="color:#96b5b4;">then</span><span>((</span><span style="color:#bf616a;">result</span><span>) </span><span style="color:#b48ead;">=&gt; </span><span style="color:#ebcb8b;">console</span><span>.</span><span style="color:#96b5b4;">log</span><span>(</span><span style="color:#bf616a;">result</span><span>))
+</span><span>
+</span><span style="color:#65737e;">// get a user&#39;s pages
+</span><span style="color:#bf616a;">fb </span><span>&gt;
+</span><span>  </span><span style="color:#8fa1b3;">withUser</span><span>(</span><span style="color:#bf616a;">firestore</span><span>.</span><span style="color:#8fa1b3;">collection</span><span>(&quot;</span><span style="color:#a3be8c;">pages</span><span>&quot;))
+</span><span>    .</span><span style="color:#96b5b4;">get</span><span>()
+</span><span>    .</span><span style="color:#96b5b4;">then</span><span>((</span><span style="color:#bf616a;">result</span><span>) </span><span style="color:#b48ead;">=&gt; </span><span style="color:#ebcb8b;">console</span><span>.</span><span style="color:#96b5b4;">log</span><span>(</span><span style="color:#bf616a;">result</span><span>.size))
+</span></code></pre>
+<p>Using this approach you could also pull in any of your application code (for
+instance GraphQL resolvers), and have a ready built console application version
+for your app.</p>
+<h2 id="a-note-on-async-await">A note on async/await</h2>
+<p>By default, the node <code>repl</code> doesn’t support <code>async</code>/<code>await</code>. It’s available
+under a feature flag in node 10+, but doesn’t appear to be available in ts-node
+yet. You can provide async functionality by installing
+<a rel="noopener nofollow noreferrer" target="_blank" href="https://github.com/ownadi/async-repl">async-repl</a> and using it as follows:</p>
+<pre data-lang="typescript" style="background-color:#2b303b;color:#c0c5ce;" class="language-typescript "><code class="language-typescript" data-lang="typescript"><span style="color:#65737e;">// inside repl.ts
+</span><span style="color:#b48ead;">import</span><span> \</span><span style="color:#d08770;">* </span><span style="color:#b48ead;">as </span><span style="color:#bf616a;">stubber </span><span style="color:#b48ead;">from </span><span>&#39;</span><span style="color:#a3be8c;">async-repl/stubber</span><span>&#39;
+</span><span>
+</span><span style="color:#65737e;">//
+</span><span style="color:#65737e;">//set up your repl as above...
+</span><span style="color:#65737e;">//
+</span><span>
+</span><span style="color:#8fa1b3;">stubber</span><span>(</span><span style="color:#bf616a;">replServer</span><span>)
+</span></code></pre>
+<p>Now in your repl you can do the following:</p>
+<pre data-lang="typescript" style="background-color:#2b303b;color:#c0c5ce;" class="language-typescript "><code class="language-typescript" data-lang="typescript"><span style="color:#bf616a;">fb </span><span>&gt; </span><span style="color:#b48ead;">const </span><span style="color:#bf616a;">docs </span><span>= </span><span style="color:#b48ead;">await </span><span style="color:#bf616a;">firestore</span><span>.</span><span style="color:#8fa1b3;">collection</span><span>(&#39;</span><span style="color:#a3be8c;">documents</span><span>&#39;).</span><span style="color:#96b5b4;">get</span><span>()
+</span></code></pre>
+</article>
+
+<div class="container col">
+  <h2>Comments</h2>
+  <blockquote>Comments are powered by github and <a href="https://giscus.app">giscus</a></blockquote>
+  <script src="https://giscus.app/client.js"
+        data-repo="will-hart/will-hart.github.io"
+        data-repo-id="MDEwOlJlcG9zaXRvcnkzMjQ2NjY3Mzg="
+        data-category="General"
+        data-category-id="DIC_kwDOE1oFcs4CtiK6"
+        data-mapping="og:title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+  </script>
+</div>
+</div>
+
+  <footer id="footer">
+    <div class="container col">
+      This website was hand-made using Zola and Tera.
+      All text and images are available under CC0 1.0 Universal and code under MIT unless otherwise specified. See <a href="https://github.com/will-hart/willhart.io/blob/main/LICENSE.md">LICENSE.md</a> for more.
+    </div>
+  </footer>
+</body>
+
+</html>

@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Embedded rust - comparing RTIC and embassy | willhart.io</title>
+
+
+  <link rel="icon" type="image/x-icon" href="/icons/icon_light_32x32.png">
+
+  
+<meta name="description" content="Looking at the pros and cons of different approaches for running rust on STM32 microcontrollers. Posted on https://willhart.io" />
+<meta property="og:description" content="Looking at the pros and cons of different approaches for running rust on STM32 microcontrollers" />
+<meta property="og:title" content="Embedded rust - comparing RTIC and embassy" />
+<meta property="og:url" content="https://willhart.io/post/embedded-rust-options/">
+<meta property="og:type" content="article" />
+<meta property="og:locale" content="en_AU" />
+
+
+  <link rel="stylesheet" href="https://willhart.io/global.css?h=f83cd20cd0df26d72c2b" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sono:wght@200..800&display=swap" rel="stylesheet">
+
+  
+
+  <!-- Cloudflare Web Analytics -->
+  <script defer src='https://static.cloudflareinsights.com/beacon.min.js'
+    data-cf-beacon='{"token": "310f93cab66a42c5a328f246cc053025"}'></script>
+  <!-- End Cloudflare Web Analytics -->
+
+  <!-- Light/Dark theme toggling -->
+  <script type="text/javascript">
+    const storageKey = "websiteTheme";
+
+    // apply theme once we have a DOM
+    document.addEventListener("DOMContentLoaded", () => {
+      applyTheme();
+    })
+
+    // a function that toggles between light and dark theme
+    const toggleTheme = () => {
+      localStorage.setItem(storageKey, localStorage.getItem(storageKey) === "d" ? "l" : "d" );
+      applyTheme();
+    }
+
+    // a function that actually applies the theme
+    const applyTheme = () => {
+      const useDarkTheme = localStorage.getItem(storageKey) === "d";
+      document.getElementsByTagName("html")[0].className = useDarkTheme ? "dark" : "";
+      document.getElementById("theme-toggle").textContent = useDarkTheme ? "🔆" : "🌑";
+    }
+  </script>
+
+  <script type="speculationrules">
+  {
+    "prerender": [
+      { "where": { "selector_matches": "a" } }
+    ]
+  }
+  </script></head>
+
+<body>
+  <nav id="header">
+    <a href="/" aria-label="Website Logo and Link to Home Page">
+      <div id="logo" >&nbsp;</div>
+    </a>
+    <span>
+      <button type="button" id="theme-toggle" aria-label="Toggle Theme" onClick="toggleTheme()">🌑</button>
+      <a class="header-item" href="/post">POSTS</a>
+      <a class="header-item" href="/tag">TAGS</a>
+      <span class="header-item hide-when-slim">|</span>
+      <a class="header-item hide-when-slim" href="/tag/projects">PROJECTS</a>
+      <a class="header-item hide-when-slim" href="/tag/gamedev">GAMEDEV</a>
+      <a class="header-item hide-when-slim" href="/tag/electronics">ELECTRONICS</a>
+    </span>
+  </nav>
+
+  
+
+<div class="container col mb mt">
+  <h1>Embedded rust - comparing RTIC and embassy</h1>
+  <div class="col txtsm">
+    <span>Posted by Will Hart on 2023-12-30</span>
+    <div>
+      <span>See also:</span>
+      
+      <a class="txtsm mr" href="https://willhart.io/tag/code/">#code</a>
+      
+      <a class="txtsm mr" href="https://willhart.io/tag/electronics/">#electronics</a>
+      
+    </div>
+  </div>
+</div>
+
+
+  <div class="container col txtsm mb page-toc">
+    <h2>Table of contents</h2>
+    <ul>
+    
+        <li>
+            <a href="https://willhart.io/post/embedded-rust-options/#writing-custom-input-devices-in-rust">Writing custom input devices in rust</a>
+            
+        </li>
+    
+        <li>
+            <a href="https://willhart.io/post/embedded-rust-options/#getting-started">Getting started</a>
+            
+        </li>
+    
+        <li>
+            <a href="https://willhart.io/post/embedded-rust-options/#configuring-the-microcontroller">Configuring the microcontroller</a>
+            
+        </li>
+    
+        <li>
+            <a href="https://willhart.io/post/embedded-rust-options/#the-hardware-abstraction-layer">The Hardware Abstraction Layer</a>
+            
+        </li>
+    
+        <li>
+            <a href="https://willhart.io/post/embedded-rust-options/#resource-sharing-between-tasks">Resource sharing between tasks</a>
+            
+        </li>
+    
+        <li>
+            <a href="https://willhart.io/post/embedded-rust-options/#availability-of-community-support-and-examples">Availability of community support and examples</a>
+            
+        </li>
+    
+        <li>
+            <a href="https://willhart.io/post/embedded-rust-options/#conclusion">Conclusion</a>
+            
+        </li>
+    
+    </ul>
+  </div>
+
+
+<article class="container col mblg"><h2 id="writing-custom-input-devices-in-rust">Writing custom input devices in rust</h2>
+<p>Now that the price of ICs has returned to the realms of affordability, I’ve been
+playing around with a few programmable input devices powered by STM32. For
+instance I made some sorta <a href="/post/custom-gaming-foot-pedals">programmable
+pedals</a>
+(<a rel="noopener nofollow noreferrer" target="_blank" href="https://github.com/will-hart/pedalrs">code</a>) which were a lot of fun and more
+recently I’ve been playing around with a macro-style keyboard called
+<a rel="noopener nofollow noreferrer" target="_blank" href="https://github.com/will-hart/switchy">switchy</a> which has support for 24
+switches, 4 rotary encoders with buttons, and two joysticks with buttons.</p>
+<p>Before 2023 work life balance got tipped strongly in favour of work (has it
+really been almost a year and a half since my last post?) I had converted the
+firmware to use something called <a rel="noopener nofollow noreferrer" target="_blank" href="https://rtic.rs"><code>RTIC</code></a> which, according to
+their website, is a “The hardware accelerated Rust RTOS”, where RTOS is a
+real-time operating system.</p>
+<p>The summary of what the RTOS provides is that instead of writing your code in a
+big loop, e.g.</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#65737e;">// pseudo-rust code, obvs
+</span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">main</span><span>() {
+</span><span>  </span><span style="color:#b48ead;">loop </span><span>{
+</span><span>    </span><span style="color:#96b5b4;">read_adcs</span><span>();
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">if </span><span style="color:#96b5b4;">time</span><span>() &gt; time_to_next_blink_led {
+</span><span>      </span><span style="color:#96b5b4;">toggle_led</span><span>();
+</span><span>      time_to_next_blink_led = </span><span style="color:#96b5b4;">time</span><span>() + </span><span style="color:#d08770;">1000</span><span>;
+</span><span>    }
+</span><span>  }
+</span><span>}
+</span></code></pre>
+<p>You structure the code into “tasks”, which are scheduled and executed at the
+appropriate time by the RTOS. The RTOS bit means that there is a scheduler that
+determines when the tasks can run. Tasks can be triggered by interrupts, a
+timer, or called as a “one-shot” task. A totally made up non-compiling toy
+example might be:</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span>async </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">main</span><span>() {
+</span><span>  </span><span style="color:#b48ead;">let</span><span> task1 = </span><span style="color:#96b5b4;">spawn</span><span>(adc_task);
+</span><span>  </span><span style="color:#b48ead;">let</span><span> task2 = </span><span style="color:#96b5b4;">spawn</span><span>(blink_task);
+</span><span>  join!([task1, task2]).await;
+</span><span>}
+</span><span>
+</span><span>async </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">adc_task</span><span>() -&gt; ! {
+</span><span>  </span><span style="color:#b48ead;">loop </span><span>{
+</span><span>    </span><span style="color:#b48ead;">let</span><span> value = adc.</span><span style="color:#96b5b4;">sample</span><span>();
+</span><span>    serial.</span><span style="color:#96b5b4;">send</span><span>(&quot;</span><span style="color:#a3be8c;">{value}</span><span>&quot;);
+</span><span>    </span><span style="color:#96b5b4;">wait_millis</span><span>(</span><span style="color:#d08770;">1000</span><span>);
+</span><span>  }
+</span><span>}
+</span><span>
+</span><span>async </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">blink_task</span><span>() -&gt; ! {
+</span><span>  </span><span style="color:#b48ead;">loop </span><span>{
+</span><span>    led.</span><span style="color:#96b5b4;">toggle</span><span>();
+</span><span>    </span><span style="color:#96b5b4;">wait_millis</span><span>(</span><span style="color:#d08770;">1000</span><span>);
+</span><span>  }
+</span><span>}
+</span></code></pre>
+<p>This toy example requires a bit more code, but it also clearly separates our
+concerns. We use <code>main</code> to set up the logic, then there are two separate tasks
+that each do different things. Given that the microcontroller is a resource
+constrained environment, there is a fair bit of magic in the <code>spawn</code>ing and
+execution of tasks.</p>
+<p>There are two main libraries (that I’m aware of) that provide the infrastructure
+to do this: <a rel="noopener nofollow noreferrer" target="_blank" href="https://rtic.rs"><code>rtic-rs</code></a> and <a rel="noopener nofollow noreferrer" target="_blank" href="https://embassy.dev"><code>embassy</code></a>.
+Each of these rely on hardware abstraction layers (HALs) that allow <em>almost</em> the
+same code to be run on different MCUs. The <a rel="noopener nofollow noreferrer" target="_blank" href="https://rtic.rs/2/book/en/rtic_and_embassy.html">RTIC
+documentation</a> has an
+interesting comparison of the aims of the RTIC project, compared to embassy:</p>
+<blockquote>
+<p>Embassy provides both Hardware Abstraction Layers (HALs), and an
+executor/runtime, while RTIC aims to only provide an execution framework. [In
+RTIC] the user is responsible for providing a PAC (peripheral access crate)
+and HAL implementation.</p>
+</blockquote>
+<p>In other words, RTIC aims to be a lot lower level while embassy seems to be
+taking a “batteries included” approach. In this post I want to go over my
+experience using these two libraries to write the <code>switchy</code> firmware, and
+outline what I love (and love slightly less) about these libraries. I decided to
+write down my notes on using <code>embassy</code> after returning to <code>switchy</code> after a 10
+month delay.</p>
+<p>Both embassy and RTIC are amazing software projects, and I’m very excited to
+have two solid options like these for writing rust code for embedded targets.
+I’ve seen a few fairly complex bits of firmware written using the STM32 C++ HALs
+and <em>hoo boy</em> does the rust code look nicer (to me at least).</p>
+<p>So in short, these are my opinions and first impressions only, and probably
+reflect as much on my own capacity to write embedded rust code as the libraries
+themselves, so take everything I say here with a couple of hundred grains of
+salt. My impressions are also relatively “high level”, I’m not writing
+performance critical or safety critical code so consider this a “hobbyist”
+assessment of the two frameworks, likely riddled with errors.</p>
+<h2 id="getting-started">Getting started</h2>
+<p>Both projects have pretty good getting started guides, although RTIC requires a
+bit of digging. The first thing on their home page is a discussion of whether
+RTIC is an RTOS while embassy’s home page emphasises <em>what</em> embassy is and shows
+a minimal code example, which IMO is a better approach.</p>
+<p>Either way, it only takes a little bit of scrolling or one or two clicks to find
+a template. The <a rel="noopener nofollow noreferrer" target="_blank" href="https://github.com/rtic-rs/defmt-app-template">RTIC template</a>
+has a great README, while the embassy documentation points you to some examples
+before moving on to a great walkthrough of <a rel="noopener nofollow noreferrer" target="_blank" href="https://embassy.dev/book/dev/new_project.html">starting a new
+project</a>.</p>
+<p>Both frameworks have a similar amount of mucking about getting targets, build
+configurations and debugging set up. Sometimes the guides have worked for me,
+and other times I’ve spend a few hours debugging random build errors and
+incompatibilities. I think this will get better with time.</p>
+<p>Both frameworks now rely on <code>async</code> fns, which I’m ok with but lots of people
+seem to have issue with the “terrible async in lang X”. To me the code is much
+simpler and expressive with async - for instance if you’re waiting for a message
+this seems simpler than a polling loop:</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span>receiver.</span><span style="color:#96b5b4;">next</span><span>().await
+</span></code></pre>
+<h2 id="configuring-the-microcontroller">Configuring the microcontroller</h2>
+<p>Configuration is really the realm of the hardware abstraction layer, or HAL. As
+mentioned, RTIC relies on you to bring your own HAL, while embassy includes a
+bunch of HALs. The main complexity here seems to be driven by the complexity of
+the ICs themselves - no code is directly transferrable as (for instance) an
+STM32F4 handles ADCs differently to how an STM32F1 or an RP2040 does. I’d say
+the <a rel="noopener nofollow noreferrer" target="_blank" href="https://github.com/stm32-rs"><code>stm32-rs</code></a> and
+<a rel="noopener nofollow noreferrer" target="_blank" href="https://github.com/rp-rs/rp-hal"><code>rp-hal</code></a> used by RTIC are <em>probably</em> a bit
+more mature here, but they aren’t far off each other.</p>
+<p>The configuration function for switchy in the RTIC version lives
+<a rel="noopener nofollow noreferrer" target="_blank" href="https://github.com/will-hart/switchy/blob/develop/src/configure.rs#L52">here</a>.
+A typical digital IO pin configuration might look like:</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">let</span><span> gpioc = device_peripherals.</span><span style="color:#d08770;">GPIOC</span><span>.</span><span style="color:#96b5b4;">split</span><span>();
+</span><span style="color:#b48ead;">let</span><span> pin = gpioc.pc3.</span><span style="color:#96b5b4;">into_push_pull_output</span><span>();
+</span></code></pre>
+<p>For embassy, a similar RP2040 configuration might be:</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">let</span><span> p = embassy_rp::init(config);
+</span><span style="color:#b48ead;">let</span><span> pin = p.</span><span style="color:#d08770;">PIN_2</span><span>;
+</span></code></pre>
+<p>I did have some issues getting USB HID to work with embassy on an STM32F401
+microcontroller. For whatever reason the device just wouldn’t be detected no
+matter what I tried. Its possible the chip was faulty, but I changed to a RPi
+Pico, spent about an hour converting the code base from STM32F4 to RP2040, and
+it worked flawlessly.</p>
+<h2 id="the-hardware-abstraction-layer">The Hardware Abstraction Layer</h2>
+<p>Both HALs rely on <code>embedded_hal</code> to provide common structures for
+Pins, allowing re-use of device drivers between MCUs, which is a pretty feature
+thing to have for somebody like me with a drawer full of different dev boards.</p>
+<p>I’ve been successful in running both stm32 and embassy HALs on STM32F0, STM32F1,
+STM32F4 and RP2040 targets, often with minimal code changes between MCUs thanks
+to <code>embedded_hal</code>s.</p>
+<p>My general impression here is that the <code>stm32-rs</code> / <code>rp-hal</code> HALs used with RTIC
+are a bit more mature, but <em>feel</em> more varied in approach as they’re from lots
+of different projects. Embassy HALs felt more consistent between MCU families,
+but maybe a little less mature in some cases(?).</p>
+<h2 id="resource-sharing-between-tasks">Resource sharing between tasks</h2>
+<p>There is often a requirement in non-trivial firmware to share resources or
+state, or maintain global state for tasks. This might be something like whether
+an LED should be on, or in the case of the USB input devices it might be a
+current map of the state of buttons. Both
+<a rel="noopener nofollow noreferrer" target="_blank" href="https://rtic.rs/2/book/en/by-example/channel.html">RTIC</a> and
+<a rel="noopener nofollow noreferrer" target="_blank" href="https://docs.embassy.dev/embassy-sync/git/default/index.html">embassy</a> allow
+sync structures with things like <code>queues</code> and <code>channels</code> for passing data
+between tasks in a pretty straightforward way.</p>
+<p>RTIC and embassy do differ though on how resources are shared globally. Embassy
+takes a fairly standard approach of requiring all resources to be statically
+allocated. This requires a lot of <code>static</code> types or the use of something like
+<a rel="noopener nofollow noreferrer" target="_blank" href="https://docs.rs/static_cell/latest/static_cell/"><code>StaticCell</code></a>. Its a bit of a
+mouthful to write code this way in rust, but it is fairly obvious and direct. To
+quote an “industry source” that I discussed this with:</p>
+<blockquote>
+<p>rust is exposing a constraint that’s already there [in C++ firmware], but I’m
+finding it annoying to write [in rust].</p>
+</blockquote>
+<p>Here is an example from my keyboard firmware:</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">let</span><span> channel: &amp;</span><span style="color:#b48ead;">&#39;static mut</span><span> KeyboardActionChannel = {
+</span><span>    </span><span style="color:#b48ead;">static </span><span style="color:#d08770;">CHANNEL</span><span>: StaticCell&lt;KeyboardActionChannel&gt; = StaticCell::new();
+</span><span>    </span><span style="color:#d08770;">CHANNEL</span><span>.</span><span style="color:#96b5b4;">init_with</span><span>(|| KeyboardActionChannel::new())
+</span><span>};
+</span><span>
+</span><span style="color:#65737e;">// spawn a task and pass in the reference to our channel
+</span><span>unwrap!(spawner.</span><span style="color:#96b5b4;">spawn</span><span>(</span><span style="color:#96b5b4;">send_dummy_key_presses</span><span>(channel)));
+</span></code></pre>
+<p>A limitation of embassy tasks is that they cannot accept generic function
+arguments, which includes non-static lifetimes. Often I found myself stumbling
+over this and fighting with the compiler.</p>
+<p>RTIC uses a more “magical” macro-based approach to
+<a rel="noopener nofollow noreferrer" target="_blank" href="https://rtic.rs/2/book/en/by-example/resources.html">resources</a>. There are
+<code>shared</code> resources and <code>local</code> resources. Shared resources are available to any
+task, usually accessed through a mutex, while local resources are available only
+to a single task. This model works very well when it works, but I found the
+macro approach often resulted in obscure hard-to-debug errors because if I made
+a mistake in my resource initialisation code the error was reported somewhere
+else (i.e. in the macro), and often took a bit of digging to work out. An
+example of how this works (adapted from the docs linked above) is:</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span>#[</span><span style="color:#bf616a;">rtic</span><span>::</span><span style="color:#bf616a;">app</span><span>(device = stm32f401, dispatchers = [EXTI1])]
+</span><span style="color:#b48ead;">mod </span><span>app {
+</span><span>    </span><span style="color:#65737e;">//.. use blah;
+</span><span>
+</span><span>    #[</span><span style="color:#bf616a;">shared</span><span>]
+</span><span>    </span><span style="color:#b48ead;">struct </span><span>Shared {
+</span><span>      </span><span style="color:#bf616a;">driver</span><span>: MyDeviceDriver,
+</span><span>    }
+</span><span>
+</span><span>    #[</span><span style="color:#bf616a;">local</span><span>]
+</span><span>    </span><span style="color:#b48ead;">struct </span><span>Local {
+</span><span>        </span><span style="color:#bf616a;">local_to_foo</span><span>: </span><span style="color:#b48ead;">i64</span><span>,
+</span><span>    }
+</span><span>
+</span><span>    #[</span><span style="color:#bf616a;">init</span><span>]
+</span><span>    </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">init</span><span>(_: init::Context) -&gt; (Shared, Local) {
+</span><span>        foo::spawn().</span><span style="color:#96b5b4;">unwrap</span><span>();
+</span><span>
+</span><span>        </span><span style="color:#65737e;">// get GPIOs here
+</span><span>
+</span><span>        </span><span style="color:#b48ead;">let</span><span> driver: MyDeviceDriver::new(</span><span style="color:#65737e;">/* move in a bunch of GPIOs */</span><span>);
+</span><span>
+</span><span>        (
+</span><span>            Shared { driver },
+</span><span>            Local {
+</span><span>                local_to_foo: </span><span style="color:#d08770;">0</span><span>,
+</span><span>            },
+</span><span>        )
+</span><span>    }
+</span><span>
+</span><span>    #[</span><span style="color:#bf616a;">task</span><span>(local = [local_to_foo], shared = [driver], priority = 1)]
+</span><span>    async </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">foo</span><span>(</span><span style="color:#bf616a;">cx</span><span>: foo::Context) {
+</span><span>        </span><span style="color:#b48ead;">let</span><span> local_to_foo = cx.local.local_to_foo;
+</span><span>        *local_to_foo += </span><span style="color:#d08770;">1</span><span>;
+</span><span>
+</span><span>        cx.shared.driver.</span><span style="color:#96b5b4;">lock</span><span>(|</span><span style="color:#bf616a;">driver</span><span>| {
+</span><span>          driver.</span><span style="color:#96b5b4;">do_something</span><span>();
+</span><span>        });      
+</span><span>    }
+</span><span>
+</span><span>}
+</span></code></pre>
+<p>Another challenge I found with RTIC’s approach was that the task functions must
+be <code>async</code> but the <code>init</code> function which initialises global resources was
+<code>sync</code>. Some libraries (for instance for interfacing with <code>nrf24</code>) only came in
+an async variant, meaning it was a real struggle to get them to work properly
+with RTIC.</p>
+<h2 id="availability-of-community-support-and-examples">Availability of community support and examples</h2>
+<p>Rust projects usually have very thorough API documentation and detailed
+examples, and both RTIC and embassy are no exception here. There are tonnes of
+examples for both. As the HAL and framework are the same for embassy, the
+examples are a bit more coherent and unified, and <em>oh my</em> there are <a rel="noopener nofollow noreferrer" target="_blank" href="https://github.com/embassy-rs/embassy/tree/main/examples">a lot of
+examples</a> for
+different MCUs.</p>
+<p>The RTIC examples are <a rel="noopener nofollow noreferrer" target="_blank" href="https://github.com/rtic-rs/rtic-examples">a bit more
+sparse</a>, and don’t seem to have any v2
+specific examples yet, however the HALs usually provide examples. Again this
+means that you’re a bit at the mercy of how mature the specific HAL is. For both
+frameworks this is a function of their rapid development - some of the examples
+get stale relatively quickly which can make finding relevant examples tricky at
+times.</p>
+<p>One thing that is missing for both frameworks is “intermediate” complexity
+examples. For instance most of the embassy examples don’t actually spawn
+<code>tasks</code>, which is a core feature of the framework. The examples seemingly go
+from “how to blink an LED” to “here is a huge repository for 3d printer
+firmware”, leaving little clue for the newcomer on how to sensibly structure an
+application with complexity anywhere above “trivial”. In some ways this should
+be left up to the developer, but I felt like RTIC perhaps provided a bit welcome
+more guidance here.</p>
+<p>Often for the embassy examples there are HAL specific features that are
+required. However as the examples for a particular MCU are all in one directory,
+its a bit unclear which feature relates to which example. This isn’t a big deal,
+but adds a bit of friction to implementing examples into your own code. There
+were also some non-obvious dependencies (for instance <code>portable_atomic</code> was
+required for <code>thumbv6</code> target to use <code>static_cell</code>, which wasn’t immediately
+obvious when moving between targets).</p>
+<h2 id="conclusion">Conclusion</h2>
+<p>I love writing embedded rust code. For me, its easier to read and write than the
+typical C++ code bases, while allowing a bit more power and flexibility than
+something like Arduino.</p>
+<p>There definitely some cons. I’m not 100% sure rust embedded in general is
+<em>quite</em> ready for mission critical applications, although seems more than stable
+enough for regular old firmware. The usual rust trade offs are multiplied in a
+<code>no-std</code> environment - finnicky compiler errors, types and lifetime management,
+and many of the “nicer” rust features like dynamically sized <code>Vec</code>s  are not
+immediately available without an external crate. I’d say that usually rust
+trades up front development time for less future debugging time, and I think
+that is exacerbated in embedded.</p>
+<p>There are definite pros to rust embedded though. The ecosystem is already very
+strong with lots of drivers, crates, and wide MCU support from a single language
+and coding environment. Once I’ve gotten past the initial hurdle of lifetimes,
+device initialisation and so on, writing application logic has been an absolute
+dream, and the code usually “just works”.</p>
+<p>I would happily reach for either embassy or RTIC. I think my own preference
+would probably be to reach for embassy for simple projects, and RTIC for things
+that are likely to be more complex, but really I think it would be hard to go
+wrong using either for rust embedded development.</p>
+</article>
+
+<div class="container col">
+  <h2>Comments</h2>
+  <blockquote>Comments are powered by github and <a href="https://giscus.app">giscus</a></blockquote>
+  <script src="https://giscus.app/client.js"
+        data-repo="will-hart/will-hart.github.io"
+        data-repo-id="MDEwOlJlcG9zaXRvcnkzMjQ2NjY3Mzg="
+        data-category="General"
+        data-category-id="DIC_kwDOE1oFcs4CtiK6"
+        data-mapping="og:title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+  </script>
+</div>
+</div>
+
+  <footer id="footer">
+    <div class="container col">
+      This website was hand-made using Zola and Tera.
+      All text and images are available under CC0 1.0 Universal and code under MIT unless otherwise specified. See <a href="https://github.com/will-hart/willhart.io/blob/main/LICENSE.md">LICENSE.md</a> for more.
+    </div>
+  </footer>
+</body>
+
+</html>

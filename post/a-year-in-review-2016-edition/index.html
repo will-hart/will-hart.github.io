@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>A year in review (2016 game dev edition) | willhart.io</title>
+
+
+  <link rel="icon" type="image/x-icon" href="/icons/icon_light_32x32.png">
+
+  
+<meta name="description" content="A quick look back at my coding efforts for 2016. Posted on https://willhart.io" />
+<meta property="og:description" content="A quick look back at my coding efforts for 2016" />
+<meta property="og:title" content="A year in review (2016 game dev edition)" />
+<meta property="og:url" content="https://willhart.io/post/a-year-in-review-2016-edition/">
+<meta property="og:type" content="article" />
+<meta property="og:locale" content="en_AU" />
+
+
+  <link rel="stylesheet" href="https://willhart.io/global.css?h=f83cd20cd0df26d72c2b" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sono:wght@200..800&display=swap" rel="stylesheet">
+
+  
+
+  <!-- Cloudflare Web Analytics -->
+  <script defer src='https://static.cloudflareinsights.com/beacon.min.js'
+    data-cf-beacon='{"token": "310f93cab66a42c5a328f246cc053025"}'></script>
+  <!-- End Cloudflare Web Analytics -->
+
+  <!-- Light/Dark theme toggling -->
+  <script type="text/javascript">
+    const storageKey = "websiteTheme";
+
+    // apply theme once we have a DOM
+    document.addEventListener("DOMContentLoaded", () => {
+      applyTheme();
+    })
+
+    // a function that toggles between light and dark theme
+    const toggleTheme = () => {
+      localStorage.setItem(storageKey, localStorage.getItem(storageKey) === "d" ? "l" : "d" );
+      applyTheme();
+    }
+
+    // a function that actually applies the theme
+    const applyTheme = () => {
+      const useDarkTheme = localStorage.getItem(storageKey) === "d";
+      document.getElementsByTagName("html")[0].className = useDarkTheme ? "dark" : "";
+      document.getElementById("theme-toggle").textContent = useDarkTheme ? "🔆" : "🌑";
+    }
+  </script>
+
+  <script type="speculationrules">
+  {
+    "prerender": [
+      { "where": { "selector_matches": "a" } }
+    ]
+  }
+  </script></head>
+
+<body>
+  <nav id="header">
+    <a href="/" aria-label="Website Logo and Link to Home Page">
+      <div id="logo" >&nbsp;</div>
+    </a>
+    <span>
+      <button type="button" id="theme-toggle" aria-label="Toggle Theme" onClick="toggleTheme()">🌑</button>
+      <a class="header-item" href="/post">POSTS</a>
+      <a class="header-item" href="/tag">TAGS</a>
+      <span class="header-item hide-when-slim">|</span>
+      <a class="header-item hide-when-slim" href="/tag/projects">PROJECTS</a>
+      <a class="header-item hide-when-slim" href="/tag/gamedev">GAMEDEV</a>
+      <a class="header-item hide-when-slim" href="/tag/electronics">ELECTRONICS</a>
+    </span>
+  </nav>
+
+  
+
+<div class="container col mb mt">
+  <h1>A year in review (2016 game dev edition)</h1>
+  <div class="col txtsm">
+    <span>Posted by Will Hart on 2017-01-15</span>
+    <div>
+      <span>See also:</span>
+      
+      <a class="txtsm mr" href="https://willhart.io/tag/gamedev/">#gamedev</a>
+      
+    </div>
+  </div>
+</div>
+
+
+
+<article class="container col mblg"><p>Looking back, 2016 was a fairly big year for me. I travelled a bit, finished up
+some major work projects, moved house (to a different hemisphere) and started a
+PhD! I thought it might be nice to look back at the year in review for my
+favourite hobby - game dev.</p>
+<h2 id="game-jams">Game Jams</h2>
+<p>I try to do game jams when I can, as its a great way to test out ideas.
+Obviously juggling family life and game jams can be a bit of a challenge, but I
+still managed to release five games for Game Jams in 2016!</p>
+<h3 id="twirlygig">Twirlygig</h3>
+<p><img src="https://willhart.io/post/a-year-in-review-2016-edition/twirlygig.jpg" alt="A terrible game jam game (size: 551x500px)" /></p>
+<p><a rel="noopener nofollow noreferrer" target="_blank" href="https://web.archive.org/web/20210127063404/http://ludumdare.com/compo/ludum-dare-35/?action=preview&amp;uid=50407">Ludum Dare 35 Link</a></p>
+<p>This game was an example of what happens when you try to balance family life
+with a weekend game jam! To follow on from the Button Simulator, I decided to
+make another game using ReactJS. The theme of the jam was “shape shifting” and I
+wanted to see if I could use React to simulate physics. Basically the idea is
+there are a whole lot of shapes which swirl down towards the centre, and you
+have to press keys to match the shapes before they hit the centre. Its
+not (quite) the worst game I ever made.</p>
+<h3 id="clockwork-dragon">Clockwork Dragon</h3>
+<p><img src="https://willhart.io/post/a-year-in-review-2016-edition/clockwork-dragon.jpg" alt="Clockwork Dragon - a game I was actually proud of (size: 731x500px)" /></p>
+<p><a rel="noopener nofollow noreferrer" target="_blank" href="https://wilsk.itch.io/clockwork-dragon">Ludum Dare 36 Link</a></p>
+<p>I’m actually fairly proud of this game - I think its probably one of the best
+games I’ve released to date. In this voxel adventure, you are a steam powered
+dragon that flies around scaring villagers to steal their gold. Use the gold to
+upgrade yourself, and follow along with the story.</p>
+<h3 id="missile-commander">Missile Commander</h3>
+<p><img src="https://willhart.io/post/a-year-in-review-2016-edition/missile-commander.png" alt="Missile Commander - a game made in about three hours (size: 596x402px)" /></p>
+<p><a rel="noopener nofollow noreferrer" target="_blank" href="https://wilsk.itch.io/missile-commander">Game Dev League Artificial Intelligence Jam, itch.io link</a></p>
+<p>I wasn’t going to take part in this game jam, but changed my mind at the last
+minute. Hence this game was made in about 2-3 hours, and it shows! Its kind of a
+cross between <a rel="noopener nofollow noreferrer" target="_blank" href="http://interplanetary.weebly.com/">Interplanetary</a> and just about
+any artillery type game ever made. Fire off missiles from the surface of the
+earth and hope to get the enemy before they get you.</p>
+<h3 id="the-eridanus-monument">The Eridanus Monument</h3>
+<p><img src="https://willhart.io/post/a-year-in-review-2016-edition/eridanus-monument.png" alt="Eridanus Monument - my attempt at a more narrative game (size: 473x312px)" /></p>
+<p><a rel="noopener nofollow noreferrer" target="_blank" href="https://wilsk.itch.io/eridanus">Game Dev League Area 51 Jam, itch.io link</a></p>
+<p>This was probably the most experimental “game” I’ve made to date. Its a
+hand-drawn story driven narrative game. There isn’t a whole lot of game play, so
+I guess its almost semi-interactive fiction. I’m pretty proud of it, even if the
+“critical reception” wasn’t great.</p>
+<h3 id="github-game-jam-november">GitHub Game Jam (November)</h3>
+<p>I also participated in the GitHub November Game Jam, and along with Zentropy
+built up a functioning RTS, and a solid entity component system framework which
+I hope I’ll have more to say about later.</p>
+<h2 id="art">“Art”</h2>
+<p>I tinkered around quite a lot with Blender and MagicaVoxel in 2016, mostly in
+the low poly style because thats about all I can manage. Here are a few things I
+worked on.</p>
+<h3 id="a-random-low-poly-landscape">A random low poly landscape</h3>
+<p><img src="https://willhart.io/post/a-year-in-review-2016-edition/Random-Landscape-2.png" alt="Low poly scene (size: 1337x746px)" /></p>
+<h3 id="some-random-medieval-game-assets">Some random medieval game assets</h3>
+<p><img src="https://willhart.io/post/a-year-in-review-2016-edition/medieval_assets.png" alt="Some medieval game assets (size: 1536x864px)" /></p>
+<h3 id="four-seasons">Four seasons</h3>
+<p><img src="https://willhart.io/post/a-year-in-review-2016-edition/Seasons-Composite.png" alt="Four seasons (size: 1536x618px)" /></p>
+<h3 id="camping-under-the-stars">Camping under the stars</h3>
+<p><img src="https://willhart.io/post/a-year-in-review-2016-edition/Scene-4.2-J.png" alt="Camping under the stars (size: 1152x618px)" /></p>
+<h2 id="2017">2017?</h2>
+<p>Well I’m pretty excited for 2017 both professionally and for game dev. I’m
+working with Zentropy from the GitHub game jam on some new ideas and our ECS is
+maturing rapidly. I’m hoping I’ll have a lot more to talk about this year, and
+this time in 2018 :)</p>
+</article>
+
+<div class="container col">
+  <h2>Comments</h2>
+  <blockquote>Comments are powered by github and <a href="https://giscus.app">giscus</a></blockquote>
+  <script src="https://giscus.app/client.js"
+        data-repo="will-hart/will-hart.github.io"
+        data-repo-id="MDEwOlJlcG9zaXRvcnkzMjQ2NjY3Mzg="
+        data-category="General"
+        data-category-id="DIC_kwDOE1oFcs4CtiK6"
+        data-mapping="og:title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+  </script>
+</div>
+</div>
+
+  <footer id="footer">
+    <div class="container col">
+      This website was hand-made using Zola and Tera.
+      All text and images are available under CC0 1.0 Universal and code under MIT unless otherwise specified. See <a href="https://github.com/will-hart/willhart.io/blob/main/LICENSE.md">LICENSE.md</a> for more.
+    </div>
+  </footer>
+</body>
+
+</html>

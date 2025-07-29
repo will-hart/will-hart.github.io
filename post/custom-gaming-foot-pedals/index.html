@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Custom gaming foot pedals | willhart.io</title>
+
+
+  <link rel="icon" type="image/x-icon" href="/icons/icon_light_32x32.png">
+
+  
+<meta name="description" content="I created a set of custom gaming foot pedals, basically because I had nothing better to do while in Covid isolation!. Posted on https://willhart.io" />
+<meta property="og:description" content="I created a set of custom gaming foot pedals, basically because I had nothing better to do while in Covid isolation!" />
+<meta property="og:title" content="Custom gaming foot pedals" />
+<meta property="og:url" content="https://willhart.io/post/custom-gaming-foot-pedals/">
+<meta property="og:type" content="article" />
+<meta property="og:locale" content="en_AU" />
+
+
+  <link rel="stylesheet" href="https://willhart.io/global.css?h=f83cd20cd0df26d72c2b" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sono:wght@200..800&display=swap" rel="stylesheet">
+
+  
+
+  <!-- Cloudflare Web Analytics -->
+  <script defer src='https://static.cloudflareinsights.com/beacon.min.js'
+    data-cf-beacon='{"token": "310f93cab66a42c5a328f246cc053025"}'></script>
+  <!-- End Cloudflare Web Analytics -->
+
+  <!-- Light/Dark theme toggling -->
+  <script type="text/javascript">
+    const storageKey = "websiteTheme";
+
+    // apply theme once we have a DOM
+    document.addEventListener("DOMContentLoaded", () => {
+      applyTheme();
+    })
+
+    // a function that toggles between light and dark theme
+    const toggleTheme = () => {
+      localStorage.setItem(storageKey, localStorage.getItem(storageKey) === "d" ? "l" : "d" );
+      applyTheme();
+    }
+
+    // a function that actually applies the theme
+    const applyTheme = () => {
+      const useDarkTheme = localStorage.getItem(storageKey) === "d";
+      document.getElementsByTagName("html")[0].className = useDarkTheme ? "dark" : "";
+      document.getElementById("theme-toggle").textContent = useDarkTheme ? "🔆" : "🌑";
+    }
+  </script>
+
+  <script type="speculationrules">
+  {
+    "prerender": [
+      { "where": { "selector_matches": "a" } }
+    ]
+  }
+  </script></head>
+
+<body>
+  <nav id="header">
+    <a href="/" aria-label="Website Logo and Link to Home Page">
+      <div id="logo" >&nbsp;</div>
+    </a>
+    <span>
+      <button type="button" id="theme-toggle" aria-label="Toggle Theme" onClick="toggleTheme()">🌑</button>
+      <a class="header-item" href="/post">POSTS</a>
+      <a class="header-item" href="/tag">TAGS</a>
+      <span class="header-item hide-when-slim">|</span>
+      <a class="header-item hide-when-slim" href="/tag/projects">PROJECTS</a>
+      <a class="header-item hide-when-slim" href="/tag/gamedev">GAMEDEV</a>
+      <a class="header-item hide-when-slim" href="/tag/electronics">ELECTRONICS</a>
+    </span>
+  </nav>
+
+  
+
+<div class="container col mb mt">
+  <h1>Custom gaming foot pedals</h1>
+  <div class="col txtsm">
+    <span>Posted by Will Hart on 2022-02-08</span>
+    <div>
+      <span>See also:</span>
+      
+      <a class="txtsm mr" href="https://willhart.io/tag/projects/">#projects</a>
+      
+      <a class="txtsm mr" href="https://willhart.io/tag/electronics/">#electronics</a>
+      
+    </div>
+  </div>
+</div>
+
+
+
+<article class="container col mblg"><p>While playing a certain online shooter with some friends, one of our party noted
+that having some foot pedals to lean would make it easier than using the default
+Q and E keys. We found a bunch of commercial ones online, with prices from about
+$50 to $350 after shipping (electronics and shipping to Australia tend to be
+pretty expensive). One of my side projects at the moment is to build my own
+mechanical keyboard from scratch, and thinking about it I was almost certain I
+had everything I needed on hand to make a set of my own custom pedals.</p>
+<p>The idea was simple - grab a couple of limit switches I had for upgrading my
+budget CNC, wire them up with a microcontroller with USB HID capability and make
+a little custom keyboard that could only press Q or E. The only thing I needed
+to buy were springs, as I didn’t have any suitable ones in my random stash of
+salvaged mechanical pieces. These were about $3 from the local big box hardware
+store.</p>
+<p><img src="https://willhart.io/post/custom-gaming-foot-pedals/pedals_disassembled.jpg" alt="The foot pedals during assembly" /></p>
+<p>The design was otherwise fairly simple. The main structure was a box with an
+angled top, and a hole for the foot button to poke through. A skirt on the
+button prevents it from popping out the top, and two springs keep the pedal up
+off the switch and provide some resistance. The limit switch is hot glued down
+onto a raised base which limits the travel of the foot pedal, and M3 bolts in
+heat set threaded inserts were used to fix the two halves together and lock the
+“button” in place.</p>
+<p>The electronics are equally simple, I had a stash of “blue pill” STM32F103C8
+chips, which can be programmed through the Arduino environment. Its a bit of a
+hassle because programming requires an external FTDI adapter and manually moving
+jumpers around, but once I got the process sorted out it was easy enough. By
+putting the GPIO pins into <code>INPUT_PULLUP</code> mode, I could also avoid any external
+components and just wire the limit switches between the GPIO pins and ground.</p>
+<p>Using the inbuilt <code>USBComposite</code> library for STM32 chips, the firmware was also
+pretty trivial. I’ve included the gist below. (I’m fairly certain as well that
+later on I could provide a two way USB Serial interface to rebind the keys).</p>
+<h2 id="results">Results</h2>
+<p>The results were pretty satisfactory, and I can now lean left and right with my
+feet while keeping my hands on the WASD keys - its truly a fantastic age to be a
+nerd with a tiny home workshop! My friends have both placed orders but I’m not
+sure I want to ship them rev 1. I can think of a number of mechanical
+improvements I could make, and its hard to resist making custom electronics.</p>
+<p>I’d be curious to try other switches, for instance I’ve got some spare MX Browns
+from a mechanical keyboard I’m building that might be interesting to test. I
+could even make my own <a
+href="https://hackaday.com/2022/01/17/3d-printed-magnetic-switches-promise-truly-custom-keyboards/"
+target="_blank" rel="noopener noreferrer">magnetic mechanical switches</a>!</p>
+<p>I’m also looking into removing the springs and replacing them with mechanical
+flexures (assuming they last long enough to be useful). This would also allow
+combining the button and lid into one part which would make manufacturing and
+assembly easier.</p>
+<p>Either way, it was a fairly trivial and fun project - but very satisfying to
+play with.</p>
+<h2 id="firmware">Firmware</h2>
+<script src="https://gist.github.com/will-hart/45090e7d43fe5d6656ce9fc78dbceb27.js"></script>
+</article>
+
+<div class="container col">
+  <h2>Comments</h2>
+  <blockquote>Comments are powered by github and <a href="https://giscus.app">giscus</a></blockquote>
+  <script src="https://giscus.app/client.js"
+        data-repo="will-hart/will-hart.github.io"
+        data-repo-id="MDEwOlJlcG9zaXRvcnkzMjQ2NjY3Mzg="
+        data-category="General"
+        data-category-id="DIC_kwDOE1oFcs4CtiK6"
+        data-mapping="og:title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+  </script>
+</div>
+</div>
+
+  <footer id="footer">
+    <div class="container col">
+      This website was hand-made using Zola and Tera.
+      All text and images are available under CC0 1.0 Universal and code under MIT unless otherwise specified. See <a href="https://github.com/will-hart/willhart.io/blob/main/LICENSE.md">LICENSE.md</a> for more.
+    </div>
+  </footer>
+</body>
+
+</html>

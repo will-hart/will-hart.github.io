@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>First impressions: converting a React&#x2F;Firebase project to GraphQL | willhart.io</title>
+
+
+  <link rel="icon" type="image/x-icon" href="/icons/icon_light_32x32.png">
+
+  
+<meta name="description" content="I&#x27;ve recently moved a firebase project to GraphQL, here I talk about the my first impressions of migrating to GraphQL.. Posted on https://willhart.io" />
+<meta property="og:description" content="I&#x27;ve recently moved a firebase project to GraphQL, here I talk about the my first impressions of migrating to GraphQL." />
+<meta property="og:title" content="First impressions: converting a React&#x2F;Firebase project to GraphQL" />
+<meta property="og:url" content="https://willhart.io/post/first-impressions-converting-a-firebase-project-to-graphql/">
+<meta property="og:type" content="article" />
+<meta property="og:locale" content="en_AU" />
+
+
+  <link rel="stylesheet" href="https://willhart.io/global.css?h=f83cd20cd0df26d72c2b" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sono:wght@200..800&display=swap" rel="stylesheet">
+
+  
+
+  <!-- Cloudflare Web Analytics -->
+  <script defer src='https://static.cloudflareinsights.com/beacon.min.js'
+    data-cf-beacon='{"token": "310f93cab66a42c5a328f246cc053025"}'></script>
+  <!-- End Cloudflare Web Analytics -->
+
+  <!-- Light/Dark theme toggling -->
+  <script type="text/javascript">
+    const storageKey = "websiteTheme";
+
+    // apply theme once we have a DOM
+    document.addEventListener("DOMContentLoaded", () => {
+      applyTheme();
+    })
+
+    // a function that toggles between light and dark theme
+    const toggleTheme = () => {
+      localStorage.setItem(storageKey, localStorage.getItem(storageKey) === "d" ? "l" : "d" );
+      applyTheme();
+    }
+
+    // a function that actually applies the theme
+    const applyTheme = () => {
+      const useDarkTheme = localStorage.getItem(storageKey) === "d";
+      document.getElementsByTagName("html")[0].className = useDarkTheme ? "dark" : "";
+      document.getElementById("theme-toggle").textContent = useDarkTheme ? "🔆" : "🌑";
+    }
+  </script>
+
+  <script type="speculationrules">
+  {
+    "prerender": [
+      { "where": { "selector_matches": "a" } }
+    ]
+  }
+  </script></head>
+
+<body>
+  <nav id="header">
+    <a href="/" aria-label="Website Logo and Link to Home Page">
+      <div id="logo" >&nbsp;</div>
+    </a>
+    <span>
+      <button type="button" id="theme-toggle" aria-label="Toggle Theme" onClick="toggleTheme()">🌑</button>
+      <a class="header-item" href="/post">POSTS</a>
+      <a class="header-item" href="/tag">TAGS</a>
+      <span class="header-item hide-when-slim">|</span>
+      <a class="header-item hide-when-slim" href="/tag/projects">PROJECTS</a>
+      <a class="header-item hide-when-slim" href="/tag/gamedev">GAMEDEV</a>
+      <a class="header-item hide-when-slim" href="/tag/electronics">ELECTRONICS</a>
+    </span>
+  </nav>
+
+  
+
+<div class="container col mb mt">
+  <h1>First impressions: converting a React&#x2F;Firebase project to GraphQL</h1>
+  <div class="col txtsm">
+    <span>Posted by Will Hart on 2018-10-27</span>
+    <div>
+      <span>See also:</span>
+      
+      <a class="txtsm mr" href="https://willhart.io/tag/code/">#code</a>
+      
+    </div>
+  </div>
+</div>
+
+
+
+<article class="container col mblg"><p>I’ve been working on a project on and off for about 2 years, which I’m using to
+create basketball play diagrams. I wanted some real-time features and eventually
+settled on firebase for the backend. I found
+<a rel="noopener nofollow noreferrer" target="_blank" href="https://github.com/prescottprue/react-redux-firebase">react-redux-firebase</a>, a
+fantastic project for redux / firebase bindings, and quickly built up a
+prototype. I used the app throughout the entire 2017/18 basketball season and
+found it very useful for scouting reports, building up training plans and so on.</p>
+<p><img src="https://willhart.io/post/first-impressions-converting-a-firebase-project-to-graphql/convert-firebase-to-graphql.png" alt="GraphiQL, a handy tool for browsing and interacting with a GraphQL server" /></p>
+<p>Then development stalled… the constraints of firebase, the weight of redux
+boilerplate and the few idiosyncrasies of the firebase bindings made adding new
+features a bit of a drag. The project was usable, but it had enough app-crashing
+bugs that I wasn’t comfortable sharing it with other coaches.</p>
+<p><img src="https://willhart.io/post/first-impressions-converting-a-firebase-project-to-graphql/playbook_play.gif" alt="The “play editor”, showing how basketball plays can be edited using the web interface." /></p>
+<h2 id="what-wasn-t-right-about-firestore">What wasn’t right about firestore?</h2>
+<p>Actually, not a whole lot, if I’m honest. Firebase has a very decent free tier,
+is easy to get up and running, and has nice built-in support for features like
+authentication. I did have a few small frustrations:</p>
+<ol>
+<li>The security rules that are used for authorisation depend on a custom language which is a bit of a nightmare to develop and especially debug. <a rel="noopener nofollow noreferrer" target="_blank" href="https://github.com/firebase/bolt">firebase-bolt</a> is an improvement over the normal security rule language, but not very well maintained. (in the end with the firestore beta I gave up on security rules for the MVP).</li>
+<li>Even some seemingly simple tasks like preventing new user sign ups were also
+surprisingly hard to do.</li>
+<li>I found
+<a rel="noopener nofollow noreferrer" target="_blank" href="https://redux.js.org/recipes/structuringreducers/normalizingstateshape">normalisation</a>
+of data structures well-suited to the redux architecture, but also a pain to
+work with for multi-layered hierarchical documents as it felt like it
+required a lot of additional queries.</li>
+<li>The bindings were pre <code>1.0</code> so there were a few weird bugs <a rel="noopener nofollow noreferrer" target="_blank" href="https://github.com/prescottprue/redux-firestore/issues/140">like this
+one</a> which gave
+me headaches, and were tricky to debug.</li>
+<li>redux boilerplate :(</li>
+</ol>
+<h2 id="discovering-graphql">Discovering GraphQL</h2>
+<p>Coming back to the project after a few months away, I felt like it was time for
+a change. While (for now) this is just a hobby project, I wanted to open it up
+to a few of my fellow coaches. As some of the issues in the project would
+require me to restructure the database, and I felt like the GUI needed a
+complete overhaul, I decided to look around for some other options to firebase.</p>
+<p>I’d been hearing good things about GraphQL so kind of as a “what if…” I
+decided to learn GraphQL while porting the firebase project over.</p>
+<p>Initially I settled on a stack of <code>next.js</code> and <code>react-apollo</code> on the client
+(neither of which I had used before), although after a couple of days wrestling
+with SSR and file system routing of <code>next</code> (and getting annoyed that half their
+tutorials are behind a login wall), I ditched <code>next</code> in favour of the old
+faithful, <code>create-react-app</code>.</p>
+<p>For the MVP server I chose <code>prisma</code> and <code>graphql-yoga</code>. So far I’ve migrated
+about 80% of the functionality from the firestore website to the react-apollo
+website, and I’m very happy with the approach. I’ve listed some of the “pros and
+cons” I’ve encountered with GraphQL so far below.</p>
+<h2 id="what-i-like-about-graphql">What I like about GraphQL</h2>
+<h3 id="easy-ish-to-learn">Easy(ish) to learn</h3>
+<p>I knew absolutely nothing about GraphQL, and initially it looked a little
+intimidating, so I did what any self-respecting developer does when they are
+lost - I googled. I found <a rel="noopener nofollow noreferrer" target="_blank" href="https://www.howtographql.com/">How to GraphQL</a>, which is a really well
+laid out tutorial showing you how to create a GraphQL server and client. It only
+took a day or so of tinkering before it clicked into place, and I could start
+transitioning my firebase app over.</p>
+<h3 id="writing-queries-mutations-is-very-easy">Writing queries / mutations is very easy</h3>
+<p>In the front end writing type safe queries is as simple as this:</p>
+<pre data-lang="graphql" style="background-color:#2b303b;color:#c0c5ce;" class="language-graphql "><code class="language-graphql" data-lang="graphql"><span style="color:#b48ead;">query </span><span>GET_PLAYS($</span><span style="color:#bf616a;">userId</span><span>: </span><span style="color:#bf616a;">ID</span><span style="color:#b48ead;">!</span><span>) {
+</span><span>  getPlays(</span><span style="color:#bf616a;">userId</span><span>: $</span><span style="color:#bf616a;">userId</span><span>) {
+</span><span>    id
+</span><span>    title
+</span><span>  }
+</span><span>}
+</span></code></pre>
+<p>The server requires a bit more code, having the query defined a second time in a
+<code>schema.graphql</code>, and a <code>resolver</code> function which converts the query into a response
+to the client. A simple resolver in <code>prisma</code> might look something like:</p>
+<pre data-lang="typescript" style="background-color:#2b303b;color:#c0c5ce;" class="language-typescript "><code class="language-typescript" data-lang="typescript"><span style="color:#b48ead;">export const </span><span style="color:#8fa1b3;">getPlays </span><span>= </span><span style="color:#b48ead;">async </span><span>(</span><span style="color:#bf616a;">root</span><span>, </span><span style="color:#bf616a;">data</span><span>, </span><span style="color:#bf616a;">context</span><span>) </span><span style="color:#b48ead;">=&gt; </span><span>{
+</span><span>  </span><span style="color:#b48ead;">return await </span><span style="color:#bf616a;">context</span><span>.</span><span style="color:#bf616a;">prisma</span><span>.</span><span style="color:#8fa1b3;">user</span><span>({ id: </span><span style="color:#bf616a;">data</span><span>.</span><span style="color:#bf616a;">userId </span><span>}).</span><span style="color:#8fa1b3;">plays</span><span>()
+</span><span>}
+</span></code></pre>
+<p>Resolvers tend to only do one thing, and are only a few lines long, making them
+easy to develop.</p>
+<h3 id="declarative-data-reduced-prop-passing-in-the-client">Declarative data / reduced prop-passing in the client</h3>
+<p>In the client with <code>react-apollo</code>, data is queried or changed by wrapping the
+React elements in higher order components. A <code>Query</code> HOC is used to fetch data and
+a <code>Mutation</code> HOC can be used to modify or create data. Both use render props to
+handle the results of their operation. An (over simplified) example of how a
+<code>Query</code> would be used is like:</p>
+<pre data-lang="typescript" style="background-color:#2b303b;color:#c0c5ce;" class="language-typescript "><code class="language-typescript" data-lang="typescript"><span style="color:#65737e;">// e.g. import { GET_PLAYS } from &#39;../client-schema/get-plays.graphql&#39;
+</span><span>
+</span><span>&lt;</span><span style="color:#bf616a;">Query query</span><span>={</span><span style="color:#bf616a;">GET_PLAYS</span><span>}&gt;
+</span><span>  {</span><span style="color:#bf616a;">result </span><span style="color:#b48ead;">=&gt; </span><span style="color:#bf616a;">result</span><span>.</span><span style="color:#bf616a;">getPlays</span><span>.</span><span style="color:#8fa1b3;">map</span><span>(</span><span style="color:#bf616a;">item </span><span style="color:#b48ead;">=&gt; </span><span>&lt;Play {...item /&gt;)}
+</span><span>&lt;/Query&gt;
+</span></code></pre>
+<p>This runs when the component loads, and then allows mapping the returned query
+data over components. <code>react-apollo</code> also provides cache implementations so you
+can optionally display data from local-storage etc <em>while</em> the query is being
+returned from the server.</p>
+<p>A mutation is also quite simple:</p>
+<pre data-lang="typescript" style="background-color:#2b303b;color:#c0c5ce;" class="language-typescript "><code class="language-typescript" data-lang="typescript"><span>&lt;</span><span style="color:#bf616a;">Mutation mutation</span><span>={</span><span style="color:#bf616a;">UPDATE_NAME</span><span>} </span><span style="color:#bf616a;">variables</span><span>={{ name: </span><span style="color:#bf616a;">this</span><span>.</span><span style="color:#bf616a;">state</span><span>.</span><span style="color:#bf616a;">newName </span><span>}}&gt;
+</span><span>  {(</span><span style="color:#bf616a;">mutation</span><span>) </span><span style="color:#b48ead;">=&gt; </span><span>&lt;button onClick={</span><span style="color:#bf616a;">mutation</span><span>}&gt;</span><span style="color:#bf616a;">Update Name</span><span>&lt;/</span><span style="color:#bf616a;">button</span><span>&gt;}
+</span><span>&lt;/</span><span style="color:#bf616a;">Mutation</span><span>&gt;
+</span></code></pre>
+<p>Here the component passes the “mutation” function to its render props which
+actually performs the update on the server. You don’t need to “marshal” the
+arguments in a separate callback, this is done for you by the HOC. (If necessary
+you have the option to call the mutation directly like a function)</p>
+<p>An advantage of this declarative approach is that I find myself doing a lot less
+“prop passing” through the hierarchy. Instead I just define the data
+requirements at the point where they are used. This also results in less digging
+through files trying to work out where the <code>onPlayCreated</code> prop originally came
+from.</p>
+<h3 id="ditching-redux">Ditching redux</h3>
+<p>While I’ve built a few applications using redux and I’m a fan of the flux
+approach, I do find myself frustrated by how complicated writing new actions
+(especially async ones) can be using redux. I don’t think ending up with a chain
+of actions like <code>ON_REQUEST_PLAY</code>, <code>ON_REQUEST_PLAY_SUCCESS</code>,
+<code>ON_REQUEST_PLAY_ERROR</code>,
+and a saga or a thunk all spread across multiple files is anybody’s idea of a
+good time. I’ve found that without redux my code is a lot simpler and easier to
+understand, while achieving the same level of relatively complex functionality.</p>
+<h3 id="loading-optimistic-rendering-and-error-states">Loading, optimistic-rendering and error states</h3>
+<p>A really neat feature of react-apollo is the way that it handles loading, error
+and “optimistic” UI. Consider the slightly more complex example below:</p>
+<pre data-lang="typescript" style="background-color:#2b303b;color:#c0c5ce;" class="language-typescript "><code class="language-typescript" data-lang="typescript"><span>&lt;</span><span style="color:#bf616a;">Query query</span><span>={</span><span style="color:#bf616a;">GET_PLAYS</span><span>}&gt;
+</span><span>  {(</span><span style="color:#bf616a;">data</span><span>, </span><span style="color:#bf616a;">loading</span><span>, </span><span style="color:#bf616a;">error</span><span>) </span><span style="color:#b48ead;">=&gt; </span><span>{
+</span><span>    </span><span style="color:#b48ead;">if </span><span>(</span><span style="color:#bf616a;">loading </span><span>&amp;&amp; !</span><span style="color:#bf616a;">data</span><span>) </span><span style="color:#b48ead;">return </span><span>&lt;Spinner /&gt;
+</span><span>    </span><span style="color:#b48ead;">if </span><span>(</span><span style="color:#bf616a;">error</span><span>) </span><span style="color:#b48ead;">return </span><span>&lt;Error message={error.</span><span style="color:#bf616a;">message</span><span>} /&gt;
+</span><span>    </span><span style="color:#b48ead;">if </span><span>(!</span><span style="color:#bf616a;">data</span><span>) </span><span style="color:#b48ead;">return </span><span>&lt;NotFound /&gt;
+</span><span>    </span><span style="color:#b48ead;">return </span><span style="color:#bf616a;">data</span><span>.</span><span style="color:#bf616a;">getPlays</span><span>.</span><span style="color:#8fa1b3;">map</span><span>(</span><span style="color:#bf616a;">item </span><span style="color:#b48ead;">=&gt; </span><span>&lt;Play {...item} loading={</span><span style="color:#bf616a;">loading</span><span>} /&gt;)
+</span><span>  })
+</span><span>&lt;/</span><span style="color:#bf616a;">Query</span><span>&gt;
+</span></code></pre>
+<p>This particular implementation shows a loading spinner if the query is
+<em>in-flight</em> and there is no cached data. If there is locally cached data, this
+will be displayed while the query is running (we can still show a spinner in
+this case if we want to). If the request errors, this can be displayed as well,
+and all with only a few lines of code using the props passed down from the
+<code>Query</code> HOC.</p>
+<p>We can also control how the local cache is used by specifying a <code>fetchPolicy</code>,
+for instance <code>cache-and-network</code>, <code>no-cache</code> and so on which tells
+<code>react-apollo</code> where to look for data. This makes it very easy to handle real
+world scenarios like displaying data quickly, and merging in new data from the
+server automagically when it arrives.</p>
+<p>Its even neater for mutations, which offer an <code>optimisticResponse</code> option. Here
+you can pass the UI the value you think will be returned from a <code>Mutation</code> which
+is stored temporarily in the local cache and displayed in the UI. If the request
+errors out the UI is automatically rolled back to the unmodified state, but if
+the request is successful it appears to the user that the change has been made
+without any latency. (This feature alone solves about three hard to fix issues I
+had with updating the <code>redux-firestore</code> backend).</p>
+<h3 id="the-graphql-playground">The GraphQL Playground</h3>
+<p>This is a fantastic tool for developing / testing / getting to know how GraphQL
+works.</p>
+<h2 id="what-i-don-t-like-about-graphql-and-or-prisma">What I don’t like about GraphQL (and/or Prisma)</h2>
+<p>Despite all these features, GraphQL certainly isn’t perfect. Here are some of
+the main issues I’ve come across:</p>
+<h3 id="lots-of-boilerplate-and-repetition">Lots of boilerplate and repetition</h3>
+<p>On the server, there is a lot of boilerplate code. For <code>prisma</code> based
+applications, developers are encouraged to have a “database layer” and an “API
+layer”. In the case of prisma this means you are required to maintain your
+database schema in three different places:</p>
+<ol>
+<li>The prisma schema file, which is used to create and migrate the database
+structure</li>
+<li>prisma client bindings, automatically generated from the schema file</li>
+<li>a separate (but in many places identical) schema for the <code>graphql-yoga</code> back
+end.</li>
+</ol>
+<p>In addition to this, each possible query mutation requires a <code>resolver</code> to be
+written which handles these queries. The schema for the queries is then
+replicated client side (with a slightly different format).</p>
+<p>While there are some tools to reduce the boilerplate, this is probably the worst
+“feature” of GraphQL. I’ve come across to date.</p>
+<h3 id="error-messages">Error messages</h3>
+<p>On the server I’ve had some issues with <a rel="noopener nofollow noreferrer" target="_blank" href="https://stackoverflow.com/questions/52883048/could-not-find-argument-in-nested-prisma-graphql-query/52885173">error messages being a bit
+vague</a>,
+although part of that issues could just be me getting to grips with how they are
+written.</p>
+<h3 id="hosting">Hosting</h3>
+<p>A neat thing about firebase and firestore was how easy it was to set up and
+install a back end. It literally takes five seconds to do, and cost $0. I could
+also host the front end using firebase hosting and deploy it from a CLI.</p>
+<p>The picture for GraphQL is a lot less pretty. There are products like
+<a rel="noopener nofollow noreferrer" target="_blank" href="https://graph.cool/">graph.cool</a> and <a rel="noopener nofollow noreferrer" target="_blank" href="https://hasura.io/">hasura</a> which can be
+deployed to heroku and a bunch of others that come up in searches but have since
+folded. Neither solution really works for me - Prisma cloud hosting starts at
+$300 USD a month; I don’t understand this value proposition. There are several
+other options (i.e. some open source ones, Amazon AppSync etc), but there
+appears to be a lot of churn in the smaller providers.</p>
+<p>The other option is to “roll your own” backend using docker and a VPS, which is
+basically the only option documented by Prisma. Unfortunately Docker is
+incompatible with the most common version of Win 10 so this isn’t an option. To
+be honest part of the reason I initially chose firebase was that I’d rather
+spend time getting the front end to a state where I can share the app with
+others, as opposed to working on DevOps.</p>
+<p>In the end I opted to use a free Prisma Cloud development server as an interim
+solution, however this appears to have a very long latency ~1s on requests. I
+hope that by the time I’m moving towards “production”, some other viable options
+have emerged.</p>
+<blockquote>
+<p><strong>NOTE FROM AN OLDER AND WISER WILL</strong> I think at this stage I’m looking at
+using an AppSync / Cognito / DynamoDB / Lambda backend, but I may make another
+post later on if I go down that route.</p>
+<p><strong>ANOTHER NOTE FROM AN EVEN OLDER AND WISER WILL</strong> Hey, it turns out I can
+just wrap my firestore DB with a GraphQL endpoint!</p>
+</blockquote>
+<p><img src="https://willhart.io/post/first-impressions-converting-a-firebase-project-to-graphql/playbook_ui.png" alt="A sneak preview of the new interface (size: 1300x599px)" /></p>
+<h2 id="overall-verdict">Overall verdict</h2>
+<p>GraphQL has some annoyances but overall I’ve really enjoyed building a server
+and application with it. There are some frustrations compared to firebase but
+overall I’m happier developing with the GraphQL backend as it gives me an almost
+<em>functional</em> approach and few surprises.</p>
+<p>The client also seems like a lot less of a hassle to work with than mixing redux
+and firestore and with the backend fleshed out I’m implementing features a lot
+faster than I was with firestore. Many of the issues I had trouble working
+around with firebase just aren’t issues with the new design.</p>
+<p>I’m really excited about building some of the new features I’ve been dreaming
+about for a few years and sharing the app with some other coaches!</p>
+</article>
+
+<div class="container col">
+  <h2>Comments</h2>
+  <blockquote>Comments are powered by github and <a href="https://giscus.app">giscus</a></blockquote>
+  <script src="https://giscus.app/client.js"
+        data-repo="will-hart/will-hart.github.io"
+        data-repo-id="MDEwOlJlcG9zaXRvcnkzMjQ2NjY3Mzg="
+        data-category="General"
+        data-category-id="DIC_kwDOE1oFcs4CtiK6"
+        data-mapping="og:title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+  </script>
+</div>
+</div>
+
+  <footer id="footer">
+    <div class="container col">
+      This website was hand-made using Zola and Tera.
+      All text and images are available under CC0 1.0 Universal and code under MIT unless otherwise specified. See <a href="https://github.com/will-hart/willhart.io/blob/main/LICENSE.md">LICENSE.md</a> for more.
+    </div>
+  </footer>
+</body>
+
+</html>

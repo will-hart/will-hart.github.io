@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Chez D&#x27;Alert: PIC Countdown Alarm | willhart.io</title>
+
+
+  <link rel="icon" type="image/x-icon" href="/icons/icon_light_32x32.png">
+
+  
+<meta name="description" content="A summary of a project I build for my Dad&#x27;s birthday.. Posted on https://willhart.io" />
+<meta property="og:description" content="A summary of a project I build for my Dad&#x27;s birthday." />
+<meta property="og:title" content="Chez D&#x27;Alert: PIC Countdown Alarm" />
+<meta property="og:url" content="https://willhart.io/post/chez-dalert-pic-countdown-alarm/">
+<meta property="og:type" content="article" />
+<meta property="og:locale" content="en_AU" />
+
+
+  <link rel="stylesheet" href="https://willhart.io/global.css?h=f83cd20cd0df26d72c2b" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sono:wght@200..800&display=swap" rel="stylesheet">
+
+  
+
+  <!-- Cloudflare Web Analytics -->
+  <script defer src='https://static.cloudflareinsights.com/beacon.min.js'
+    data-cf-beacon='{"token": "310f93cab66a42c5a328f246cc053025"}'></script>
+  <!-- End Cloudflare Web Analytics -->
+
+  <!-- Light/Dark theme toggling -->
+  <script type="text/javascript">
+    const storageKey = "websiteTheme";
+
+    // apply theme once we have a DOM
+    document.addEventListener("DOMContentLoaded", () => {
+      applyTheme();
+    })
+
+    // a function that toggles between light and dark theme
+    const toggleTheme = () => {
+      localStorage.setItem(storageKey, localStorage.getItem(storageKey) === "d" ? "l" : "d" );
+      applyTheme();
+    }
+
+    // a function that actually applies the theme
+    const applyTheme = () => {
+      const useDarkTheme = localStorage.getItem(storageKey) === "d";
+      document.getElementsByTagName("html")[0].className = useDarkTheme ? "dark" : "";
+      document.getElementById("theme-toggle").textContent = useDarkTheme ? "🔆" : "🌑";
+    }
+  </script>
+
+  <script type="speculationrules">
+  {
+    "prerender": [
+      { "where": { "selector_matches": "a" } }
+    ]
+  }
+  </script></head>
+
+<body>
+  <nav id="header">
+    <a href="/" aria-label="Website Logo and Link to Home Page">
+      <div id="logo" >&nbsp;</div>
+    </a>
+    <span>
+      <button type="button" id="theme-toggle" aria-label="Toggle Theme" onClick="toggleTheme()">🌑</button>
+      <a class="header-item" href="/post">POSTS</a>
+      <a class="header-item" href="/tag">TAGS</a>
+      <span class="header-item hide-when-slim">|</span>
+      <a class="header-item hide-when-slim" href="/tag/projects">PROJECTS</a>
+      <a class="header-item hide-when-slim" href="/tag/gamedev">GAMEDEV</a>
+      <a class="header-item hide-when-slim" href="/tag/electronics">ELECTRONICS</a>
+    </span>
+  </nav>
+
+  
+
+<div class="container col mb mt">
+  <h1>Chez D&#x27;Alert: PIC Countdown Alarm</h1>
+  <div class="col txtsm">
+    <span>Posted by Will Hart on 2012-01-24</span>
+    <div>
+      <span>See also:</span>
+      
+      <a class="txtsm mr" href="https://willhart.io/tag/projects/">#projects</a>
+      
+      <a class="txtsm mr" href="https://willhart.io/tag/electronics/">#electronics</a>
+      
+    </div>
+  </div>
+</div>
+
+
+
+<article class="container col mblg"><p>For my Dad’s 60th birthday, I wanted to make him something a bit special. Dad
+spends a fair bit of his spare time in his shed “doing woodwork” and building
+some really nice pieces of furniture. However he is a busy man and sometimes
+only has a little bit of spare time to plane a few bits of timber, use a
+thicknesser or whatever woodworky stuff he does. So I decided the best possible
+thing to make would be a PIC countdown Alarm so that he can use his time in the
+shed efficiently</p>
+<p>As a friend of mine mentioned, he can even use it to time lacquer and stains for
+drying and curing, so its not all about getting his nose back to the grindstone
+on time!</p>
+<p>Thus, the Chez D’Alert (pronounced Shed Alert in Australian) was born, a PIC
+based countdown timer with a laser cut body. In this article I’m going to
+describe a bit about the design process, and in particular some of the lessons I
+learned through the process.</p>
+<h2 id="the-pic-countdown-alarm-design">The PIC Countdown Alarm Design</h2>
+<h3 id="enclosure">Enclosure</h3>
+<p>Custom laser cut acrylic, designed in SolidWorks and transferred to Inkscape for
+laser cutting.</p>
+<h3 id="inputs">Inputs</h3>
+<p>Four buttons - +1 minute, +15minutes, start/stop and reset. Custom software
+debounce routine.</p>
+<h3 id="outputs">Outputs</h3>
+<p>A seven segment LED display, multiplexed.</p>
+<h3 id="electronics">Electronics</h3>
+<p>Main controller board with PIC16F877A. IO board with buttons and displays.</p>
+<hr />
+<p>As this was my first properly complex, permanent electronics project I didn’t
+try to do anything too flashy. Basically the PIC countdown timer has four
+buttons, a seven segment display, a buzzer, some LEDs and a microcontroller to
+control it all. You set the time with two buttons, then start/stop and reset the
+timer using the other two buttons. When the timer runs out, the buzzer beeps and
+the LEDs flash.</p>
+<p>I put a bit of effort into the enclosure which is basically a laser cut version
+of Melbourne’s skyline. I’ve seen quite a few articles and forum discussions
+about whether you should design your PCB or enclosure first, however in this
+case the enclosure would be custom made, and as size was not a particular issue
+I decided to design the schematic and PCB first. The final design had two boards</p>
+<ul>
+<li>an IO board with buttons and a display, and</li>
+<li>a main board with the PIC, buzzer, and most of the passive components.</li>
+</ul>
+<p>This was partly because the IO board required very thin traces so I had it
+manufactured, but also because it fit better in an enclosure with the buttons
+and display slightly elevated.</p>
+<p>The original design had a PIC16F628A, however it quickly became apparent that a
+board with more IO pins would be a better option. From Rev C of the main board I
+switched to a PIC16F877A, mostly because my preferred online hobby store had
+them in stock!</p>
+<h2 id="the-final-product">The Final Product</h2>
+<p>So, after quite a bit of back and forth and a lot of revisions, the final
+product was completed. Some photos are shown below, and I hope to have some more
+once Dad takes some of it in place (he’s 17,000km away so it takes a while for
+the emails to get here).</p>
+<p><img src="https://willhart.io/post/chez-dalert-pic-countdown-alarm/shed-alert-breadboard.jpg" alt="Chez D’Alert Breadboard Breadboard" /></p>
+<p><img src="https://willhart.io/post/chez-dalert-pic-countdown-alarm/shed-alert-revb-board.jpg" alt="Chez D’Alert RevB Board Rev B Board" /></p>
+<p><img src="https://willhart.io/post/chez-dalert-pic-countdown-alarm/shed-alert-revd-board.jpg" alt="Chez D’Alert RevD Board Rev D Board" /></p>
+<p>There were some issues with the finished design - basically I mucked up in
+Solidworks, and as I hadn’t built anything when I sent the enclosure off for
+manufacturing, I had the button holes about 10mm from where they should have
+been. This was mainly because I had assumed the IO board would be centred on the
+main board, but because of the heat sink it was not. The enclosure had to be
+“customised” later with a drill and some paper labels which ruined the look a
+little bit. The original button labels were laser engraved in and looked quite
+professional.</p>
+<p>One of the features that I wanted to add was to have flash LEDs when the timer
+went off. My idea was to have several colours (I settled on white, blue and red)
+with two LEDs of each type that were turned on at the same time. To reduce the
+number of pins that were required to drive this, I decided to <a href="/chez-dalert-pic-countdown-alarm">Charlieplex the
+LEDs</a>. The circuit is shown below. Basically
+by setting the pins to a combination of +5v, GND or “disconnected” I could turn
+on just two LEDs at a time by only using four pins. (On reflection it would have
+been better to do this with three pins!)</p>
+<p><img src="https://willhart.io/post/chez-dalert-pic-countdown-alarm/led_charlieplex.png" alt="Four Pin LED Charliplex" /></p>
+<p>The code to run this was fairly simple, basically I used the arrays below to OR
+with TRISB and PORTB, setting the pins to the correct mode. You can see the full
+working version in the C source code attached below.</p>
+<pre data-lang="c" style="background-color:#2b303b;color:#c0c5ce;" class="language-c "><code class="language-c" data-lang="c"><span style="color:#b48ead;">const</span><span> uchar LED_TRISB_OR[] =
+</span><span>{
+</span><span>    </span><span style="color:#d08770;">0</span><span style="background-color:#bf616a;color:#2b303b;">b00111100</span><span>, </span><span style="color:#65737e;">// off
+</span><span>    </span><span style="color:#d08770;">0</span><span style="background-color:#bf616a;color:#2b303b;">b00000100</span><span>, </span><span style="color:#65737e;">// blue
+</span><span>    </span><span style="color:#d08770;">0</span><span style="background-color:#bf616a;color:#2b303b;">b00100000</span><span>, </span><span style="color:#65737e;">// white
+</span><span>    </span><span style="color:#d08770;">0</span><span style="background-color:#bf616a;color:#2b303b;">b00000000</span><span> </span><span style="color:#65737e;">// red
+</span><span>};
+</span><span>
+</span><span style="color:#b48ead;">const</span><span> uchar LED_PORTB_OR[] =
+</span><span>{
+</span><span>    </span><span style="color:#d08770;">0</span><span style="background-color:#bf616a;color:#2b303b;">b00000000</span><span>, </span><span style="color:#65737e;">// off
+</span><span>    </span><span style="color:#d08770;">0</span><span style="background-color:#bf616a;color:#2b303b;">b00011000</span><span>, </span><span style="color:#65737e;">// blue
+</span><span>    </span><span style="color:#d08770;">0</span><span style="background-color:#bf616a;color:#2b303b;">b00011000</span><span>, </span><span style="color:#65737e;">// white
+</span><span>    </span><span style="color:#d08770;">0</span><span style="background-color:#bf616a;color:#2b303b;">b00100100</span><span> </span><span style="color:#65737e;">// red
+</span><span>};
+</span></code></pre>
+<h2 id="a-few-gotchas">A Few Gotchas</h2>
+<p>I came across a few gotchas throughout the design which I’ll describe here in
+the hope that somebody will find them useful!</p>
+<p>I ended with about Revision E of the main board and D of the IO board. The
+original Rev A designs had a PIC16F628A, however it quickly became apparent that
+a board with more IO pins would be a better option. From Rev C of the main board
+I switched to a PIC16F877A. I chose this chip because I was time and budget
+constrained, and my local hobby store had them in stock. In reality (and if I
+had the ability at this stage to comfortably solder SMD parts) an SMD chip with
+a real time clock and “nanowatt” power mode would be a better option.</p>
+<p>The main electronics issues I ran across were:</p>
+<ul>
+<li>ICSP - In the first prototype I forget to add an ICSP to my circuit. Don’t do
+this! For a prototype you would be insane not to include this port - it only
+needs a few connectors but its impossibly painful to try to debug the software
+without it!</li>
+<li>I had some issues with RA4 on the PIC16F628A, before I re-read the datasheet
+and noticed it was an “open drain”. This mean it can’t really be used for
+output unless some additional circuitry is used. The lesson learned here is to
+thoroughly read the datasheet before ordering any parts and re-read it again
+before soldering!</li>
+<li>My PCB manufacturing technique was not perfected, and I had some issues with
+traces and ground planes being “smushed” during toner transfer and bridging.
+The solution was to buy a laminator to do the toner transfer, and to increase
+the isolation in eagles DRC rules. In the case of the IO board I had it
+manufactured for me.</li>
+<li>Sometimes the PICKIT2 would freeze, all lights on, when attempting to read or
+program a chip using ICSP. I eventually worked out that this was because the
+software had reset the power voltage from 5V to 2.5V. Setting the voltage to
+5v again stopped the PICKIT2 from freezing</li>
+</ul>
+<h2 id="better-luck-next-time">Better Luck Next Time?</h2>
+<p>Without meaning to use Dad’s birthday present as a bit of a guinea pig, it has
+kind of turned out that way. The experience has taught me a lot about how to
+approach my next design task, and in particular the importance of a thorough
+testing / prototyping / breadboarding stage. The PIC Countdown Alarm turned out
+ok, but I could probably have got there in a lot fewer iterations with a bit
+more effort in the design phase!</p>
+<p>If I were to do the project again, or a similar one, I might do a few things
+differently:</p>
+<h3 id="micro-selection">Micro Selection</h3>
+<p>I originally chose the PIC16F628A for the project because I had used this
+before, had a few development boards built, and was familiar with the basics. On
+reflection, this chip is unsuitable for a number of reasons - firstly it didn’t
+have enough IO pins, meaning that an additional shift register was required, but
+secondly it is not a low power chip. The final chip I selected does not have the
+XLP features of some PIC chips, so is probably not ideal, but was what I could
+get a hold of in the time/budget I had available. For future projects I would
+spend a lot more time selecting an appropriate chip, and would be more likely to
+order one from RS or something especially (extremely high shipping costs aside).</p>
+<h3 id="component-types">Component Types</h3>
+<p>I used DIP / through-hole components for the design but I think for future
+projects I would really like to give SMD components a go as it will give me more
+room to route the boards and make smaller PCBs. This will require a bit of
+experimentation to make sure the PCB manufacturing accuracy is high enough,
+or…</p>
+<h3 id="make-vs-buy-pcbs">Make vs Buy PCBs</h3>
+<p>My original plan was to make the PCB as a way of saving a bit of cash and also
+because I felt it would be a bit more “personal”. In the end I think it has cost
+me more money from buying materials, remaking and certainly has taken a lot
+longer with a poorer quality output. The jury is out on this one!</p>
+<blockquote>
+<p><strong>NOTE FROM 2020 Will</strong> the jury is no longer out on this one, since 2012 an absolute truck
+load of low-cost, high-quality PCB prototyping services have emerged</p>
+</blockquote>
+</article>
+
+<div class="container col">
+  <h2>Comments</h2>
+  <blockquote>Comments are powered by github and <a href="https://giscus.app">giscus</a></blockquote>
+  <script src="https://giscus.app/client.js"
+        data-repo="will-hart/will-hart.github.io"
+        data-repo-id="MDEwOlJlcG9zaXRvcnkzMjQ2NjY3Mzg="
+        data-category="General"
+        data-category-id="DIC_kwDOE1oFcs4CtiK6"
+        data-mapping="og:title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+  </script>
+</div>
+</div>
+
+  <footer id="footer">
+    <div class="container col">
+      This website was hand-made using Zola and Tera.
+      All text and images are available under CC0 1.0 Universal and code under MIT unless otherwise specified. See <a href="https://github.com/will-hart/willhart.io/blob/main/LICENSE.md">LICENSE.md</a> for more.
+    </div>
+  </footer>
+</body>
+
+</html>

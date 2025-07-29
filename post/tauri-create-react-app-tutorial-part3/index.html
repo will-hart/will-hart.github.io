@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Tauri and Create React App Part 3 - Commands as hooks | willhart.io</title>
+
+
+  <link rel="icon" type="image/x-icon" href="/icons/icon_light_32x32.png">
+
+  
+<meta name="description" content="Part 3 of a tutorial for setting up Tauri (an electron alternative) and Create React App. Here we create a hook for invoking &#x27;get&#x2F;set&#x27; commands using the `useSWR` package.. Posted on https://willhart.io" />
+<meta property="og:description" content="Part 3 of a tutorial for setting up Tauri (an electron alternative) and Create React App. Here we create a hook for invoking &#x27;get&#x2F;set&#x27; commands using the `useSWR` package." />
+<meta property="og:title" content="Tauri and Create React App Part 3 - Commands as hooks" />
+<meta property="og:url" content="https://willhart.io/post/tauri-create-react-app-tutorial-part3/">
+<meta property="og:type" content="article" />
+<meta property="og:locale" content="en_AU" />
+
+
+  <link rel="stylesheet" href="https://willhart.io/global.css?h=f83cd20cd0df26d72c2b" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sono:wght@200..800&display=swap" rel="stylesheet">
+
+  
+
+  <!-- Cloudflare Web Analytics -->
+  <script defer src='https://static.cloudflareinsights.com/beacon.min.js'
+    data-cf-beacon='{"token": "310f93cab66a42c5a328f246cc053025"}'></script>
+  <!-- End Cloudflare Web Analytics -->
+
+  <!-- Light/Dark theme toggling -->
+  <script type="text/javascript">
+    const storageKey = "websiteTheme";
+
+    // apply theme once we have a DOM
+    document.addEventListener("DOMContentLoaded", () => {
+      applyTheme();
+    })
+
+    // a function that toggles between light and dark theme
+    const toggleTheme = () => {
+      localStorage.setItem(storageKey, localStorage.getItem(storageKey) === "d" ? "l" : "d" );
+      applyTheme();
+    }
+
+    // a function that actually applies the theme
+    const applyTheme = () => {
+      const useDarkTheme = localStorage.getItem(storageKey) === "d";
+      document.getElementsByTagName("html")[0].className = useDarkTheme ? "dark" : "";
+      document.getElementById("theme-toggle").textContent = useDarkTheme ? "🔆" : "🌑";
+    }
+  </script>
+
+  <script type="speculationrules">
+  {
+    "prerender": [
+      { "where": { "selector_matches": "a" } }
+    ]
+  }
+  </script></head>
+
+<body>
+  <nav id="header">
+    <a href="/" aria-label="Website Logo and Link to Home Page">
+      <div id="logo" >&nbsp;</div>
+    </a>
+    <span>
+      <button type="button" id="theme-toggle" aria-label="Toggle Theme" onClick="toggleTheme()">🌑</button>
+      <a class="header-item" href="/post">POSTS</a>
+      <a class="header-item" href="/tag">TAGS</a>
+      <span class="header-item hide-when-slim">|</span>
+      <a class="header-item hide-when-slim" href="/tag/projects">PROJECTS</a>
+      <a class="header-item hide-when-slim" href="/tag/gamedev">GAMEDEV</a>
+      <a class="header-item hide-when-slim" href="/tag/electronics">ELECTRONICS</a>
+    </span>
+  </nav>
+
+  
+
+<div class="container col mb mt">
+  <h1>Tauri and Create React App Part 3 - Commands as hooks</h1>
+  <div class="col txtsm">
+    <span>Posted by Will Hart on 2021-08-28</span>
+    <div>
+      <span>See also:</span>
+      
+      <a class="txtsm mr" href="https://willhart.io/tag/tutorials/">#tutorials</a>
+      
+      <a class="txtsm mr" href="https://willhart.io/tag/code/">#code</a>
+      
+    </div>
+  </div>
+</div>
+
+
+
+<article class="container col mblg"><h2 id="recap">Recap</h2>
+<p>In <a href="/post/20210826_tauri_create_react_app_tutorial_part1">part 1</a> of this
+tutorial series we set up a Tauri and create-react-app app and added a basic
+non-functional counter. In <a href="/post/20210827_tauri_create_react_app_tutorial_part2">part
+2</a> we created and invoked
+a command for incrementing our counter.</p>
+<p>In this part, we will write a generic hook for invoking and updating hook data.
+In theory this hook could be reused for both web APIs or invoked commands by
+changing the underlying <code>fetcher</code> used by <code>swr</code>.</p>
+<h2 id="what-is-swr">What is SWR</h2>
+<p><a rel="noopener nofollow noreferrer" target="_blank" href="https://swr.vercel.app/">SWR</a> stands for “stale while revalidate”, which is a
+lightweight HTTP approach to managing requests to an API, caching data to
+improve load times and fetching updates in the background. The benefits of the
+react hook from the <code>swr</code> package are that it allows us to define queries by a
+key, and then easily re-fetch data when we make changes. It also supports
+optimistic UI, so in many ways is a simplified <code>@apollo/client</code> without
+requiring a GraphQL endpoint (although it supports GraphQL).</p>
+<p>To install SWR, <strong>first make sure that the Tauri app isn’t running</strong>. Then we
+can run</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">yarn</span><span> add swr
+</span></code></pre>
+<p>Using the SWR library looks something like this:</p>
+<pre data-lang="typescript" style="background-color:#2b303b;color:#c0c5ce;" class="language-typescript "><code class="language-typescript" data-lang="typescript"><span style="color:#b48ead;">const </span><span>{ </span><span style="color:#bf616a;">data</span><span>, </span><span style="color:#bf616a;">error </span><span>} = </span><span style="color:#8fa1b3;">useSWR</span><span>(&#39;</span><span style="color:#a3be8c;">my/api</span><span>&#39;, </span><span style="color:#bf616a;">fetcher</span><span>)
+</span></code></pre>
+<p>Here the <code>my/api</code> bit is a key that is use to refer to the specific query, while
+<code>fetcher</code> is some sort of wrapper over a function that calls the API to fetch
+the data. In the case of a web request, it might look something like this:</p>
+<pre data-lang="typescript" style="background-color:#2b303b;color:#c0c5ce;" class="language-typescript "><code class="language-typescript" data-lang="typescript"><span style="color:#b48ead;">const </span><span style="color:#8fa1b3;">fetcher </span><span>= (</span><span style="color:#bf616a;">key</span><span>: string) -&gt; Promise&lt;any&gt; {
+</span><span>  return </span><span style="color:#8fa1b3;">fetch</span><span>(`</span><span style="color:#a3be8c;">myapi.com/${</span><span style="color:#bf616a;">key</span><span style="color:#a3be8c;">}</span><span>`).</span><span style="color:#8fa1b3;">then</span><span>(</span><span style="color:#bf616a;">r </span><span>=&gt; </span><span style="color:#bf616a;">r</span><span>.</span><span style="color:#8fa1b3;">json</span><span>())
+</span><span>}
+</span></code></pre>
+<p>Arguments can be provided to the fetcher by passing an array to the <code>useSWR</code>
+hook:</p>
+<pre data-lang="typescript" style="background-color:#2b303b;color:#c0c5ce;" class="language-typescript "><code class="language-typescript" data-lang="typescript"><span style="color:#b48ead;">const </span><span>{ </span><span style="color:#bf616a;">data </span><span>} = </span><span style="color:#8fa1b3;">useSWR</span><span>([&#39;</span><span style="color:#a3be8c;">my/api</span><span>&#39;, </span><span style="color:#bf616a;">myId</span><span>], </span><span style="color:#bf616a;">fetcher</span><span>)
+</span></code></pre>
+<p>This argument will be passed to the <code>fetcher</code>, and forms part of the <code>key</code> that
+uniquely identifies the query within the <code>swr</code> cache. We shouldn’t dynamically
+create an object here (i.e. <code>useSWR(['my/api', { myId }])</code>) as this can prevent
+caching.</p>
+<h2 id="writing-a-fetcher-that-invokes-commands">Writing a fetcher that invokes commands</h2>
+<p>This bit is fairly straightforward. Instead of the key being the URL, here we
+can just assume the key is the name of the command we want to run. While we’re
+at it, lets make the <code>invokeFetcher</code> generic so we can have a typed response.
+Create a new file, <code>useInvoke.ts</code> and add the following:</p>
+<pre data-lang="typescript" style="background-color:#2b303b;color:#c0c5ce;" class="language-typescript "><code class="language-typescript" data-lang="typescript"><span style="color:#b48ead;">export const </span><span style="color:#8fa1b3;">invokeFetcher </span><span>= </span><span style="color:#b48ead;">async </span><span>&lt;TArgs </span><span style="color:#b48ead;">extends </span><span>Record&lt;string, any&gt;, TResult&gt;(
+</span><span>  </span><span style="color:#bf616a;">command</span><span>: string,
+</span><span>  </span><span style="color:#bf616a;">args</span><span>: TArgs
+</span><span>): Promise&lt;TResult&gt; </span><span style="color:#b48ead;">=&gt; </span><span style="color:#8fa1b3;">invoke</span><span>&lt;TResult&gt;(</span><span style="color:#bf616a;">command</span><span>, </span><span style="color:#bf616a;">args</span><span>)
+</span></code></pre>
+<p>The <code>invokeFetcher</code> has two type parameters, the first <code>TArgs</code> defines the
+arguments that are passed to the fetcher, here they must extend <code>Record&lt;string, any&gt;</code>. We also have a <code>TResult</code> type which determines what the invoked command
+should return. We don’t attempt any error handling here, this is handled by
+<code>swr</code>.</p>
+<h2 id="using-the-fetcher-in-an-swr-hook">Using the fetcher in an swr hook</h2>
+<p>Now we can invoke a command via SWR. In our <code>App.tsx</code> from <a href="/post/20210828_tauri_create_react_app_tutorial_part2">part
+2</a> replace the <code>useEffect</code>
+with:</p>
+<pre data-lang="typescript" style="background-color:#2b303b;color:#c0c5ce;" class="language-typescript "><code class="language-typescript" data-lang="typescript"><span style="color:#b48ead;">const </span><span style="color:#bf616a;">args </span><span>= </span><span style="color:#8fa1b3;">useRef</span><span>({ delta: </span><span style="color:#d08770;">0 </span><span>})
+</span><span style="color:#b48ead;">const </span><span>{ </span><span style="color:#bf616a;">data </span><span>} = </span><span style="color:#8fa1b3;">useSWR</span><span>([&#39;</span><span style="color:#a3be8c;">increment_counter</span><span>&#39;, </span><span style="color:#bf616a;">args</span><span>.current], </span><span style="color:#bf616a;">invokeFetcher</span><span>)
+</span><span style="color:#8fa1b3;">useEffect</span><span>(() </span><span style="color:#b48ead;">=&gt; </span><span>{
+</span><span>  </span><span style="color:#8fa1b3;">setCounter</span><span>(</span><span style="color:#bf616a;">data </span><span style="color:#b48ead;">as </span><span>number)
+</span><span>}, [</span><span style="color:#bf616a;">data</span><span>, </span><span style="color:#bf616a;">setCounter</span><span>])
+</span></code></pre>
+<p>This does two things - firstly we create a <code>ref</code> to hold our arguments to aid
+with caching. Then we call <code>useSWR</code> with the name of the command and our
+arguments. Finally we just hook up an effect that updates our counter state
+whenever the data updates (we’ll remove this in a later step). We can also leave
+the <code>invoke</code> command in the <code>useCallback</code> untouched for now.</p>
+<blockquote>
+<p>Note that the arguments for <code>useSWR</code> are in an object where the name of the fields corresponds to the arguments in the rust command function.</p>
+</blockquote>
+<h2 id="refactor-our-commands-into-get-set-commands">Refactor our commands into get/set commands</h2>
+<p>This works pretty well, but we’re kind of mixing our metaphors with the commands
+when we get the inital value. For instance we’re passing a <code>delta</code> of <code>0</code> to get
+the current value which seems a little bit weird. Lets refactor our command into
+two commands - one to get the current value of the app state, and one to
+increment the state by a <code>delta</code>. We can add the <code>get_counter</code> hook quite
+easily:</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span>#[</span><span style="color:#bf616a;">tauri</span><span>::</span><span style="color:#bf616a;">command</span><span>]
+</span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">get_counter</span><span>(</span><span style="color:#bf616a;">state</span><span>: State&lt;AtomicI32&gt;) -&gt; Result&lt;</span><span style="color:#b48ead;">i32</span><span>, String&gt; {
+</span><span>  println!(&quot;</span><span style="color:#a3be8c;">Getting counter value</span><span>&quot;);
+</span><span>  Ok(state.</span><span style="color:#96b5b4;">load</span><span>(Ordering::SeqCst))
+</span><span>}
+</span></code></pre>
+<p>and we also have to make sure we register the new command:</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#65737e;">// in the tauri::Builder in main.rs
+</span><span>.</span><span style="color:#96b5b4;">invoke_handler</span><span>(tauri::generate_handler![increment_counter, get_counter])
+</span></code></pre>
+<p>We can now replace all our hooks with the following:</p>
+<pre data-lang="typescript" style="background-color:#2b303b;color:#c0c5ce;" class="language-typescript "><code class="language-typescript" data-lang="typescript"><span style="color:#b48ead;">const </span><span>{ </span><span style="color:#bf616a;">data</span><span>: </span><span style="color:#bf616a;">counter</span><span>, </span><span style="color:#bf616a;">mutate </span><span>} = </span><span style="color:#8fa1b3;">useSWR</span><span>(&#39;</span><span style="color:#a3be8c;">get_counter</span><span>&#39;, </span><span style="color:#bf616a;">invokeFetcher</span><span>)
+</span><span>
+</span><span style="color:#b48ead;">const </span><span style="color:#bf616a;">increment </span><span>= </span><span style="color:#8fa1b3;">useCallback</span><span>(</span><span style="color:#b48ead;">async </span><span>() </span><span style="color:#b48ead;">=&gt; </span><span>{
+</span><span>  </span><span style="color:#b48ead;">const </span><span style="color:#bf616a;">result </span><span>= </span><span style="color:#b48ead;">await </span><span style="color:#8fa1b3;">invoke</span><span>(&#39;</span><span style="color:#a3be8c;">increment_counter</span><span>&#39;, { delta: </span><span style="color:#d08770;">1 </span><span>}) </span><span style="color:#b48ead;">as </span><span>number
+</span><span>  </span><span style="color:#8fa1b3;">mutate</span><span>(</span><span style="color:#bf616a;">result</span><span>, </span><span style="color:#d08770;">false</span><span>)
+</span><span>}, [</span><span style="color:#bf616a;">mutate</span><span>])
+</span></code></pre>
+<p>The <code>useSWR</code> hook now calls <code>get_counter</code>, and then inside the <code>useCallback</code> we
+invoke the <code>increment_counter</code> function.</p>
+<p>Another key difference here is we are now using a “bound <code>mutate</code>” function that
+is returned by the <code>useSWR</code> hook. This lets us tell <code>swr</code> it should refetch the
+data (in this case, invoke the <code>get_counter</code> command). We also pass the <code>result</code>
+to the <code>mutate</code> function so that the <code>counter</code> variable is updated
+optimistically, as well as <code>false</code> as a second argument to mutate. Passing false
+prevents the <code>get_counter</code> command from being invoked again when <code>mutate</code> is
+called. We no longer need to store the <code>counter</code> in state, or update when <code>data</code>
+updates so both these hooks have been removed.</p>
+<blockquote>
+<p>In this case our <code>increment_counter</code> variable returns the value, however in
+some cases we may not want to do this, or perhaps we’ve updated one part of
+our data which means another part should be re-fetched. In this case we can
+omit the second argument to <code>mutate</code>. If you make this change and run the code
+you should see that both “incrementing” and “getting” actions are logged.</p>
+</blockquote>
+<h2 id="write-a-generic-hook">Write a generic hook</h2>
+<p>Lets refactor the invoke logic into a separate hook. At the bottom of
+<code>useInvoke.ts</code>, add a new hook function:</p>
+<pre data-lang="typescript" style="background-color:#2b303b;color:#c0c5ce;" class="language-typescript "><code class="language-typescript" data-lang="typescript"><span style="color:#b48ead;">export const </span><span style="color:#8fa1b3;">useInvoke </span><span>= &lt;TArgs </span><span style="color:#b48ead;">extends </span><span>Record&lt;string, any&gt;, TResult&gt;(
+</span><span>  </span><span style="color:#bf616a;">args</span><span>: TArgs,
+</span><span>  </span><span style="color:#bf616a;">getCommand</span><span>: string,
+</span><span>  </span><span style="color:#bf616a;">setCommand</span><span>: string
+</span><span>) </span><span style="color:#b48ead;">=&gt; </span><span>{
+</span><span>  </span><span style="color:#65737e;">// run the invoke command
+</span><span>  </span><span style="color:#b48ead;">const </span><span>{ </span><span style="color:#bf616a;">data</span><span>, </span><span style="color:#bf616a;">error</span><span>, </span><span style="color:#bf616a;">mutate </span><span>} = </span><span style="color:#8fa1b3;">useSWR</span><span>&lt;TResult&gt;(
+</span><span>    [</span><span style="color:#bf616a;">getCommand</span><span>, </span><span style="color:#bf616a;">args</span><span>],
+</span><span>    </span><span style="color:#bf616a;">invokeFetcher
+</span><span>  )
+</span><span>
+</span><span>  </span><span style="color:#65737e;">// create an update function
+</span><span>  </span><span style="color:#b48ead;">const </span><span style="color:#bf616a;">update </span><span>= </span><span style="color:#8fa1b3;">useCallback</span><span>(
+</span><span>    </span><span style="color:#b48ead;">async </span><span>(</span><span style="color:#bf616a;">newData</span><span>: TResult) </span><span style="color:#b48ead;">=&gt; </span><span>{
+</span><span>      </span><span style="color:#8fa1b3;">mutate</span><span>(</span><span style="color:#b48ead;">await </span><span style="color:#8fa1b3;">invoke</span><span>(</span><span style="color:#bf616a;">setCommand</span><span>, { ...</span><span style="color:#bf616a;">args </span><span>}), </span><span style="color:#d08770;">false</span><span>)
+</span><span>    },
+</span><span>    [</span><span style="color:#bf616a;">args</span><span>, </span><span style="color:#bf616a;">mutate</span><span>, </span><span style="color:#bf616a;">setCommand</span><span>]
+</span><span>  )
+</span><span>
+</span><span>  </span><span style="color:#b48ead;">return </span><span>{
+</span><span>    </span><span style="color:#bf616a;">data</span><span>,
+</span><span>    fetching: !</span><span style="color:#bf616a;">data</span><span>,
+</span><span>    </span><span style="color:#bf616a;">error</span><span>,
+</span><span>    </span><span style="color:#bf616a;">update</span><span>,
+</span><span>  }
+</span><span>}
+</span><span>
+</span></code></pre>
+<p>This is a fairly standard react hook which is mostly just the code we had
+previously in <code>App.tsx</code> moved over. We first call <code>useSWR</code> with our passed in
+command, the arguments and the <code>invokeFetcher</code>. We then create a callback for
+invoking the update command and cache it using <code>useCallback</code>. This assumes that
+the invoke command also returns the updated data, if it doesn’t then we could
+replace the body of the <code>useCallback</code> with something like:</p>
+<pre data-lang="typescript" style="background-color:#2b303b;color:#c0c5ce;" class="language-typescript "><code class="language-typescript" data-lang="typescript"><span style="color:#b48ead;">async </span><span>(</span><span style="color:#bf616a;">newData</span><span>: TResult) </span><span style="color:#b48ead;">=&gt; </span><span>{
+</span><span>  </span><span style="color:#b48ead;">await </span><span style="color:#8fa1b3;">invoke</span><span>(</span><span style="color:#bf616a;">setCommand</span><span>, { ...</span><span style="color:#bf616a;">args </span><span>})
+</span><span>  </span><span style="color:#8fa1b3;">mutate</span><span>()
+</span><span>},
+</span></code></pre>
+<p>This would automatically refetch the data after the <code>setCommand</code> command is
+invoked.</p>
+<blockquote>
+<p>We’re assuming here that the <code>args</code> provided to the hook is stable enough to
+be used as a key for <code>useSWR</code>. If necessary this can be cached using
+<code>useState</code> and compared when <code>args</code> changes.</p>
+</blockquote>
+<p>We then need to update our <code>App.tsx</code> to use this new hook. We can replace
+everything except the return with:</p>
+<pre data-lang="typescript" style="background-color:#2b303b;color:#c0c5ce;" class="language-typescript "><code class="language-typescript" data-lang="typescript"><span style="color:#b48ead;">const </span><span>{ </span><span style="color:#bf616a;">data</span><span>: </span><span style="color:#bf616a;">counter</span><span>, </span><span style="color:#bf616a;">update </span><span>} = </span><span style="color:#8fa1b3;">useInvoke</span><span>(
+</span><span>  </span><span style="color:#bf616a;">defaultArgs</span><span>, &#39;</span><span style="color:#a3be8c;">get_counter</span><span>&#39;, &#39;</span><span style="color:#a3be8c;">increment_counter</span><span>&#39;
+</span><span>)
+</span></code></pre>
+<p>The button in the <code>App</code> component should be updated to use the <code>update</code> function
+as well:</p>
+<pre data-lang="html" style="background-color:#2b303b;color:#c0c5ce;" class="language-html "><code class="language-html" data-lang="html"><span>&lt;</span><span style="color:#bf616a;">button </span><span style="color:#d08770;">onClick</span><span>=</span><span style="color:#a3be8c;">{update}</span><span>&gt;increment&lt;/</span><span style="color:#bf616a;">button</span><span>&gt; {counter}
+</span></code></pre>
+<p>When the app reloads, the counter should work as before.</p>
+<h2 id="adding-a-second-counter">Adding a second counter</h2>
+<p>To check that the hook is sharing data, we can add a second counter that uses
+the same data source as the first. Add a second <code>useInvoke</code> hook into <code>App.tsx</code>
+below the first:</p>
+<pre data-lang="typescript" style="background-color:#2b303b;color:#c0c5ce;" class="language-typescript "><code class="language-typescript" data-lang="typescript"><span style="color:#b48ead;">const </span><span>{ </span><span style="color:#bf616a;">data</span><span>: </span><span style="color:#bf616a;">counter2</span><span>, </span><span style="color:#bf616a;">update</span><span>: </span><span style="color:#bf616a;">update2 </span><span>} = </span><span style="color:#8fa1b3;">useInvoke</span><span>(
+</span><span>  </span><span style="color:#bf616a;">defaultArgs</span><span>, &#39;</span><span style="color:#a3be8c;">get_counter</span><span>&#39;, &#39;</span><span style="color:#a3be8c;">increment_counter</span><span>&#39;
+</span><span>)
+</span></code></pre>
+<p>Then update our returned component:</p>
+<pre data-lang="tsx" style="background-color:#2b303b;color:#c0c5ce;" class="language-tsx "><code class="language-tsx" data-lang="tsx"><span style="color:#b48ead;">return </span><span>(
+</span><span>  &lt;</span><span style="color:#bf616a;">div</span><span>&gt;
+</span><span>    &lt;</span><span style="color:#bf616a;">div</span><span>&gt;&lt;</span><span style="color:#bf616a;">button </span><span style="color:#d08770;">onClick</span><span>=</span><span style="color:#ab7967;">{</span><span style="color:#bf616a;">update</span><span style="color:#ab7967;">}</span><span>&gt;increment&lt;/</span><span style="color:#bf616a;">button</span><span>&gt; </span><span style="color:#ab7967;">{</span><span style="color:#bf616a;">counter</span><span style="color:#ab7967;">}</span><span>&lt;/</span><span style="color:#bf616a;">div</span><span>&gt;
+</span><span>    &lt;</span><span style="color:#bf616a;">div</span><span>&gt;&lt;</span><span style="color:#bf616a;">button </span><span style="color:#d08770;">onClick</span><span>=</span><span style="color:#ab7967;">{</span><span style="color:#bf616a;">update2</span><span style="color:#ab7967;">}</span><span>&gt;increment&lt;/</span><span style="color:#bf616a;">button</span><span>&gt; </span><span style="color:#ab7967;">{</span><span style="color:#bf616a;">counter2</span><span style="color:#ab7967;">}</span><span>&lt;/</span><span style="color:#bf616a;">div</span><span>&gt;
+</span><span>  &lt;/</span><span style="color:#bf616a;">div</span><span>&gt;
+</span><span>)
+</span></code></pre>
+<p>Now when the app reloads there should be two counters. Clicking either increment
+button automatically updates both counters! As the <code>args</code> is the same for these
+two <code>useInvoke</code> hooks, they use the same data. In the next part of this series
+we’ll take a look at how we can use separate counters.</p>
+<blockquote>
+<p>We’ve now built a generic hook that can invoke the command and manage the
+update logic for us. The code for this tutorial can be found <a rel="noopener nofollow noreferrer" target="_blank" href="https://github.com/will-hart/tauri-cra-tutorial/tree/3dc42b87f00907e4245bd5c47d9d65a7eacc0316">here on
+github</a>.
+Part 2 of the tutorial <a href="/post/20210827_tauri_create_react_app_tutorial_part2">can be found
+here</a> and part 4 of the
+tutorial <a href="/post/20210829_tauri_create_react_app_tutorial_part4">can be found
+here</a>.</p>
+</blockquote>
+</article>
+
+<div class="container col">
+  <h2>Comments</h2>
+  <blockquote>Comments are powered by github and <a href="https://giscus.app">giscus</a></blockquote>
+  <script src="https://giscus.app/client.js"
+        data-repo="will-hart/will-hart.github.io"
+        data-repo-id="MDEwOlJlcG9zaXRvcnkzMjQ2NjY3Mzg="
+        data-category="General"
+        data-category-id="DIC_kwDOE1oFcs4CtiK6"
+        data-mapping="og:title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+  </script>
+</div>
+</div>
+
+  <footer id="footer">
+    <div class="container col">
+      This website was hand-made using Zola and Tera.
+      All text and images are available under CC0 1.0 Universal and code under MIT unless otherwise specified. See <a href="https://github.com/will-hart/willhart.io/blob/main/LICENSE.md">LICENSE.md</a> for more.
+    </div>
+  </footer>
+</body>
+
+</html>

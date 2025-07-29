@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Thesis writing in Markdown - pandemic and pandoc | willhart.io</title>
+
+
+  <link rel="icon" type="image/x-icon" href="/icons/icon_light_32x32.png">
+
+  
+<meta name="description" content="A description of the build system I&#x27;m using to build my PhD thesis in markdown and LaTeX. Posted on https://willhart.io" />
+<meta property="og:description" content="A description of the build system I&#x27;m using to build my PhD thesis in markdown and LaTeX" />
+<meta property="og:title" content="Thesis writing in Markdown - pandemic and pandoc" />
+<meta property="og:url" content="https://willhart.io/post/thesis-writing-in-markdown-pandoc-and-pandemic/">
+<meta property="og:type" content="article" />
+<meta property="og:locale" content="en_AU" />
+
+
+  <link rel="stylesheet" href="https://willhart.io/global.css?h=f83cd20cd0df26d72c2b" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sono:wght@200..800&display=swap" rel="stylesheet">
+
+  
+
+  <!-- Cloudflare Web Analytics -->
+  <script defer src='https://static.cloudflareinsights.com/beacon.min.js'
+    data-cf-beacon='{"token": "310f93cab66a42c5a328f246cc053025"}'></script>
+  <!-- End Cloudflare Web Analytics -->
+
+  <!-- Light/Dark theme toggling -->
+  <script type="text/javascript">
+    const storageKey = "websiteTheme";
+
+    // apply theme once we have a DOM
+    document.addEventListener("DOMContentLoaded", () => {
+      applyTheme();
+    })
+
+    // a function that toggles between light and dark theme
+    const toggleTheme = () => {
+      localStorage.setItem(storageKey, localStorage.getItem(storageKey) === "d" ? "l" : "d" );
+      applyTheme();
+    }
+
+    // a function that actually applies the theme
+    const applyTheme = () => {
+      const useDarkTheme = localStorage.getItem(storageKey) === "d";
+      document.getElementsByTagName("html")[0].className = useDarkTheme ? "dark" : "";
+      document.getElementById("theme-toggle").textContent = useDarkTheme ? "🔆" : "🌑";
+    }
+  </script>
+
+  <script type="speculationrules">
+  {
+    "prerender": [
+      { "where": { "selector_matches": "a" } }
+    ]
+  }
+  </script></head>
+
+<body>
+  <nav id="header">
+    <a href="/" aria-label="Website Logo and Link to Home Page">
+      <div id="logo" >&nbsp;</div>
+    </a>
+    <span>
+      <button type="button" id="theme-toggle" aria-label="Toggle Theme" onClick="toggleTheme()">🌑</button>
+      <a class="header-item" href="/post">POSTS</a>
+      <a class="header-item" href="/tag">TAGS</a>
+      <span class="header-item hide-when-slim">|</span>
+      <a class="header-item hide-when-slim" href="/tag/projects">PROJECTS</a>
+      <a class="header-item hide-when-slim" href="/tag/gamedev">GAMEDEV</a>
+      <a class="header-item hide-when-slim" href="/tag/electronics">ELECTRONICS</a>
+    </span>
+  </nav>
+
+  
+
+<div class="container col mb mt">
+  <h1>Thesis writing in Markdown - pandemic and pandoc</h1>
+  <div class="col txtsm">
+    <span>Posted by Will Hart on 2019-05-16</span>
+    <div>
+      <span>See also:</span>
+      
+      <a class="txtsm mr" href="https://willhart.io/tag/tutorials/">#tutorials</a>
+      
+      <a class="txtsm mr" href="https://willhart.io/tag/phd/">#phd</a>
+      
+    </div>
+  </div>
+</div>
+
+
+
+<article class="container col mblg"><p>I’m in the closing stages of my PhD (I hope), and beginning to write up some
+chapters. As my PhD is heavy on analysis, data and modelling, I’ve found writing
+in Word or LaTeX to have a lot of shortcomings that I’d really like to overcome.
+Word is simple to use but citations are a bit clunky and the typography isn’t
+particularly nice. On the other hand, LaTeX looks nicer but is a lot more work
+to get right. There are also some complications - for instance, what if I just
+want to build one chapter at a time?</p>
+<p>I guess I’ve been spoiled for choice in the Node / Python / C# worlds where you
+can usually just type yarn build or yarn start and out pops a functional web
+app. Is there a similar build system for academic documents? It turns out there
+isn’t, at least not a good one, but it isn’t too hard to cobble together a
+Frankenstein to do the job.</p>
+<p>What features would a build system have? The first step was to work out what
+sort of features a thesis build system would have. The core requirements are:</p>
+<ol>
+<li><strong>Citations and a bibliography</strong>,</li>
+<li><strong>Variable substitution</strong>, so that analysis results can be exported to JSON
+files and then the values automagically inserted in the correct location in
+the text,</li>
+<li><strong>Build up multi-part figures</strong>,</li>
+<li><strong>Automatic cross references</strong>, I don’t want to have to think about fixing
+<code>Figure 6.15</code> when I insert a figure in between, and I want to be able to
+reference between chapters even if they are in separate documents,</li>
+<li><strong>Single command build</strong>, being able to compile the document with one click
+or CLI command</li>
+</ol>
+<p>There are some nice to have features as well:</p>
+<ol>
+<li><strong>Write in a plain text language</strong>, i.e. Markdown? as much as possible</li>
+<li><strong>Build the entire document or single chapters</strong>, so I can send a chapter to
+a supervisor for review</li>
+<li><strong>Various export formats</strong>, so that I can send Word, Markdown, LaTeX or PDF
+formats as required</li>
+</ol>
+<h2 id="wait-doesn-t-this-already-exist">Wait, doesn’t this already exist?</h2>
+<p>Well, yes in a word, <code>pandoc</code> does a lot of these things already. In the list
+above there are only a few things that I don’t think pandoc can do out of the
+box - building multi-part figures and building entire document or single
+chapters (although this could probably be achieved with a batch file or
+similar). However managing the different commands required for all the export
+formats and options that I want to build would be a bit tricky.</p>
+<p>Luckily, I found <a rel="noopener nofollow noreferrer" target="_blank" href="https://github.com/lionel-rigoux/pandemic"><code>pandemic</code></a> which
+is a <code>pandoc</code> CLI for building documents from “recipes”. pandemic <code>recipes</code>
+allow multiple export formats, and different filter combinations and so on per
+recipe. It also has <code>prehooks</code> which let you define CLI commands that should run
+before pandoc to either preprocess the document or run side effects.</p>
+<p>Once a recipe is defined, pandemic can be used to build up a chapter by running
+a single CLI command:</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">pandemic</span><span> publish manuscript.md
+</span></code></pre>
+<p>Or if a particular recipe is required:</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">pandemic</span><span> publish</span><span style="color:#bf616a;"> -f</span><span> tex manuscript.md
+</span></code></pre>
+<h2 id="cobbling-it-together">Cobbling it together</h2>
+<p>At this point I got a bit medieval and cobbled together what can only be
+described as an abomination!</p>
+<p>Using PowerShell scripts, pandoc and pandemic I set up a document build system
+that converts the raw Markdown documents to LaTeX after running some filters,
+copies the files to a build directory, merges all the chapters into a single
+document and builds it several times with XeLaTeX. I used a <code>handlebars</code> prehook
+for <code>pandemic</code> to swap variables in the form <code>{{{variable_name}}}</code> in the text
+from files output by my Jupyter notebooks. I manually run commands for
+<code>it-figures</code>, my node library for building multi-part figures on each chapter.</p>
+<p>By running a separate command I can output a chapter in a standalone tex file. A
+single chapter is built like this:</p>
+<pre data-lang="powershell" style="background-color:#2b303b;color:#c0c5ce;" class="language-powershell "><code class="language-powershell" data-lang="powershell"><span style="color:#b48ead;">function </span><span style="color:#8fa1b3;">BuildChapter </span><span>{
+</span><span>  </span><span style="color:#b48ead;">Param</span><span>([</span><span style="color:#b48ead;">String</span><span>]$</span><span style="color:#bf616a;">chap</span><span>)
+</span><span>
+</span><span>  </span><span style="color:#96b5b4;">Write-Output </span><span>&quot;</span><span style="color:#a3be8c;">Building Chapter </span><span>$</span><span style="color:#bf616a;">chap</span><span>&quot;
+</span><span>
+</span><span>  </span><span style="color:#65737e;"># build figures using `it-figures`
+</span><span>
+</span><span>  </span><span style="color:#96b5b4;">Set-Location</span><span> .\$</span><span style="color:#bf616a;">chap</span><span>\figures
+</span><span>  figures b panels.json
+</span><span>
+</span><span>  </span><span style="color:#65737e;"># build the manuscript
+</span><span>
+</span><span>  </span><span style="color:#96b5b4;">Set-Location</span><span> ..\
+</span><span>  pandemic publish manuscript.md
+</span><span>
+</span><span>  </span><span style="color:#96b5b4;">Set-Location</span><span> .\_public
+</span><span>
+</span><span>  </span><span style="color:#65737e;"># add a few newlines to the markdown to force a latex break
+</span><span>
+</span><span>  </span><span style="color:#96b5b4;">Add-Content </span><span>-Path manuscript.build -Value &quot;</span><span style="color:#96b5b4;">`r`n`r`n</span><span>&quot;
+</span><span>
+</span><span>  </span><span style="color:#96b5b4;">Move-Item </span><span>-Path manuscript.build -Destination ..\..\.build\$</span><span style="color:#bf616a;">chap.md </span><span>-Force
+</span><span>
+</span><span>  </span><span style="color:#96b5b4;">New-Item </span><span>-ItemType Directory -Force -Path ..\..\.build\.tex\$</span><span style="color:#bf616a;">chap</span><span>\images
+</span><span>  </span><span style="color:#96b5b4;">Copy-Item</span><span> ..\images\* ..\..\.build\.tex\$</span><span style="color:#bf616a;">chap</span><span>\images\ -Force -Recurse
+</span><span>  </span><span style="color:#96b5b4;">New-Item </span><span>-ItemType Directory -Force -Path ..\..\.build\.tex\$</span><span style="color:#bf616a;">chap</span><span>\figures
+</span><span>  </span><span style="color:#96b5b4;">Copy-Item</span><span> ..\figures\* ..\..\.build\.tex\$</span><span style="color:#bf616a;">chap</span><span>\figures\ -Force -Recurse
+</span><span>
+</span><span>  </span><span style="color:#96b5b4;">Set-Location</span><span> ..\..\
+</span><span>}
+</span></code></pre>
+<p>Then the document is built like this</p>
+<pre data-lang="powershell" style="background-color:#2b303b;color:#c0c5ce;" class="language-powershell "><code class="language-powershell" data-lang="powershell"><span style="color:#b48ead;">function </span><span style="color:#8fa1b3;">BuildDocument </span><span>{
+</span><span>  </span><span style="color:#b48ead;">Param</span><span>([</span><span style="color:#b48ead;">String</span><span>]$</span><span style="color:#bf616a;">chaps</span><span>)
+</span><span>
+</span><span>  </span><span style="color:#96b5b4;">Set-Location</span><span> .\.build
+</span><span>
+</span><span>  cat $</span><span style="color:#bf616a;">chaps </span><span>| pandoc -s --top-level-division=chapter --template ..\template\thesis.tex -f markdown -t latex -F pandoc-crossref -M &quot;</span><span style="color:#a3be8c;">crossrefYaml=..\template\crossref_settings.yaml</span><span>&quot; --natbib -o .\.tex\thesis.tex
+</span><span>
+</span><span>  </span><span style="color:#96b5b4;">Set-Location</span><span> .\.tex
+</span><span>
+</span><span>  xelatex -quiet thesis.tex
+</span><span>  biber thesis.bcf
+</span><span>  xelatex -quiet thesis.tex
+</span><span>  xelatex thesis.tex
+</span><span>
+</span><span>  </span><span style="color:#96b5b4;">Move-Item </span><span>-Path thesis.pdf -Destination ..\..\thesis.pdf -Force
+</span><span>  </span><span style="color:#96b5b4;">Move-Item </span><span>-Path thesis.tex -Destination ..\..\thesis.tex -Force
+</span><span>
+</span><span>  </span><span style="color:#96b5b4;">Set-Location</span><span> ..\..\
+</span><span>}
+</span></code></pre>
+<p>I’m not sure if this overly complicated approach is a good one, but it lets me
+write in Markdown, and automatically update figures and variables in my text if
+the analysis changes, and then publish in LaTeX with only a single command. This
+is quite satisfying, although if something goes wrong it will probably take
+quite a while to sort out.</p>
+<p>I’m guessing that before I start getting serious feedback from my supervisors
+I’ll probably “eject” from the build system and go back to working in pure
+LaTeX. At that point it will be handy to be able to run diffs on the text I get
+back from my supervisors without having to convert to and from Markdown.</p>
+<p>In the meantime, at least I’m entertained?</p>
+</article>
+
+<div class="container col">
+  <h2>Comments</h2>
+  <blockquote>Comments are powered by github and <a href="https://giscus.app">giscus</a></blockquote>
+  <script src="https://giscus.app/client.js"
+        data-repo="will-hart/will-hart.github.io"
+        data-repo-id="MDEwOlJlcG9zaXRvcnkzMjQ2NjY3Mzg="
+        data-category="General"
+        data-category-id="DIC_kwDOE1oFcs4CtiK6"
+        data-mapping="og:title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+  </script>
+</div>
+</div>
+
+  <footer id="footer">
+    <div class="container col">
+      This website was hand-made using Zola and Tera.
+      All text and images are available under CC0 1.0 Universal and code under MIT unless otherwise specified. See <a href="https://github.com/will-hart/willhart.io/blob/main/LICENSE.md">LICENSE.md</a> for more.
+    </div>
+  </footer>
+</body>
+
+</html>

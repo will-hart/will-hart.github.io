@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Connecting Players with Firebase and Unity [Part 1] | willhart.io</title>
+
+
+  <link rel="icon" type="image/x-icon" href="/icons/icon_light_32x32.png">
+
+  
+<meta name="description" content="Part 1 of a tutorial on hacking firebase support into Unity (for desktop builds). Posted on https://willhart.io" />
+<meta property="og:description" content="Part 1 of a tutorial on hacking firebase support into Unity (for desktop builds)" />
+<meta property="og:title" content="Connecting Players with Firebase and Unity [Part 1]" />
+<meta property="og:url" content="https://willhart.io/post/firebase-and-unity-part-1/">
+<meta property="og:type" content="article" />
+<meta property="og:locale" content="en_AU" />
+
+
+  <link rel="stylesheet" href="https://willhart.io/global.css?h=f83cd20cd0df26d72c2b" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sono:wght@200..800&display=swap" rel="stylesheet">
+
+  
+
+  <!-- Cloudflare Web Analytics -->
+  <script defer src='https://static.cloudflareinsights.com/beacon.min.js'
+    data-cf-beacon='{"token": "310f93cab66a42c5a328f246cc053025"}'></script>
+  <!-- End Cloudflare Web Analytics -->
+
+  <!-- Light/Dark theme toggling -->
+  <script type="text/javascript">
+    const storageKey = "websiteTheme";
+
+    // apply theme once we have a DOM
+    document.addEventListener("DOMContentLoaded", () => {
+      applyTheme();
+    })
+
+    // a function that toggles between light and dark theme
+    const toggleTheme = () => {
+      localStorage.setItem(storageKey, localStorage.getItem(storageKey) === "d" ? "l" : "d" );
+      applyTheme();
+    }
+
+    // a function that actually applies the theme
+    const applyTheme = () => {
+      const useDarkTheme = localStorage.getItem(storageKey) === "d";
+      document.getElementsByTagName("html")[0].className = useDarkTheme ? "dark" : "";
+      document.getElementById("theme-toggle").textContent = useDarkTheme ? "🔆" : "🌑";
+    }
+  </script>
+
+  <script type="speculationrules">
+  {
+    "prerender": [
+      { "where": { "selector_matches": "a" } }
+    ]
+  }
+  </script></head>
+
+<body>
+  <nav id="header">
+    <a href="/" aria-label="Website Logo and Link to Home Page">
+      <div id="logo" >&nbsp;</div>
+    </a>
+    <span>
+      <button type="button" id="theme-toggle" aria-label="Toggle Theme" onClick="toggleTheme()">🌑</button>
+      <a class="header-item" href="/post">POSTS</a>
+      <a class="header-item" href="/tag">TAGS</a>
+      <span class="header-item hide-when-slim">|</span>
+      <a class="header-item hide-when-slim" href="/tag/projects">PROJECTS</a>
+      <a class="header-item hide-when-slim" href="/tag/gamedev">GAMEDEV</a>
+      <a class="header-item hide-when-slim" href="/tag/electronics">ELECTRONICS</a>
+    </span>
+  </nav>
+
+  
+
+<div class="container col mb mt">
+  <h1>Connecting Players with Firebase and Unity [Part 1]</h1>
+  <div class="col txtsm">
+    <span>Posted by Will Hart on 2017-02-19</span>
+    <div>
+      <span>See also:</span>
+      
+      <a class="txtsm mr" href="https://willhart.io/tag/code/">#code</a>
+      
+      <a class="txtsm mr" href="https://willhart.io/tag/gamedev/">#gamedev</a>
+      
+    </div>
+  </div>
+</div>
+
+
+
+<article class="container col mblg"><h2 id="all-your-firebases-are-belong-to-us">All your firebases are belong to us?</h2>
+<p>Playing around with a React web app recently I was working through ideas for the
+app backend, and after weighing up a bunch of different options I decided to
+give <a rel="noopener nofollow noreferrer" target="_blank" href="https://firebase.google.com/">Firebase</a> a go so I could concentrate on the
+frontend. I’d played with firebase a while back (before it was acquired by
+google) but it had never really clicked with me. That was before I used React
+for web/mobile apps, and I quickly found that firebase is <em>made</em> for the
+React/Redux architecture; the first time I changed something on my PC browser
+and it immediately popped up on my mobile browser (without any special code from
+me) I was hooked.</p>
+<p>In case you aren’t aware, firebase is a bunch of different things, but the
+interesting features for me are it provides a user logins, a real-time[1]
+JSON-like database backend with fine grained read/write permissions, and
+integrated file storage. The interface is really easy, all data is just accessed
+by URLs, like (<code>/myfirebaseurl/users/1234/username</code>). It has APIs for
+JavaScript, and … wait, did they just say <a rel="noopener nofollow noreferrer" target="_blank" href="https://firebase.google.com/docs/unity/setup">Unity
+support</a>?</p>
+<blockquote>
+<p><strong>NOTE</strong> Before I get any further: currently firebase only supports Android
+and iOS builds by default. If you stick around until the end, I’ve managed to
+get it working in standalone builds but it is a little hacky. The best thing I
+can suggest is to try to badger firebase through twitter or (shudder) google
+groups to add support for Standalone builds!</p>
+<p>I <a rel="noopener nofollow noreferrer" target="_blank" href="https://groups.google.com/d/topic/firebase-talk/XLaACoVjysc/discussion">asked for an
+update</a>
+on the google groups page, but at the time of writing this I haven’t heard
+anything back.</p>
+</blockquote>
+<p>Suddenly, gears started grinding in my head, shaking off the piles of rust that
+had accumulated. Visions of real-time backend features, like the <a rel="noopener nofollow noreferrer" target="_blank" href="http://arrowheadgamestudios.com/games/helldivers/helldivers-war-statistics/">global
+statistics</a>
+from <a rel="noopener nofollow noreferrer" target="_blank" href="http://arrowheadgamestudios.com/games/helldivers/">Helldivers</a> swam before
+my eyes. Or, what about <a rel="noopener nofollow noreferrer" target="_blank" href="http://www.warcubegame.com/">Warcube’s</a> <a rel="noopener nofollow noreferrer" target="_blank" href="https://github.com/Chman/Moments">gif recording
+feature</a>, with automatic uploads so that they
+can be featured on a game’s website in real-time. When you start to go down this
+path, there are lots of ways to make players feel connected while playing your
+game.</p>
+<p>Of course, it isn’t all roses. During development of the web app I was prompted
+to tweet this:</p>
+<p><img src="https://willhart.io/post/firebase-and-unity-part-1/tweet.png" alt="https://twitter.com/wlhart/status/824828033970212865" /></p>
+<p>There is a bit of learning curve using firebase, but its not insurmountable, and
+I was pretty impressed to see one of the firebase staff find the tweet and ask
+me for further feedback… thumbs up for good community engagement!</p>
+<p>So, that aside, I present to you - a basic introduction in creating real-time
+“social” features in your Unity games using Google’s Firebase backend (in two
+parts)! We’re going to create a very simple stats feature, which counts the
+number of mouse clicks and saves it globally so all users can see it in
+real-time. I’m going to assume you are comfortable with Unity so will gloss over
+the Unity basics for the sake of brevity.</p>
+<h2 id="getting-started">Getting Started</h2>
+<h3 id="setting-up-firebase">Setting up Firebase</h3>
+<p>Firebase at the moment has a pretty decent free tier, which gives you a bunch of
+storage and bandwidth. Go ahead and sign up now if you are following along. Once
+you are signed in, create a new application following their prompts. I’m going
+to call mine <code>wilsk_unity_test</code>, but you can call yours whatever you want (see
+note 2)</p>
+<p><img src="https://willhart.io/post/firebase-and-unity-part-1/create_new_project_firebase.png" alt="Create a new firebase application" /></p>
+<p>Once you have created the database, click the “Database” link on the left hand
+menu, here you can see your database contents. It might look something like
+this:</p>
+<p><img src="https://willhart.io/post/firebase-and-unity-part-1/firebase_setup.png" alt="The initial database contents (size: 1098x293px)" /></p>
+<p>You can see the firebase URL - <code>http://wh-unity-test.firebaseio.com/</code> and the root
+of the database, <code>wh-unity-test</code> with a value of <code>null</code>.</p>
+<p>Next we need to set up some database permissions. These control who can read or
+write what data, and also validation rules for the data. Click on the <code>RULES</code> tab
+above the database URL. You should see a text box containing the default rules
+in JSON format:</p>
+<pre data-lang="json" style="background-color:#2b303b;color:#c0c5ce;" class="language-json "><code class="language-json" data-lang="json"><span>{
+</span><span>  &quot;</span><span style="color:#a3be8c;">rules</span><span>&quot;: {
+</span><span>    &quot;</span><span style="color:#a3be8c;">.read</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">auth != null</span><span>&quot;,
+</span><span>    &quot;</span><span style="color:#a3be8c;">.write</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">auth != null</span><span>&quot;
+</span><span>  }
+</span><span>}
+</span></code></pre>
+<p>These rules just specify that anybody who is logged in can read or write
+anything. For now we don’t want any real restrictions, but we also don’t want a
+massive free for all. Lets say we want to be able to increment a counter, and
+everything else should be rejected. Paste the following into the text box,
+replacing the current rules:</p>
+<pre data-lang="json" style="background-color:#2b303b;color:#c0c5ce;" class="language-json "><code class="language-json" data-lang="json"><span>{
+</span><span>  &quot;</span><span style="color:#a3be8c;">rules</span><span>&quot;: {
+</span><span>    &quot;</span><span style="color:#a3be8c;">counter</span><span>&quot;: {
+</span><span>      &quot;</span><span style="color:#a3be8c;">.validate</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">newData.isNumber()</span><span>&quot;,
+</span><span>      &quot;</span><span style="color:#a3be8c;">.read</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">true</span><span>&quot;,
+</span><span>      &quot;</span><span style="color:#a3be8c;">.write</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">true</span><span>&quot;
+</span><span>    }
+</span><span>  }
+</span><span>}
+</span></code></pre>
+<p>This looks a little intimidating, but what it does is quite straightforward.
+Basically for the <code>counter</code> path on the database, i.e. if we access
+<code>http://wh-unity-test.firebaseio.com/counter</code>, it allows read and write by
+default. When we write to the path, any value is accepted as long as it is a
+number, this is the <code>newData.isNumber()</code> part. Anything not specified in the
+rules is rejected by default.</p>
+<p>You will probably notice a “Simulator” button on the top right of the text box.
+This lets us try out our rules before saving them. Have a play and verify that
+the rules prevent access outside of <code>counter</code> and reject attempts to write text or
+other data to the <code>/counter</code> path.</p>
+<p><img src="https://willhart.io/post/firebase-and-unity-part-1/rule_simulator-1.png" alt="The Firebase rules simulator in action (size: 1186x631px)" /></p>
+<p>When you are happy, hit <code>PUBLISH</code> and our database setup is done. We’ll come
+back to the database in a little while.</p>
+<h3 id="setting-up-unity">Setting up Unity</h3>
+<p>The next thing is to get Unity setup. Download the Unity SDK from
+<a rel="noopener nofollow noreferrer" target="_blank" href="https://firebase.google.com/docs/unity/setup">https://firebase.google.com/docs/unity/setup</a>, the package comes with a bunch of
+<code>.unitypackage</code> files which contain the code for different feature sets.</p>
+<p><img src="https://willhart.io/post/firebase-and-unity-part-1/firebase_unity_package_contents.png" alt="The Contents of the Firebase Unity Package" /></p>
+<p>Lets start a new Unity project and import the <code>FirebaseDatabase.unitypackage</code>
+package. We’re going to skip authentication for now as it makes life a bit more
+complicated (see note 3). You should see something like this screen when you
+drop the package in:</p>
+<p><img src="https://willhart.io/post/firebase-and-unity-part-1/firebase_package_import.png" alt="Importing the Firebase Database package" /></p>
+<p>You might get a warning about having the wrong SDK version. Just follow the
+instructions on screen to configure the project correctly for firebase.</p>
+<p><img src="https://willhart.io/post/firebase-and-unity-part-1/sdk_prompt.png" alt="The SDK version may need to be updated" /></p>
+<h3 id="ready-to-rock">Ready to rock</h3>
+<p>OK, with that I think we are ready to start building up our application. Stay
+tuned for <a href="/post/firebase-and-unity-part-2">part 2</a>!</p>
+<h2 id="notes">Notes</h2>
+<ol>
+<li>Real-time as in you can subscribe to a particular database field, and when
+anybody updates the value all subscribers get notified. Think a chat site,
+where new messages are automatically pushed to other users as soon as they
+are posted.</li>
+<li>If the name you pick is already taken then you will end up with a short
+series of random characters after the name you pick.</li>
+<li>Also, I’m not even sure that authentication / authorisation is possible in
+standalone builds with the current library.</li>
+</ol>
+</article>
+
+<div class="container col">
+  <h2>Comments</h2>
+  <blockquote>Comments are powered by github and <a href="https://giscus.app">giscus</a></blockquote>
+  <script src="https://giscus.app/client.js"
+        data-repo="will-hart/will-hart.github.io"
+        data-repo-id="MDEwOlJlcG9zaXRvcnkzMjQ2NjY3Mzg="
+        data-category="General"
+        data-category-id="DIC_kwDOE1oFcs4CtiK6"
+        data-mapping="og:title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+  </script>
+</div>
+</div>
+
+  <footer id="footer">
+    <div class="container col">
+      This website was hand-made using Zola and Tera.
+      All text and images are available under CC0 1.0 Universal and code under MIT unless otherwise specified. See <a href="https://github.com/will-hart/willhart.io/blob/main/LICENSE.md">LICENSE.md</a> for more.
+    </div>
+  </footer>
+</body>
+
+</html>

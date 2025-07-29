@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Editing Markdown with Ember.js | willhart.io</title>
+
+
+  <link rel="icon" type="image/x-icon" href="/icons/icon_light_32x32.png">
+
+  
+<meta name="description" content="A quick tutorial on building a custom EmberJS text editor using demarcate.js. Posted on https://willhart.io" />
+<meta property="og:description" content="A quick tutorial on building a custom EmberJS text editor using demarcate.js" />
+<meta property="og:title" content="Editing Markdown with Ember.js" />
+<meta property="og:url" content="https://willhart.io/post/editing-markdown-with-emberjs/">
+<meta property="og:type" content="article" />
+<meta property="og:locale" content="en_AU" />
+
+
+  <link rel="stylesheet" href="https://willhart.io/global.css?h=f83cd20cd0df26d72c2b" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sono:wght@200..800&display=swap" rel="stylesheet">
+
+  
+
+  <!-- Cloudflare Web Analytics -->
+  <script defer src='https://static.cloudflareinsights.com/beacon.min.js'
+    data-cf-beacon='{"token": "310f93cab66a42c5a328f246cc053025"}'></script>
+  <!-- End Cloudflare Web Analytics -->
+
+  <!-- Light/Dark theme toggling -->
+  <script type="text/javascript">
+    const storageKey = "websiteTheme";
+
+    // apply theme once we have a DOM
+    document.addEventListener("DOMContentLoaded", () => {
+      applyTheme();
+    })
+
+    // a function that toggles between light and dark theme
+    const toggleTheme = () => {
+      localStorage.setItem(storageKey, localStorage.getItem(storageKey) === "d" ? "l" : "d" );
+      applyTheme();
+    }
+
+    // a function that actually applies the theme
+    const applyTheme = () => {
+      const useDarkTheme = localStorage.getItem(storageKey) === "d";
+      document.getElementsByTagName("html")[0].className = useDarkTheme ? "dark" : "";
+      document.getElementById("theme-toggle").textContent = useDarkTheme ? "🔆" : "🌑";
+    }
+  </script>
+
+  <script type="speculationrules">
+  {
+    "prerender": [
+      { "where": { "selector_matches": "a" } }
+    ]
+  }
+  </script></head>
+
+<body>
+  <nav id="header">
+    <a href="/" aria-label="Website Logo and Link to Home Page">
+      <div id="logo" >&nbsp;</div>
+    </a>
+    <span>
+      <button type="button" id="theme-toggle" aria-label="Toggle Theme" onClick="toggleTheme()">🌑</button>
+      <a class="header-item" href="/post">POSTS</a>
+      <a class="header-item" href="/tag">TAGS</a>
+      <span class="header-item hide-when-slim">|</span>
+      <a class="header-item hide-when-slim" href="/tag/projects">PROJECTS</a>
+      <a class="header-item hide-when-slim" href="/tag/gamedev">GAMEDEV</a>
+      <a class="header-item hide-when-slim" href="/tag/electronics">ELECTRONICS</a>
+    </span>
+  </nav>
+
+  
+
+<div class="container col mb mt">
+  <h1>Editing Markdown with Ember.js</h1>
+  <div class="col txtsm">
+    <span>Posted by Will Hart on 2013-06-21</span>
+    <div>
+      <span>See also:</span>
+      
+      <a class="txtsm mr" href="https://willhart.io/tag/code/">#code</a>
+      
+      <a class="txtsm mr" href="https://willhart.io/tag/tutorials/">#tutorials</a>
+      
+    </div>
+  </div>
+</div>
+
+
+
+<article class="container col mblg"><p>If you read my rather lengthy <a href="/an-emberjs-beginners-tutorial">beginning ember.js
+tutorial</a> you may have an inkling that I’m
+rather taken with the new kid on the block. I recently started thinking of ways
+that I could use my demarcate editor in Ember applications.</p>
+<h2 id="the-demarcateeditor-view">The DemarcateEditor view</h2>
+<p>The answer turned out to be incredibly simple, thanks to some code from <a rel="noopener nofollow noreferrer" target="_blank" href="https://github.com/KasperTidemann/ember-contenteditable-view/blob/master/ember-contenteditable-view.js">Kasper
+Tidemann</a>.
+By adding only a couple of lines, I’ve taken Kasper’s code and turned it into a
+demarcate backed WYSIWYG Markdown editor. You can see the <del>live demo</del> (no
+longer available) and as usual, the source is on
+<a rel="noopener nofollow noreferrer" target="_blank" href="https://github.com/will-hart/ember_demarcate_adapter_example">github</a>.</p>
+<blockquote>
+<p><strong>NOTE</strong> At the moment you need to be on the develop branch of demarcate to
+access 2.0 features.</p>
+</blockquote>
+<p>To make the <code>contenteditable</code> view demarcate enabled, I had to change two lines of
+code. In the <code>didInsertElement</code> I added a line:</p>
+<pre data-lang="javascript" style="background-color:#2b303b;color:#c0c5ce;" class="language-javascript "><code class="language-javascript" data-lang="javascript"><span style="color:#bf616a;">demarcate</span><span>.</span><span style="color:#8fa1b3;">enable</span><span>(</span><span style="color:#bf616a;">this</span><span>.</span><span style="color:#8fa1b3;">$</span><span>().</span><span style="color:#96b5b4;">get</span><span>(</span><span style="color:#d08770;">0</span><span>));
+</span></code></pre>
+<p>Which simply takes the view’s DOM wrapper and enables it as a demarcate editor.
+To parse the DOM tree into markdown when the contents of the view’s <code>div</code> changes,
+I added a call to <code>Ember.run.debounce</code> in the <code>keyUp</code> method:</p>
+<pre data-lang="javascript" style="background-color:#2b303b;color:#c0c5ce;" class="language-javascript "><code class="language-javascript" data-lang="javascript"><span style="color:#bf616a;">Ember</span><span>.</span><span style="color:#bf616a;">run</span><span>.</span><span style="color:#8fa1b3;">debounce</span><span>({&#39;</span><span style="color:#a3be8c;">component</span><span>&#39;: </span><span style="color:#bf616a;">this</span><span>}, </span><span style="color:#b48ead;">function </span><span>() { 
+</span><span>    </span><span style="color:#bf616a;">this</span><span>.</span><span style="color:#bf616a;">component</span><span>.</span><span style="color:#96b5b4;">set</span><span>(&#39;</span><span style="color:#a3be8c;">markdown</span><span>&#39;, </span><span style="color:#bf616a;">demarcate</span><span>.</span><span style="color:#96b5b4;">parse</span><span>());
+</span><span>}, </span><span style="color:#d08770;">1000</span><span>);
+</span></code></pre>
+<p>The <code>Ember.run.debounce</code> is quite a nifty little Ember function. “Debouncing” is
+a common theme in microcontroller hardware design. It refers to the real life
+effect where pushing a button may actually result in a rapidly oscillating or
+“bouncing” electrical signal. This needs to be smoothed or “debounced” so that
+the micro-controller only reacts to a button being pushed once.</p>
+<p>In this case, as parsing a large HTML DOM into markdown may take a bit of
+effort, we don’t want to do this every time the user presses a key. The <code>debounce</code>
+method basically sets a timer (in this case for 1000 milliseconds) and restarts
+the timer if the function is called again during the timeout period. In other
+words, the call to <code>debounce</code> in this case makes <code>demarcate.parse()</code> wait for a
+pause in <code>keyPress</code> events longer than 1 second.</p>
+<h2 id="a-demo-application">A demo application</h2>
+<p>Creating a demo application requires only a few lines of code. First I create an
+Ember application:</p>
+<pre data-lang="javascript" style="background-color:#2b303b;color:#c0c5ce;" class="language-javascript "><code class="language-javascript" data-lang="javascript"><span style="color:#bf616a;">App </span><span>= </span><span style="color:#bf616a;">Ember</span><span>.</span><span style="color:#bf616a;">Application</span><span>.</span><span style="color:#8fa1b3;">create</span><span>();
+</span></code></pre>
+<p>I also define an Application controller:</p>
+<pre data-lang="javascript" style="background-color:#2b303b;color:#c0c5ce;" class="language-javascript "><code class="language-javascript" data-lang="javascript"><span style="color:#bf616a;">App</span><span>.</span><span style="color:#bf616a;">ApplicationController </span><span>= </span><span style="color:#bf616a;">Ember</span><span>.</span><span style="color:#bf616a;">ObjectController</span><span>.</span><span style="color:#8fa1b3;">extend</span><span>({
+</span><span>    editorHTML: &quot;</span><span style="color:#a3be8c;">&lt;h1&gt;Instructions&lt;/h1&gt;Edit &lt;strong&gt;your&lt;/strong&gt; document here, and &lt;i&gt;see&lt;/i&gt; the Markdown appear  next door &amp;gt;&amp;gt;</span><span>&quot;,
+</span><span>    markdown: &quot;</span><span style="color:#a3be8c;"># Instructions</span><span style="color:#96b5b4;">\n\n</span><span style="color:#a3be8c;">Edit your **document** here, and *see* the Markdown appear next door &gt;&gt;</span><span>&quot;
+</span><span>});
+</span></code></pre>
+<p>This has two properties - <code>editorHTML</code> which will be bound to the the current
+HTML of the contenteditable, and <code>markdown</code> which will be bound to the parsed
+markdown of the contenteditable. Here, I’ve hard coded the HTML and markdown
+strings to initialise the values. In real life you will probably have Markdown
+stored in a database and will use something like <code>showdown.js</code> or your backend’s
+Markdown parser to build up the HTML.</p>
+<p>Finally, to make the HTML and markdown render correctly (and safely) in the
+browser, a little handlebars helper is required. This just makes the text safe
+(strips tags) and converts newlines to <code>&lt;br&gt;</code> tags.</p>
+<pre data-lang="javascript" style="background-color:#2b303b;color:#c0c5ce;" class="language-javascript "><code class="language-javascript" data-lang="javascript"><span style="color:#bf616a;">Ember</span><span>.</span><span style="color:#bf616a;">Handlebars</span><span>.</span><span style="color:#8fa1b3;">registerBoundHelper</span><span>(&#39;</span><span style="color:#a3be8c;">breaklines</span><span>&#39;, </span><span style="color:#b48ead;">function</span><span>(</span><span style="color:#bf616a;">text</span><span>) {
+</span><span>    </span><span style="color:#bf616a;">text </span><span>= </span><span style="color:#bf616a;">Ember</span><span>.</span><span style="color:#bf616a;">Handlebars</span><span>.</span><span style="color:#bf616a;">Utils</span><span>.</span><span style="color:#8fa1b3;">escapeExpression</span><span>(</span><span style="color:#bf616a;">text</span><span>);
+</span><span>    </span><span style="color:#bf616a;">text </span><span>= </span><span style="color:#bf616a;">text</span><span>.</span><span style="color:#96b5b4;">replace</span><span>(/</span><span style="color:#96b5b4;">(</span><span style="color:#d08770;">\r\n</span><span>|</span><span style="color:#d08770;">\n</span><span>|</span><span style="color:#d08770;">\r</span><span style="color:#96b5b4;">)</span><span>/</span><span style="color:#b48ead;">gm</span><span>, &#39;</span><span style="color:#a3be8c;">&lt;br&gt;</span><span>&#39;);
+</span><span>    </span><span style="color:#b48ead;">return </span><span>new Ember.Handlebars.SafeString(</span><span style="color:#bf616a;">text</span><span>);
+</span><span>});
+</span></code></pre>
+<p>All we need then is a template in our index.html:</p>
+<pre data-lang="html" style="background-color:#2b303b;color:#c0c5ce;" class="language-html "><code class="language-html" data-lang="html"><span>&lt;</span><span style="color:#bf616a;">script </span><span style="color:#d08770;">type</span><span>=&quot;</span><span style="color:#a3be8c;">text/x-handlebars</span><span>&quot; </span><span style="color:#8fa1b3;">id</span><span>=&quot;</span><span style="color:#a3be8c;">application</span><span>&quot;&gt;
+</span><span>    &lt;div class=&quot;editor&quot;&gt;
+</span><span>        {{view Ember.DemarcateEditor valueBinding=&quot;editorHTML&quot; markdownBinding=&quot;markdown&quot;}}
+</span><span>    &lt;/div&gt;
+</span><span>    
+</span><span>    &lt;div class=&quot;output-wrapper&quot;&gt;
+</span><span>        &lt;div class=&quot;markdown&quot;&gt;
+</span><span>            {{breaklines markdown}}
+</span><span>        &lt;/div&gt;
+</span><span>        &lt;div class=&quot;html&quot;&gt;
+</span><span>            {{breaklines editorHTML}}
+</span><span>        &lt;/div&gt;
+</span><span>    &lt;/div&gt;
+</span><span>&lt;/</span><span style="color:#bf616a;">script</span><span>&gt;
+</span></code></pre>
+<p>This just includes the <code>Ember.DemarcateEditor</code> view in the template (which is
+defined in a separate file) and then outputs the HTML and markdown in the view
+for comparison. Of course some CSS is required so it doesn’t look too horrible.</p>
+<blockquote>
+<p><strong>Note</strong> that for the view I’ve included markdownBinding=“markdown”. This is
+because the value of the contenteditable is it’s HTML, so a separate binding
+is used for the markdown output.</p>
+</blockquote>
+<h2 id="building-an-ember-component">Building an Ember.Component</h2>
+<p>If you listen to the Ember experts talk - for instance <a rel="noopener nofollow noreferrer" target="_blank" href="http://www.youtube.com/watch?v=zC7o1YkmkG0">this video on
+Components</a> - then Ember’s
+Components are the future. Basically they are reusable bits of interface which
+provide a simple interface for binding data and responding to events. We can
+convert our DemarcateEditor view into an Ember.Component quite easily.</p>
+<p>Firstly, we need to add a template to our <code>index.html</code>:</p>
+<pre data-lang="html" style="background-color:#2b303b;color:#c0c5ce;" class="language-html "><code class="language-html" data-lang="html"><span>&lt;</span><span style="color:#bf616a;">script </span><span style="color:#d08770;">type</span><span>=&quot;</span><span style="color:#a3be8c;">text/x-handlebars</span><span>&quot; </span><span style="color:#8fa1b3;">id</span><span>=&quot;</span><span style="color:#a3be8c;">components/demarcate-editor</span><span>&quot;&gt;
+</span><span>    {{editorHTML}}
+</span><span>&lt;/</span><span style="color:#bf616a;">script</span><span>&gt;
+</span></code></pre>
+<p>This fairly trivial bit of code simply creates a template (note the
+<code>components/</code> in front of the ID, which tells Ember its a component template)
+and outputs the <code>editorHTML</code> variable using a Handlebars tag. Next we need to
+update our <code>application</code> template so that it imports the Component rather than
+the View. This turns out to be quite simple as well.</p>
+<p>Replace the line</p>
+<pre data-lang="javascript" style="background-color:#2b303b;color:#c0c5ce;" class="language-javascript "><code class="language-javascript" data-lang="javascript"><span>{{</span><span style="color:#bf616a;">view Ember</span><span>.</span><span style="color:#bf616a;">DemarcateEditor valueBinding</span><span>=&quot;</span><span style="color:#a3be8c;">editorHTML</span><span>&quot; </span><span style="color:#bf616a;">markdownBinding</span><span>=&quot;</span><span style="color:#a3be8c;">markdown</span><span>&quot;}}
+</span></code></pre>
+<p>with the line</p>
+<pre data-lang="javascript" style="background-color:#2b303b;color:#c0c5ce;" class="language-javascript "><code class="language-javascript" data-lang="javascript"><span>{{</span><span style="color:#bf616a;">demarcate</span><span>-</span><span style="color:#bf616a;">editor value</span><span>=</span><span style="color:#bf616a;">editorHTML markdown</span><span>=</span><span style="color:#bf616a;">markdown</span><span>}}
+</span></code></pre>
+<p>Ember recognises that the <code>{{demarcate-editor ...}}</code> tag is a reference to a
+<code>DemarcateEditorComponent</code> object. It also realises that we want a template with
+ID <code>components/demarcate-editor</code> to render the component. The <code>value</code> and
+<code>markdown</code> attributes are bindings to variables on the controller scope, even
+though we don’t have the <code>Binding</code> keyword which the view requires. In this
+case, our Application controller has properties <code>editorHTML</code> and <code>markdown</code>, and
+the Component will reference these properties.</p>
+<blockquote>
+<p><strong>NOTE</strong> As the properties passed to the component are bound, when the
+Component changes the properties then these changes will propogate to any
+reference within the template, and also back up in to the controller itself.
+Similarly, if another component or the controller changes the property, then
+the changes will automatically propogate into the component.</p>
+</blockquote>
+<p>We also need to do is to provide the code behind the component. In this case,
+its a simple matter of renaming our view to a component.</p>
+<pre data-lang="javascript" style="background-color:#2b303b;color:#c0c5ce;" class="language-javascript "><code class="language-javascript" data-lang="javascript"><span style="color:#bf616a;">Ember</span><span>.</span><span style="color:#bf616a;">DemarcateEditor </span><span>= </span><span style="color:#bf616a;">Em</span><span>.</span><span style="color:#bf616a;">View</span><span>.</span><span style="color:#8fa1b3;">extend</span><span>({ ... });
+</span></code></pre>
+<p>becomes</p>
+<pre data-lang="javascript" style="background-color:#2b303b;color:#c0c5ce;" class="language-javascript "><code class="language-javascript" data-lang="javascript"><span style="color:#bf616a;">App</span><span>.</span><span style="color:#bf616a;">DemarcateEditorComponent </span><span>= </span><span style="color:#bf616a;">Em</span><span>.</span><span style="color:#bf616a;">Component</span><span>.</span><span style="color:#8fa1b3;">extend</span><span>({ ... });
+</span></code></pre>
+<p>The naming is important - the words must be capitalised, and the last word must
+be <code>Component</code>. When searching for the correct class to use, Ember removes the
+word <code>Component</code>, replaces each word with its lowercase equivalent and separates
+them with dashes. In this instance, <code>DemarcateEditorComponent</code> becomes
+<code>demarcate-editor</code> which we used in our template above.</p>
+<h2 id="component-vs-view">Component vs View</h2>
+<p>There was little difference between the implementation of an <code>Ember.Component</code>
+and an <code>Ember.View</code> and the functionality itself was identical. Both provide a
+way to encapsulate particular behaviours in a reusable front-end class. They
+make your templates neater and more concise. In addition, the restricted
+interface provided by Components makes them easy and predictable to use. Ember’s
+Components try to predict the way that the HTML specification will evolve in the
+coming years so are a good tool for new applications.</p>
+<p>Either way, building an Ember / demarcate editor proved to be a piece of cake!</p>
+</article>
+
+<div class="container col">
+  <h2>Comments</h2>
+  <blockquote>Comments are powered by github and <a href="https://giscus.app">giscus</a></blockquote>
+  <script src="https://giscus.app/client.js"
+        data-repo="will-hart/will-hart.github.io"
+        data-repo-id="MDEwOlJlcG9zaXRvcnkzMjQ2NjY3Mzg="
+        data-category="General"
+        data-category-id="DIC_kwDOE1oFcs4CtiK6"
+        data-mapping="og:title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+  </script>
+</div>
+</div>
+
+  <footer id="footer">
+    <div class="container col">
+      This website was hand-made using Zola and Tera.
+      All text and images are available under CC0 1.0 Universal and code under MIT unless otherwise specified. See <a href="https://github.com/will-hart/willhart.io/blob/main/LICENSE.md">LICENSE.md</a> for more.
+    </div>
+  </footer>
+</body>
+
+</html>

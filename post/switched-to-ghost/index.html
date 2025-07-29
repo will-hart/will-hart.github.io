@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Switched to Ghost | willhart.io</title>
+
+
+  <link rel="icon" type="image/x-icon" href="/icons/icon_light_32x32.png">
+
+  
+<meta name="description" content="A quick note about switching this blog to Ghost. Posted on https://willhart.io" />
+<meta property="og:description" content="A quick note about switching this blog to Ghost" />
+<meta property="og:title" content="Switched to Ghost" />
+<meta property="og:url" content="https://willhart.io/post/switched-to-ghost/">
+<meta property="og:type" content="article" />
+<meta property="og:locale" content="en_AU" />
+
+
+  <link rel="stylesheet" href="https://willhart.io/global.css?h=f83cd20cd0df26d72c2b" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sono:wght@200..800&display=swap" rel="stylesheet">
+
+  
+
+  <!-- Cloudflare Web Analytics -->
+  <script defer src='https://static.cloudflareinsights.com/beacon.min.js'
+    data-cf-beacon='{"token": "310f93cab66a42c5a328f246cc053025"}'></script>
+  <!-- End Cloudflare Web Analytics -->
+
+  <!-- Light/Dark theme toggling -->
+  <script type="text/javascript">
+    const storageKey = "websiteTheme";
+
+    // apply theme once we have a DOM
+    document.addEventListener("DOMContentLoaded", () => {
+      applyTheme();
+    })
+
+    // a function that toggles between light and dark theme
+    const toggleTheme = () => {
+      localStorage.setItem(storageKey, localStorage.getItem(storageKey) === "d" ? "l" : "d" );
+      applyTheme();
+    }
+
+    // a function that actually applies the theme
+    const applyTheme = () => {
+      const useDarkTheme = localStorage.getItem(storageKey) === "d";
+      document.getElementsByTagName("html")[0].className = useDarkTheme ? "dark" : "";
+      document.getElementById("theme-toggle").textContent = useDarkTheme ? "🔆" : "🌑";
+    }
+  </script>
+
+  <script type="speculationrules">
+  {
+    "prerender": [
+      { "where": { "selector_matches": "a" } }
+    ]
+  }
+  </script></head>
+
+<body>
+  <nav id="header">
+    <a href="/" aria-label="Website Logo and Link to Home Page">
+      <div id="logo" >&nbsp;</div>
+    </a>
+    <span>
+      <button type="button" id="theme-toggle" aria-label="Toggle Theme" onClick="toggleTheme()">🌑</button>
+      <a class="header-item" href="/post">POSTS</a>
+      <a class="header-item" href="/tag">TAGS</a>
+      <span class="header-item hide-when-slim">|</span>
+      <a class="header-item hide-when-slim" href="/tag/projects">PROJECTS</a>
+      <a class="header-item hide-when-slim" href="/tag/gamedev">GAMEDEV</a>
+      <a class="header-item hide-when-slim" href="/tag/electronics">ELECTRONICS</a>
+    </span>
+  </nav>
+
+  
+
+<div class="container col mb mt">
+  <h1>Switched to Ghost</h1>
+  <div class="col txtsm">
+    <span>Posted by Will Hart on 2015-04-27</span>
+    <div>
+      <span>See also:</span>
+      
+      <a class="txtsm mr" href="https://willhart.io/tag/random/">#random</a>
+      
+    </div>
+  </div>
+</div>
+
+
+
+<article class="container col mblg"><p>I had a look at my website the other day and I realised that the last time I
+posted anything was March 2014, over a year ago. Prompted by an <a rel="noopener nofollow noreferrer" target="_blank" href="http://dailyjs.com/2015/04/23/migrating-dailyjs-to-ghost/">article on
+dailyjs</a> I decided to
+give <a rel="noopener nofollow noreferrer" target="_blank" href="https://ghost.org/">ghost</a> a go.</p>
+<p>I’ve had my eye on ghost for some time but never made the plunge as I couldn’t
+work out a neat way to redirect my old static website URLs to a new ghost
+instance. The dailyjs article is quite straightforward, it just uses a JSON file
+to describe URL redirects and sets up listeners in an express app which contains
+Ghost. My implementation is very slighlty different as it lets me use the ghost
+config file to specify the base URL, which is useful for testing. The entire
+code is trivial at about 20 lines.</p>
+<pre data-lang="javascript" style="background-color:#2b303b;color:#c0c5ce;" class="language-javascript "><code class="language-javascript" data-lang="javascript"><span style="color:#b48ead;">var </span><span style="color:#bf616a;">ghost </span><span>= </span><span style="color:#96b5b4;">require</span><span>(&#39;</span><span style="color:#a3be8c;">ghost</span><span>&#39;);
+</span><span style="color:#b48ead;">var </span><span style="color:#bf616a;">express </span><span>= </span><span style="color:#96b5b4;">require</span><span>(&#39;</span><span style="color:#a3be8c;">express</span><span>&#39;);
+</span><span style="color:#b48ead;">var </span><span style="color:#bf616a;">app </span><span>= </span><span style="color:#8fa1b3;">express</span><span>();
+</span><span>
+</span><span style="color:#b48ead;">var </span><span style="color:#bf616a;">redirects </span><span>= </span><span style="color:#96b5b4;">require</span><span>(&#39;</span><span style="color:#a3be8c;">./redirects.json</span><span>&#39;);
+</span><span>
+</span><span style="color:#8fa1b3;">ghost</span><span>({config: __dirname + &#39;</span><span style="color:#a3be8c;">/ghost-config.js</span><span>&#39;}).</span><span style="color:#96b5b4;">then</span><span>(</span><span style="color:#b48ead;">function</span><span>(</span><span style="color:#bf616a;">ghostServer</span><span>) {
+</span><span>  </span><span style="color:#bf616a;">app</span><span>.</span><span style="color:#8fa1b3;">use</span><span>(</span><span style="color:#bf616a;">ghostServer</span><span>.</span><span style="color:#bf616a;">rootApp</span><span>);
+</span><span>
+</span><span>  </span><span style="color:#bf616a;">redirects</span><span>.</span><span style="color:#96b5b4;">forEach</span><span>(</span><span style="color:#b48ead;">function</span><span>(</span><span style="color:#bf616a;">redirect</span><span>) {
+</span><span>    </span><span style="color:#ebcb8b;">console</span><span>.</span><span style="color:#96b5b4;">log</span><span>(&#39;</span><span style="color:#a3be8c;">Redirecting %s to %s</span><span>&#39;, </span><span style="color:#bf616a;">redirect</span><span>[</span><span style="color:#d08770;">0</span><span>], </span><span style="color:#bf616a;">newUrl</span><span>);
+</span><span>
+</span><span>    </span><span style="color:#bf616a;">app</span><span>.</span><span style="color:#96b5b4;">get</span><span>(</span><span style="color:#bf616a;">redirect</span><span>[</span><span style="color:#d08770;">0</span><span>], </span><span style="color:#b48ead;">function</span><span>(</span><span style="color:#bf616a;">req</span><span>, </span><span style="color:#bf616a;">res</span><span>) {
+</span><span>      </span><span style="color:#bf616a;">res</span><span>.</span><span style="color:#8fa1b3;">redirect</span><span>(</span><span style="color:#bf616a;">redirect</span><span>[</span><span style="color:#d08770;">1</span><span>]);
+</span><span>    });
+</span><span>  });
+</span><span>
+</span><span>  </span><span style="color:#bf616a;">ghostServer</span><span>.</span><span style="color:#8fa1b3;">start</span><span>(</span><span style="color:#bf616a;">app</span><span>);
+</span><span>});
+</span></code></pre>
+<p>My <code>redirects.json</code> file looks like:</p>
+<pre data-lang="json" style="background-color:#2b303b;color:#c0c5ce;" class="language-json "><code class="language-json" data-lang="json"><span>[
+</span><span>    [
+</span><span>        &quot;</span><span style="color:#a3be8c;">/charlieplexing-leds-with-arduino.html</span><span>&quot;,
+</span><span>        &quot;</span><span style="color:#a3be8c;">http://www.williamhart.info/charlieplexing-leds-with-arduino/</span><span>&quot;
+</span><span>    ],
+</span><span>    </span><span style="background-color:#bf616a;color:#2b303b;">....</span><span>
+</span><span>    </span><span style="background-color:#bf616a;color:#2b303b;">...</span><span>
+</span><span>]
+</span></code></pre>
+<p>I’m not setting myself a target or anything like that but going back to a CMS
+should make it easier to post new articles when something comes to mind (for
+instance updating my old Ember tutorial which is past overdue!)</p>
+<blockquote>
+<p><strong>NOTE</strong> I’ve since noticed that disqus comments haven’t properly migrated
+over. I’ve mapped them in the disqus interface using a CSV file but they don’t
+appear on the post. I’ll keep investigating.</p>
+</blockquote>
+</article>
+
+<div class="container col">
+  <h2>Comments</h2>
+  <blockquote>Comments are powered by github and <a href="https://giscus.app">giscus</a></blockquote>
+  <script src="https://giscus.app/client.js"
+        data-repo="will-hart/will-hart.github.io"
+        data-repo-id="MDEwOlJlcG9zaXRvcnkzMjQ2NjY3Mzg="
+        data-category="General"
+        data-category-id="DIC_kwDOE1oFcs4CtiK6"
+        data-mapping="og:title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+  </script>
+</div>
+</div>
+
+  <footer id="footer">
+    <div class="container col">
+      This website was hand-made using Zola and Tera.
+      All text and images are available under CC0 1.0 Universal and code under MIT unless otherwise specified. See <a href="https://github.com/will-hart/willhart.io/blob/main/LICENSE.md">LICENSE.md</a> for more.
+    </div>
+  </footer>
+</body>
+
+</html>

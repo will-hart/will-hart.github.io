@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>demarcate.js 2 redesign | willhart.io</title>
+
+
+  <link rel="icon" type="image/x-icon" href="/icons/icon_light_32x32.png">
+
+  
+<meta name="description" content="A quick review of the upcoming features in demarcate.js version 2. Posted on https://willhart.io" />
+<meta property="og:description" content="A quick review of the upcoming features in demarcate.js version 2" />
+<meta property="og:title" content="demarcate.js 2 redesign" />
+<meta property="og:url" content="https://willhart.io/post/demarcatejs-2-redesign/">
+<meta property="og:type" content="article" />
+<meta property="og:locale" content="en_AU" />
+
+
+  <link rel="stylesheet" href="https://willhart.io/global.css?h=f83cd20cd0df26d72c2b" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sono:wght@200..800&display=swap" rel="stylesheet">
+
+  
+
+  <!-- Cloudflare Web Analytics -->
+  <script defer src='https://static.cloudflareinsights.com/beacon.min.js'
+    data-cf-beacon='{"token": "310f93cab66a42c5a328f246cc053025"}'></script>
+  <!-- End Cloudflare Web Analytics -->
+
+  <!-- Light/Dark theme toggling -->
+  <script type="text/javascript">
+    const storageKey = "websiteTheme";
+
+    // apply theme once we have a DOM
+    document.addEventListener("DOMContentLoaded", () => {
+      applyTheme();
+    })
+
+    // a function that toggles between light and dark theme
+    const toggleTheme = () => {
+      localStorage.setItem(storageKey, localStorage.getItem(storageKey) === "d" ? "l" : "d" );
+      applyTheme();
+    }
+
+    // a function that actually applies the theme
+    const applyTheme = () => {
+      const useDarkTheme = localStorage.getItem(storageKey) === "d";
+      document.getElementsByTagName("html")[0].className = useDarkTheme ? "dark" : "";
+      document.getElementById("theme-toggle").textContent = useDarkTheme ? "🔆" : "🌑";
+    }
+  </script>
+
+  <script type="speculationrules">
+  {
+    "prerender": [
+      { "where": { "selector_matches": "a" } }
+    ]
+  }
+  </script></head>
+
+<body>
+  <nav id="header">
+    <a href="/" aria-label="Website Logo and Link to Home Page">
+      <div id="logo" >&nbsp;</div>
+    </a>
+    <span>
+      <button type="button" id="theme-toggle" aria-label="Toggle Theme" onClick="toggleTheme()">🌑</button>
+      <a class="header-item" href="/post">POSTS</a>
+      <a class="header-item" href="/tag">TAGS</a>
+      <span class="header-item hide-when-slim">|</span>
+      <a class="header-item hide-when-slim" href="/tag/projects">PROJECTS</a>
+      <a class="header-item hide-when-slim" href="/tag/gamedev">GAMEDEV</a>
+      <a class="header-item hide-when-slim" href="/tag/electronics">ELECTRONICS</a>
+    </span>
+  </nav>
+
+  
+
+<div class="container col mb mt">
+  <h1>demarcate.js 2 redesign</h1>
+  <div class="col txtsm">
+    <span>Posted by Will Hart on 2013-08-25</span>
+    <div>
+      <span>See also:</span>
+      
+      <a class="txtsm mr" href="https://willhart.io/tag/code/">#code</a>
+      
+      <a class="txtsm mr" href="https://willhart.io/tag/projects/">#projects</a>
+      
+    </div>
+  </div>
+</div>
+
+
+
+<article class="container col mblg"><h2 id="background">Background</h2>
+<p>demarcate.js is an “in-place” editor for Markdown that is free and open source.
+It is designed to be a text editor which integrated directly into the browser
+and lets you edit in a what-you-see-is-what-you-get (WYSIWYG) way. When you are
+finished editing - <strong>HEY PRESTO!</strong> - without having to type any Markdown you
+have a properly formatted Markdown document. demarcate.js is <a rel="noopener nofollow noreferrer" target="_blank" href="https://github.com/will-hart/demarcate.js">available on
+github</a>.</p>
+<h2 id="issues-with-version-1-x-x">Issues with version 1.x.x</h2>
+<p>demarcate.js was an experiment which grew out of my desire for a browser text
+editor that could easily push out Markdown. However version 1.x.x did have some
+issues:</p>
+<ol>
+<li>mobile browsers weren’t supported</li>
+<li>the UI was a bit clunky to use</li>
+<li>the UI code was a bit ugly</li>
+<li>it required jQuery and showdown to operate</li>
+</ol>
+<p>With this in mind I embarked on a review of demarcate.js.</p>
+<h2 id="contenteditable">contentEditable</h2>
+<p>The first thing I decided was that the clunky textarea based editing had to go.
+It required a lot of hackish code to resize the <code>textarea</code> based on formatting,
+and needed a lot of DOM editing and removal. I decide to use the
+<a rel="noopener nofollow noreferrer" target="_blank" href="https://developer.mozilla.org/en-US/docs/Web/HTML/Content_Editable">contentEditable</a>
+feature that virtually all modern browsers
+(<a rel="noopener nofollow noreferrer" target="_blank" href="http://caniuse.com/#search=contenteditable">http://caniuse.com/#search=contenteditable</a>)
+support. This allows a much richer UI and through use of a few shortcut keys can
+be made to work closely to a “desktop” word processor.</p>
+<h2 id="modularity">Modularity</h2>
+<p>In working on Blitz Logger recently I’ve had to think a lot about modularity.
+One of the upsides of this is that I’ve had a bit more practice. demarcate.js
+now exposes a single <code>parse</code> function which is used to convert the HTML DOM into
+Markdown. This parser self-registers against the demarcate library and is a
+separate object in its own right. This makes it much easier now to override the
+Markdown parser with a custom one such as the jQuery based parser from version
+1.1.4 or even perhaps a restructured text one?</p>
+<h2 id="coming-soon">Coming Soon</h2>
+<p>Demarcate.js 2.0 is nearly ready for release. You can have a look at the develop
+branch on github.</p>
+</article>
+
+<div class="container col">
+  <h2>Comments</h2>
+  <blockquote>Comments are powered by github and <a href="https://giscus.app">giscus</a></blockquote>
+  <script src="https://giscus.app/client.js"
+        data-repo="will-hart/will-hart.github.io"
+        data-repo-id="MDEwOlJlcG9zaXRvcnkzMjQ2NjY3Mzg="
+        data-category="General"
+        data-category-id="DIC_kwDOE1oFcs4CtiK6"
+        data-mapping="og:title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+  </script>
+</div>
+</div>
+
+  <footer id="footer">
+    <div class="container col">
+      This website was hand-made using Zola and Tera.
+      All text and images are available under CC0 1.0 Universal and code under MIT unless otherwise specified. See <a href="https://github.com/will-hart/willhart.io/blob/main/LICENSE.md">LICENSE.md</a> for more.
+    </div>
+  </footer>
+</body>
+
+</html>
