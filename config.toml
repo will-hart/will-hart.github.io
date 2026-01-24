@@ -20,10 +20,10 @@ default_language = "en"
 
 minify_html = false
 
+[markdown.highlighting]
+theme = "nord"
+
 [markdown]
-# Whether to do syntax highlighting
-# Theme can be customised by setting the `highlight_theme` variable to a theme supported by Zola
-highlight_code = true
 render_emoji = true
 external_links_target_blank = true
 external_links_no_follow = true
