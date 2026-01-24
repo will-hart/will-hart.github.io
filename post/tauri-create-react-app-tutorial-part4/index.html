@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+        <title>Tauri and Create React App Part 4 - Extending commands | willhart.io</title>
+
+        <link
+            rel="icon"
+            type="image/x-icon"
+            href="/icons/icon_light_32x32.png"
+        />
+
+        
+<meta name="description" content="Part 4 of a tutorial for setting up Tauri (an electron alternative) and Create React App. Here we extend our hook and command to support multiple counters.. Posted on https://willhart.io" />
+<meta property="og:description" content="Part 4 of a tutorial for setting up Tauri (an electron alternative) and Create React App. Here we extend our hook and command to support multiple counters." />
+<meta property="og:title" content="Tauri and Create React App Part 4 - Extending commands" />
+<meta property="og:url" content="https://willhart.io/post/tauri-create-react-app-tutorial-part4/">
+<meta property="og:type" content="article" />
+<meta property="og:locale" content="en_AU" />
+
+
+        <link
+            rel="stylesheet"
+            href="https://willhart.io/global.css?h=f83cd20cd0df26d72c2b"
+        />
+
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Sono:wght@200..800&display=swap"
+            rel="stylesheet"
+        />
+
+        
+
+        <!-- Cloudflare Web Analytics -->
+        <script
+            defer
+            src="https://static.cloudflareinsights.com/beacon.min.js"
+            data-cf-beacon='{"token": "310f93cab66a42c5a328f246cc053025"}'
+        ></script>
+        <!-- End Cloudflare Web Analytics -->
+
+        <!-- Light/Dark theme toggling -->
+        <script>
+            const storageKey = "websiteTheme";
+
+            // apply theme once we have a DOM
+            document.addEventListener("DOMContentLoaded", () => {
+                applyTheme();
+            });
+
+            // a function that toggles between light and dark theme
+            const toggleTheme = () => {
+                localStorage.setItem(
+                    storageKey,
+                    localStorage.getItem(storageKey) === "d" ? "l" : "d",
+                );
+                applyTheme();
+            };
+
+            // a function that actually applies the theme
+            const applyTheme = () => {
+                const useDarkTheme = localStorage.getItem(storageKey) === "d";
+                document.getElementsByTagName("html")[0].className =
+                    useDarkTheme ? "dark" : "";
+                document.getElementById("theme-toggle").textContent =
+                    useDarkTheme ? "🔆" : "🌑";
+            };
+        </script>
+
+        <script type="speculationrules">
+            {
+                "prerender": [{ "where": { "selector_matches": "a" } }]
+            }
+        </script>
+    </head>
+
+    <body>
+        <nav id="header">
+            <a href="/" aria-label="Website Logo and Link to Home Page">
+                <div id="logo">&nbsp;</div>
+            </a>
+            <span>
+                <button
+                    type="button"
+                    id="theme-toggle"
+                    aria-label="Toggle Theme"
+                    onClick="toggleTheme()"
+                >
+                    🌑
+                </button>
+                <a class="header-item" href="/post">POSTS</a>
+                <a class="header-item" href="/tag">TAGS</a>
+                <span class="header-item hide-when-slim">|</span>
+                <a class="header-item hide-when-slim" href="/tag/projects"
+                    >PROJECTS</a
+                >
+                <a class="header-item hide-when-slim" href="/tag/gamedev"
+                    >GAMEDEV</a
+                >
+                <a class="header-item hide-when-slim" href="/tag/electronics"
+                    >ELECTRONICS</a
+                >
+            </span>
+        </nav>
+
+        
+
+<div class="container col mb mt">
+  <h1>Tauri and Create React App Part 4 - Extending commands</h1>
+  <div class="col txtsm">
+    <span>Posted by Will Hart on 2021-08-29</span>
+    <div>
+      <span>See also:</span>
+      
+      <a class="txtsm mr" href="https://willhart.io/tag/tutorials/">#tutorials</a>
+      
+      <a class="txtsm mr" href="https://willhart.io/tag/code/">#code</a>
+      
+    </div>
+  </div>
+</div>
+
+
+
+<article class="container col mblg"><h2 id="recap">Recap</h2>
+<p>In <a href="/post/20210826_tauri_create_react_app_tutorial_part1">part 1</a> of this
+tutorial series we set up a Tauri and create-react-app app and added a basic
+non-functional counter. In <a href="/post/20210827_tauri_create_react_app_tutorial_part2">part
+2</a> we created and invoked
+a command for incrementing our counter. In <a href="/post/20210828_tauri_create_react_app_tutorial_part3">part
+3</a> we created and invoked
+a command for incrementing our counter.</p>
+<p>In this part, we will update our command and hooks to support multiple different
+counters indexed by ID.</p>
+<h2 id="basic-concept">Basic concept</h2>
+<p>If you recall from <a href="/post/20210830_tauri_create_react_app_tutorial_part3">part 3 of this
+series</a>, the <code>useSWR</code> uses
+the first argument as a <code>key</code> to cache queries. The key can be an array, and the
+key is passed to the <code>fetcher</code> function as arguments. We’re going to use the key
+to store a <code>counterId</code> variable that we can use to maintain separate counters.
+We’ll also need to update our commands in the rust code to support an ID.</p>
+<h2 id="update-our-hook-to-support-counter-ids">Update our hook to support counter Ids</h2>
+<p>We need to update our <code>useInvoke</code> hook in <code>useInvoke.tsx</code> to support this new
+requirement. We can start by updating the fetcher to take an <code>id</code> as an
+argument:</p>
+<pre class="giallo" style="color: #D8DEE9; background-color: #2E3440;"><code data-lang="typescript"><span class="giallo-l"><span style="color: #81A1C1;">export const</span><span style="color: #88C0D0;"> invokeFetcher</span><span style="color: #81A1C1;"> = async</span><span style="color: #ECEFF4;"> &lt;</span><span style="color: #8FBCBB;">TArgs</span><span style="color: #81A1C1;"> extends</span><span style="color: #8FBCBB;"> Record</span><span style="color: #ECEFF4;">&lt;</span><span style="color: #8FBCBB;">string</span><span style="color: #ECEFF4;">,</span><span style="color: #8FBCBB;"> any</span><span style="color: #ECEFF4;">&gt;,</span><span style="color: #8FBCBB;"> TResult</span><span style="color: #ECEFF4;">&gt;</span><span>(</span></span>
+<span class="giallo-l"><span>  command</span><span style="color: #81A1C1;">:</span><span style="color: #8FBCBB;"> string</span><span style="color: #ECEFF4;">,</span></span>
+<span class="giallo-l"><span>  id</span><span style="color: #81A1C1;">:</span><span style="color: #8FBCBB;"> number</span><span style="color: #ECEFF4;">,</span></span>
+<span class="giallo-l"><span>  args</span><span style="color: #81A1C1;">:</span><span style="color: #8FBCBB;"> TArgs</span></span>
+<span class="giallo-l"><span>)</span><span style="color: #81A1C1;">:</span><span style="color: #8FBCBB;"> Promise</span><span style="color: #ECEFF4;">&lt;</span><span style="color: #8FBCBB;">TResult</span><span style="color: #ECEFF4;">&gt;</span><span style="color: #81A1C1;"> =&gt;</span><span style="color: #88C0D0;"> invoke</span><span style="color: #ECEFF4;">&lt;</span><span style="color: #8FBCBB;">TResult</span><span style="color: #ECEFF4;">&gt;</span><span>(command</span><span style="color: #ECEFF4;">, {</span><span> id</span><span style="color: #ECEFF4;">,</span><span style="color: #81A1C1;"> ...</span><span>args</span><span style="color: #ECEFF4;"> }</span><span>)</span></span></code></pre>
+<p>The main change here is that we are now taking an <code>id</code> as a second argument, and
+spreading it into the args sent to the invoke command. We then need to update
+our <code>useInvoke</code> hook to:</p>
+<pre class="giallo" style="color: #D8DEE9; background-color: #2E3440;"><code data-lang="typescript"><span class="giallo-l"><span style="color: #81A1C1;">export const</span><span style="color: #88C0D0;"> useInvoke</span><span style="color: #81A1C1;"> =</span><span style="color: #ECEFF4;"> &lt;</span><span style="color: #8FBCBB;">TResult</span><span style="color: #ECEFF4;">&gt;</span><span>(</span></span>
+<span class="giallo-l"><span>  id</span><span style="color: #81A1C1;">:</span><span style="color: #8FBCBB;"> number</span><span style="color: #ECEFF4;">,</span></span>
+<span class="giallo-l"><span>  getCommand</span><span style="color: #81A1C1;">:</span><span style="color: #8FBCBB;"> string</span><span style="color: #ECEFF4;">,</span></span>
+<span class="giallo-l"><span>  setCommand</span><span style="color: #81A1C1;">:</span><span style="color: #8FBCBB;"> string</span></span>
+<span class="giallo-l"><span>)</span><span style="color: #81A1C1;"> =&gt;</span><span style="color: #ECEFF4;"> {</span></span>
+<span class="giallo-l"><span style="color: #616E88;">  // run the invoke command to get by ID</span></span>
+<span class="giallo-l"><span style="color: #81A1C1;">  const</span><span style="color: #ECEFF4;"> {</span><span> data</span><span style="color: #ECEFF4;">,</span><span> error</span><span style="color: #ECEFF4;">,</span><span> mutate</span><span style="color: #ECEFF4;"> }</span><span style="color: #81A1C1;"> =</span><span style="color: #88C0D0;"> useSWR</span><span style="color: #ECEFF4;">&lt;</span><span style="color: #8FBCBB;">TResult</span><span style="color: #ECEFF4;">&gt;</span><span>(</span></span>
+<span class="giallo-l"><span>    [getCommand</span><span style="color: #ECEFF4;">,</span><span> id</span><span style="color: #ECEFF4;">,</span><span style="color: #81A1C1;"> null</span><span>]</span><span style="color: #ECEFF4;">,</span></span>
+<span class="giallo-l"><span>    invokeFetcher</span></span>
+<span class="giallo-l"><span>  )</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #616E88;">  // create an update function</span></span>
+<span class="giallo-l"><span style="color: #81A1C1;">  const</span><span> update</span><span style="color: #81A1C1;"> =</span><span style="color: #88C0D0;"> useCallback</span><span>(</span></span>
+<span class="giallo-l"><span style="color: #81A1C1;">    async</span><span style="color: #ECEFF4;"> (</span><span>newData</span><span style="color: #81A1C1;">:</span><span style="color: #8FBCBB;"> TResult</span><span style="color: #ECEFF4;">)</span><span style="color: #81A1C1;"> =&gt;</span><span style="color: #ECEFF4;"> {</span></span>
+<span class="giallo-l"><span style="color: #88C0D0;">      mutate</span><span>(</span><span style="color: #81A1C1;">await</span><span style="color: #88C0D0;"> invoke</span><span>(</span></span>
+<span class="giallo-l"><span>        setCommand</span><span style="color: #ECEFF4;">,</span></span>
+<span class="giallo-l"><span style="color: #ECEFF4;">        {</span><span> id</span><span style="color: #ECEFF4;">,</span><span style="color: #81A1C1;"> ...</span><span>newData</span><span style="color: #ECEFF4;"> }</span></span>
+<span class="giallo-l"><span>      )</span><span style="color: #ECEFF4;">,</span><span style="color: #81A1C1;"> false</span><span>)</span></span>
+<span class="giallo-l"><span style="color: #ECEFF4;">    },</span></span>
+<span class="giallo-l"><span>    [mutate</span><span style="color: #ECEFF4;">,</span><span> id</span><span style="color: #ECEFF4;">,</span><span> setCommand]</span></span>
+<span class="giallo-l"><span>  )</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #616E88;">  // unchanged</span></span>
+<span class="giallo-l"><span style="color: #ECEFF4;">}</span></span></code></pre>
+<p>We now pass the <code>id</code> to the hook, which is used as part of the <code>key</code> in
+<code>useSWR</code>. In our <code>update</code> function we add the <code>id</code> into the data payload sent to
+<code>invoke</code>. Other than that, not a lot has changed.</p>
+<h2 id="updating-our-front-end">Updating our front end</h2>
+<p>It would be nice at this point to factor out the <code>Counter</code> into a new component.
+This lets us pass the <code>counterId</code> as a prop. Create a new file, <code>Counter.tsx</code>
+and add the following:</p>
+<pre class="giallo" style="color: #D8DEE9; background-color: #2E3440;"><code data-lang="typescript"><span class="giallo-l"><span style="color: #81A1C1;">import</span><span style="color: #ECEFF4;"> {</span><span> useInvoke</span><span style="color: #ECEFF4;"> }</span><span style="color: #81A1C1;"> from</span><span style="color: #ECEFF4;"> &quot;</span><span style="color: #A3BE8C;">./useInvoke</span><span style="color: #ECEFF4;">&quot;</span><span style="color: #81A1C1;">;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #81A1C1;">const</span><span> defaultArgs</span><span style="color: #81A1C1;"> =</span><span style="color: #ECEFF4;"> {</span><span> delta</span><span style="color: #ECEFF4;">:</span><span style="color: #B48EAD;"> 1</span><span style="color: #ECEFF4;"> }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #81A1C1;">const</span><span style="color: #88C0D0;"> Counter</span><span style="color: #81A1C1;"> =</span><span style="color: #ECEFF4;"> ({</span><span> counterId</span><span style="color: #ECEFF4;"> }</span><span style="color: #81A1C1;">:</span><span style="color: #ECEFF4;"> {</span><span> counterId</span><span style="color: #81A1C1;">:</span><span style="color: #8FBCBB;"> number</span><span style="color: #ECEFF4;"> })</span><span style="color: #81A1C1;"> =&gt;</span><span style="color: #ECEFF4;"> {</span></span>
+<span class="giallo-l"><span style="color: #81A1C1;">  const</span><span style="color: #ECEFF4;"> {</span><span> data</span><span style="color: #ECEFF4;">:</span><span> counter</span><span style="color: #ECEFF4;">,</span><span> update</span><span style="color: #ECEFF4;"> }</span><span style="color: #81A1C1;"> =</span><span style="color: #88C0D0;"> useInvoke</span><span>(</span></span>
+<span class="giallo-l"><span>    counterId</span><span style="color: #ECEFF4;">,</span></span>
+<span class="giallo-l"><span style="color: #ECEFF4;">    &#39;</span><span style="color: #A3BE8C;">get_counter</span><span style="color: #ECEFF4;">&#39;,</span></span>
+<span class="giallo-l"><span style="color: #ECEFF4;">    &#39;</span><span style="color: #A3BE8C;">increment_counter</span><span style="color: #ECEFF4;">&#39;</span></span>
+<span class="giallo-l"><span>  )</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #81A1C1;">  return</span><span> (</span></span>
+<span class="giallo-l"><span>    &lt;</span><span style="color: #8FBCBB;">div</span><span>&gt;</span></span>
+<span class="giallo-l"><span style="color: #81A1C1;">      &lt;</span><span>button onClick</span><span style="color: #81A1C1;">=</span><span style="color: #ECEFF4;">{</span><span>() =&gt;</span><span style="color: #88C0D0;"> update</span><span style="color: #ECEFF4;">(</span><span>defaultArgs</span><span style="color: #ECEFF4;">)}</span><span style="color: #81A1C1;">&gt;</span><span>increment</span><span style="color: #81A1C1;">&lt;/</span><span>button</span><span style="color: #81A1C1;">&gt;</span></span>
+<span class="giallo-l"><span>      Counter</span><span style="color: #ECEFF4;"> {</span><span>counterId</span><span style="color: #ECEFF4;">}</span><span style="color: #81A1C1;">:</span><span style="color: #ECEFF4;"> {</span><span>counter</span><span style="color: #ECEFF4;">}</span></span>
+<span class="giallo-l"><span style="color: #81A1C1;">    &lt;/</span><span>div</span><span style="color: #81A1C1;">&gt;</span></span>
+<span class="giallo-l"><span>  )</span></span>
+<span class="giallo-l"><span style="color: #ECEFF4;">}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #81A1C1;">export default</span><span> Counter</span></span></code></pre>
+<p>This is basically copied over from our previous implementation inside <code>App.tsx</code>.
+Speaking of which, we can now use our <code>Counter</code> component inside <code>App.tsx</code>:</p>
+<pre class="giallo" style="color: #D8DEE9; background-color: #2E3440;"><code data-lang="typescript"><span class="giallo-l"><span style="color: #81A1C1;">import</span><span> Counter</span><span style="color: #81A1C1;"> from</span><span style="color: #ECEFF4;"> &#39;</span><span style="color: #A3BE8C;">./Counter</span><span style="color: #ECEFF4;">&#39;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #81A1C1;">const</span><span style="color: #88C0D0;"> App</span><span style="color: #81A1C1;"> =</span><span style="color: #ECEFF4;"> ()</span><span style="color: #81A1C1;"> =&gt;</span><span style="color: #ECEFF4;"> {</span></span>
+<span class="giallo-l"><span style="color: #81A1C1;">  return</span><span> (</span></span>
+<span class="giallo-l"><span>    &lt;</span><span style="color: #8FBCBB;">div</span><span>&gt;</span></span>
+<span class="giallo-l"><span style="color: #81A1C1;">      &lt;</span><span>Counter counterId</span><span style="color: #81A1C1;">=</span><span style="color: #ECEFF4;">{</span><span style="color: #B48EAD;">1</span><span style="color: #ECEFF4;">}</span><span style="color: #81A1C1;"> /&gt;</span></span>
+<span class="giallo-l"><span style="color: #81A1C1;">      &lt;</span><span>Counter counterId</span><span style="color: #81A1C1;">=</span><span style="color: #ECEFF4;">{</span><span style="color: #B48EAD;">1</span><span style="color: #ECEFF4;">}</span><span style="color: #81A1C1;"> /&gt;</span></span>
+<span class="giallo-l"><span style="color: #81A1C1;">      &lt;</span><span>Counter counterId</span><span style="color: #81A1C1;">=</span><span style="color: #ECEFF4;">{</span><span style="color: #B48EAD;">2</span><span style="color: #ECEFF4;">}</span><span style="color: #81A1C1;"> /&gt;</span></span>
+<span class="giallo-l"><span style="color: #81A1C1;">    &lt;/</span><span>div</span><span style="color: #81A1C1;">&gt;</span></span>
+<span class="giallo-l"><span>  )</span></span>
+<span class="giallo-l"><span style="color: #ECEFF4;">}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #81A1C1;">export default</span><span> App</span><span style="color: #81A1C1;">;</span></span></code></pre>
+<p>We’re using three counters here, but two of them point to <code>counterId == 1</code>. If
+we run the app now it kind of works, the counters with <code>id == 1</code> increment
+together and the counter with <code>id == 2</code> increments separately. However you can
+see that the two counters are linked, i.e. they’re modifying the same underlying
+counter, but only the counters with the same <code>id</code> visually update when the
+increment action is invoked.</p>
+<h2 id="updating-the-rust-command">Updating the rust command</h2>
+<p>To fix this, we need to extend our commands in <code>src-tauri/src/main.rs</code>. Here is
+the code:</p>
+<pre class="giallo" style="color: #D8DEE9; background-color: #2E3440;"><code data-lang="rust"><span class="giallo-l"><span style="color: #81A1C1;">use</span><span> tauri</span><span style="color: #81A1C1;">::</span><span style="color: #ECEFF4;">{</span><span>async_runtime</span><span style="color: #81A1C1;">::</span><span style="color: #8FBCBB;">RwLock</span><span style="color: #ECEFF4;">,</span><span style="color: #8FBCBB;"> State</span><span style="color: #ECEFF4;">};</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #81A1C1;">type</span><span style="color: #8FBCBB;"> InnerState</span><span style="color: #81A1C1;"> =</span><span style="color: #8FBCBB;"> RwLock</span><span style="color: #ECEFF4;">&lt;</span><span style="color: #8FBCBB;">HashMap</span><span style="color: #ECEFF4;">&lt;</span><span style="color: #8FBCBB;">i32</span><span style="color: #ECEFF4;">,</span><span style="color: #8FBCBB;"> i32</span><span style="color: #ECEFF4;">&gt;&gt;;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #5E81AC;">#[tauri::command]</span></span>
+<span class="giallo-l"><span style="color: #81A1C1;">async fn</span><span style="color: #88C0D0;"> increment_counter</span><span style="color: #ECEFF4;">(</span></span>
+<span class="giallo-l"><span>  state</span><span style="color: #81A1C1;">:</span><span style="color: #8FBCBB;"> State</span><span style="color: #ECEFF4;">&lt;&#39;</span><span style="color: #8FBCBB;">_</span><span style="color: #ECEFF4;">,</span><span style="color: #8FBCBB;"> InnerState</span><span style="color: #ECEFF4;">&gt;,</span></span>
+<span class="giallo-l"><span>  id</span><span style="color: #81A1C1;">:</span><span style="color: #8FBCBB;"> i32</span><span style="color: #ECEFF4;">,</span></span>
+<span class="giallo-l"><span>  delta</span><span style="color: #81A1C1;">:</span><span style="color: #8FBCBB;"> i32</span><span style="color: #ECEFF4;">,</span></span>
+<span class="giallo-l"><span style="color: #ECEFF4;">)</span><span style="color: #81A1C1;"> -&gt;</span><span style="color: #8FBCBB;"> Result</span><span style="color: #ECEFF4;">&lt;</span><span style="color: #8FBCBB;">i32</span><span style="color: #ECEFF4;">,</span><span style="color: #8FBCBB;"> String</span><span style="color: #ECEFF4;">&gt; {</span></span>
+<span class="giallo-l"><span style="color: #88C0D0;font-weight: bold;">  println!</span><span style="color: #ECEFF4;">(&quot;</span><span style="color: #A3BE8C;">Incrementing counter </span><span style="color: #EBCB8B;">{}</span><span style="color: #A3BE8C;"> by </span><span style="color: #EBCB8B;">{}</span><span style="color: #ECEFF4;">&quot;,</span><span> id</span><span style="color: #ECEFF4;">,</span><span> delta</span><span style="color: #ECEFF4;">);</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #81A1C1;">  let mut</span><span> hashmap</span><span style="color: #81A1C1;"> =</span><span> state</span><span style="color: #81A1C1;">.</span><span style="color: #88C0D0;">write</span><span style="color: #ECEFF4;">()</span><span style="color: #81A1C1;">.await</span><span style="color: #ECEFF4;">;</span></span>
+<span class="giallo-l"><span style="color: #81A1C1;">  let</span><span> next_value</span><span style="color: #81A1C1;"> = *</span><span>hashmap</span><span style="color: #81A1C1;">.</span><span style="color: #88C0D0;">get</span><span style="color: #ECEFF4;">(</span><span style="color: #81A1C1;">&amp;</span><span>id</span><span style="color: #ECEFF4;">)</span><span style="color: #81A1C1;">.</span><span style="color: #88C0D0;">unwrap_or</span><span style="color: #ECEFF4;">(</span><span style="color: #81A1C1;">&amp;</span><span style="color: #B48EAD;">0</span><span style="color: #ECEFF4;">)</span><span style="color: #81A1C1;"> +</span><span> delta</span><span style="color: #ECEFF4;">;</span></span>
+<span class="giallo-l"><span>  hashmap</span><span style="color: #81A1C1;">.</span><span style="color: #88C0D0;">insert</span><span style="color: #ECEFF4;">(</span><span>id</span><span style="color: #ECEFF4;">,</span><span> next_value</span><span style="color: #ECEFF4;">);</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #8FBCBB;">  Ok</span><span style="color: #ECEFF4;">(</span><span>next_value</span><span style="color: #ECEFF4;">)</span></span>
+<span class="giallo-l"><span style="color: #ECEFF4;">}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #5E81AC;">#[tauri::command]</span></span>
+<span class="giallo-l"><span style="color: #81A1C1;">async fn</span><span style="color: #88C0D0;"> get_counter</span><span style="color: #ECEFF4;">(</span><span>state</span><span style="color: #81A1C1;">:</span><span style="color: #8FBCBB;"> State</span><span style="color: #ECEFF4;">&lt;&#39;</span><span style="color: #8FBCBB;">_</span><span style="color: #ECEFF4;">,</span><span style="color: #8FBCBB;"> InnerState</span><span style="color: #ECEFF4;">&gt;,</span><span> id</span><span style="color: #81A1C1;">:</span><span style="color: #8FBCBB;"> i32</span><span style="color: #ECEFF4;">)</span><span style="color: #81A1C1;"> -&gt;</span><span style="color: #8FBCBB;"> Result</span><span style="color: #ECEFF4;">&lt;</span><span style="color: #8FBCBB;">i32</span><span style="color: #ECEFF4;">,</span><span style="color: #8FBCBB;"> String</span><span style="color: #ECEFF4;">&gt; {</span></span>
+<span class="giallo-l"><span style="color: #88C0D0;font-weight: bold;">  println!</span><span style="color: #ECEFF4;">(&quot;</span><span style="color: #A3BE8C;">Getting counter value for counter </span><span style="color: #EBCB8B;">{}</span><span style="color: #ECEFF4;">&quot;,</span><span> id</span><span style="color: #ECEFF4;">);</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #81A1C1;">  let</span><span> hashmap</span><span style="color: #81A1C1;"> =</span><span> state</span><span style="color: #81A1C1;">.</span><span style="color: #88C0D0;">read</span><span style="color: #ECEFF4;">()</span><span style="color: #81A1C1;">.await</span><span style="color: #ECEFF4;">;</span></span>
+<span class="giallo-l"><span style="color: #8FBCBB;">  Ok</span><span style="color: #ECEFF4;">(</span><span style="color: #81A1C1;">*</span><span>hashmap</span><span style="color: #81A1C1;">.</span><span style="color: #88C0D0;">get</span><span style="color: #ECEFF4;">(</span><span style="color: #81A1C1;">&amp;</span><span>id</span><span style="color: #ECEFF4;">)</span><span style="color: #81A1C1;">.</span><span style="color: #88C0D0;">unwrap_or</span><span style="color: #ECEFF4;">(</span><span style="color: #81A1C1;">&amp;</span><span style="color: #B48EAD;">0</span><span style="color: #ECEFF4;">))</span></span>
+<span class="giallo-l"><span style="color: #ECEFF4;">}</span></span></code></pre>
+<p>We’re doing quite a bit here. First of all we’ve removed the <code>AtomicI32</code> and
+replaced it with a <code>RwLock&lt;HashMap&lt;i32, i32&gt;&gt;</code>. The main condition here is that
+our <code>State</code> can be managed across threads. Here we’re using a read-write lock to
+make sure that there can be multiple reads but only one write at a time. We also
+added a bit more logging so we can see which <code>counterId</code> is being get or set in
+the logs.</p>
+<blockquote>
+<p>Note that we’ve used a <code>RwLock&lt;HashMap&gt;</code> here as our state, but in reality
+could use any <code>Send + Sync</code> type, i.e. one that supports threading. This might
+be a database, or a file store or something like that in a more complex app.
+In addition, the inner state type (currently <code>i32</code>) could be anything that
+supports <code>serde::Serialize</code>.</p>
+</blockquote>
+<p>We also need to update the way our state is created in the <code>main()</code> function.
+Change the line with <code>manage</code> to:</p>
+<pre class="giallo" style="color: #D8DEE9; background-color: #2E3440;"><code data-lang="rust"><span class="giallo-l"><span style="color: #616E88;">  // tauri::Builder</span></span>
+<span class="giallo-l"><span style="color: #81A1C1;">    .</span><span style="color: #88C0D0;">manage</span><span style="color: #ECEFF4;">(</span><span>RwLock</span><span style="color: #81A1C1;">::</span><span style="color: #88C0D0;">new</span><span style="color: #ECEFF4;">(</span><span>HashMap</span><span style="color: #81A1C1;">::</span><span style="color: #ECEFF4;">&lt;</span><span style="color: #8FBCBB;">i32</span><span style="color: #ECEFF4;">,</span><span style="color: #8FBCBB;"> i32</span><span style="color: #ECEFF4;">&gt;</span><span style="color: #81A1C1;">::</span><span style="color: #88C0D0;">new</span><span style="color: #ECEFF4;">()))</span></span></code></pre>
+<p>At this point we can also remove a bunch of unused imports in the <code>main.rs</code>
+file. If we run the app we can see that the counters behave as we’d expect, each
+incrementing separately and the counters using the same ID updating at the same
+time.</p>
+<h2 id="building-the-app">Building the app</h2>
+<p>Now that we are done developing the app, lets build it and see how large the
+binary is and how much memory it uses. To build the app,</p>
+<pre class="giallo" style="color: #D8DEE9; background-color: #2E3440;"><code data-lang="shellscript"><span class="giallo-l"><span style="color: #88C0D0;">yarn</span><span style="color: #A3BE8C;"> tauri build</span></span></code></pre>
+<p>The build can take a while as the CRA is built and the rust parts are compiled
+in release mode. Once it is built we can look in <code>src-tauri/target/release</code>. In
+the <code>bundle</code> folder there is an <code>msi</code> installer we can use, but there should be
+a <code>counter-app.exe</code> directly in the <code>release</code> folder. Mine is about 7MB.</p>
+<p><img src="https://willhart.io/post/tauri-create-react-app-tutorial-part4/tauri-step2-binary.png" alt="The binary size of the built Tauri app" /></p>
+<p>If I run the application I can check the memory footprint. (After first clicking
+the increment buttons a bunch of times to make sure everything is working!). Its
+a fairly slim application, but with basically no CPU and about 50MB of RAM its
+perfectly acceptible out of the box.</p>
+<p><img src="https://willhart.io/post/tauri-create-react-app-tutorial-part4/tauri-step2-resources.png" alt="The resource usage of the built Tauri app" /></p>
+<blockquote>
+<p>That’s it, our counter tutorial app is complete! In this part we extended our
+command here to support counters with different IDs. The code for this
+tutorial can be found <a rel="noopener nofollow noreferrer external" target="_blank" href="https://github.com/will-hart/tauri-cra-tutorial/tree/0f664071e266d45c153efeabf43c09d588c5c907">here on
+github</a>.
+Part 3 of the tutorial <a href="/post/20210828_tauri_create_react_app_tutorial_part3">can be found
+here</a>.</p>
+</blockquote>
+</article>
+
+<div class="container col">
+  <h2>Comments</h2>
+  <blockquote>Comments are powered by github and <a href="https://giscus.app">giscus</a></blockquote>
+  <script src="https://giscus.app/client.js"
+        data-repo="will-hart/will-hart.github.io"
+        data-repo-id="MDEwOlJlcG9zaXRvcnkzMjQ2NjY3Mzg="
+        data-category="General"
+        data-category-id="DIC_kwDOE1oFcs4CtiK6"
+        data-mapping="og:title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+  </script>
+</div>
+
+
+        <footer id="footer">
+            <div class="container col">
+                This website was hand-made using Zola and Tera. All text and
+                images are available under CC0 1.0 Universal and code under MIT
+                unless otherwise specified. See
+                <a
+                    href="https://github.com/will-hart/willhart.io/blob/main/LICENSE.md"
+                    >LICENSE.md</a
+                >
+                for more.
+            </div>
+        </footer>
+    </body>
+</html>

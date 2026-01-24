@@ -1,0 +1,385 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+        <title>Morse Kodeboard - a Morse Code Keyboard | willhart.io</title>
+
+        <link
+            rel="icon"
+            type="image/x-icon"
+            href="/icons/icon_light_32x32.png"
+        />
+
+        
+<meta name="description" content="The Morse Kodeboard is a custom USB-HID keyboard that turns morse code into keyboard inputs.. Posted on https://willhart.io" />
+<meta property="og:description" content="The Morse Kodeboard is a custom USB-HID keyboard that turns morse code into keyboard inputs." />
+<meta property="og:title" content="Morse Kodeboard - a Morse Code Keyboard" />
+<meta property="og:url" content="https://willhart.io/post/morse-kodeboard/">
+<meta property="og:type" content="article" />
+<meta property="og:locale" content="en_AU" />
+
+
+        <link
+            rel="stylesheet"
+            href="https://willhart.io/global.css?h=f83cd20cd0df26d72c2b"
+        />
+
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Sono:wght@200..800&display=swap"
+            rel="stylesheet"
+        />
+
+        
+
+        <!-- Cloudflare Web Analytics -->
+        <script
+            defer
+            src="https://static.cloudflareinsights.com/beacon.min.js"
+            data-cf-beacon='{"token": "310f93cab66a42c5a328f246cc053025"}'
+        ></script>
+        <!-- End Cloudflare Web Analytics -->
+
+        <!-- Light/Dark theme toggling -->
+        <script>
+            const storageKey = "websiteTheme";
+
+            // apply theme once we have a DOM
+            document.addEventListener("DOMContentLoaded", () => {
+                applyTheme();
+            });
+
+            // a function that toggles between light and dark theme
+            const toggleTheme = () => {
+                localStorage.setItem(
+                    storageKey,
+                    localStorage.getItem(storageKey) === "d" ? "l" : "d",
+                );
+                applyTheme();
+            };
+
+            // a function that actually applies the theme
+            const applyTheme = () => {
+                const useDarkTheme = localStorage.getItem(storageKey) === "d";
+                document.getElementsByTagName("html")[0].className =
+                    useDarkTheme ? "dark" : "";
+                document.getElementById("theme-toggle").textContent =
+                    useDarkTheme ? "🔆" : "🌑";
+            };
+        </script>
+
+        <script type="speculationrules">
+            {
+                "prerender": [{ "where": { "selector_matches": "a" } }]
+            }
+        </script>
+    </head>
+
+    <body>
+        <nav id="header">
+            <a href="/" aria-label="Website Logo and Link to Home Page">
+                <div id="logo">&nbsp;</div>
+            </a>
+            <span>
+                <button
+                    type="button"
+                    id="theme-toggle"
+                    aria-label="Toggle Theme"
+                    onClick="toggleTheme()"
+                >
+                    🌑
+                </button>
+                <a class="header-item" href="/post">POSTS</a>
+                <a class="header-item" href="/tag">TAGS</a>
+                <span class="header-item hide-when-slim">|</span>
+                <a class="header-item hide-when-slim" href="/tag/projects"
+                    >PROJECTS</a
+                >
+                <a class="header-item hide-when-slim" href="/tag/gamedev"
+                    >GAMEDEV</a
+                >
+                <a class="header-item hide-when-slim" href="/tag/electronics"
+                    >ELECTRONICS</a
+                >
+            </span>
+        </nav>
+
+        
+
+<div class="container col mb mt">
+  <h1>Morse Kodeboard - a Morse Code Keyboard</h1>
+  <div class="col txtsm">
+    <span>Posted by Will Hart on 2025-07-21</span>
+    <div>
+      <span>See also:</span>
+      
+      <a class="txtsm mr" href="https://willhart.io/tag/projects/">#projects</a>
+      
+      <a class="txtsm mr" href="https://willhart.io/tag/electronics/">#electronics</a>
+      
+    </div>
+  </div>
+</div>
+
+
+  <div class="container col txtsm mb page-toc">
+    <h2>Table of contents</h2>
+    <ul>
+    
+        <li>
+            <a href="https://willhart.io/post/morse-kodeboard/#initial-build">Initial build</a>
+            
+        </li>
+    
+        <li>
+            <a href="https://willhart.io/post/morse-kodeboard/#morse-code-decoding">Morse Code Decoding</a>
+            
+        </li>
+    
+        <li>
+            <a href="https://willhart.io/post/morse-kodeboard/#more-keys">More keys?</a>
+            
+        </li>
+    
+        <li>
+            <a href="https://willhart.io/post/morse-kodeboard/#building-the-hardware">Building the hardware</a>
+            
+        </li>
+    
+        <li>
+            <a href="https://willhart.io/post/morse-kodeboard/#typing-performance">Typing performance</a>
+            
+        </li>
+    
+        <li>
+            <a href="https://willhart.io/post/morse-kodeboard/#what-next">What next?</a>
+            
+        </li>
+    
+        <li>
+            <a href="https://willhart.io/post/morse-kodeboard/#notes">Notes</a>
+            
+        </li>
+    
+    </ul>
+  </div>
+
+
+<article class="container col mblg"><p>Welcome to another project in a long line of “I don’t know why I’m doing this”
+projects!</p>
+<p>A while back my family and I spent a week in coastal Victoria as I was
+running<sup class="footnote-reference" id="fr-1-1"><a href="#fn-1">1</a></sup> the Great Ocean Road Marathon. While we were there we visited the
+<a rel="noopener nofollow noreferrer external" target="_blank" href="https://www.lightstation.com">Cape Otway Lightstation</a>, which was an important
+lighthouse that helped guide ships through the rough seas that slam into the “Shipwreck Coast”.</p>
+<p>The Lightstation was also a key part of a 400km long telegraph cable that connected
+Tasmania to the Australian mainland in the 1850s. In one of the buildings we
+spotted a morse code table. I copied down some of the morse code and my kids
+spent a happy half the long drive back decoding a message written in <code>dits</code> and <code>dahs</code>.</p>
+<p>A few weeks later, I was chatting to a friend about my weakness for clicky,
+tactile interfaces and input devices. In my excitement I got a bit careless in
+my typing and was forced to defend my accuracy. I claimed I was “I’m typing on
+my Morse Code keyboard” and then a moment later  realised I’d found my next
+silly electronics project.</p>
+<p>The idea was simple - a single button keyboard that you tap in either long or
+short pulses and the keyboard outputs the correct letters over the USB port.</p>
+<p>I decided to call this innovative and highly efficient device a:</p>
+<p><strong>—— ——— ·—· ··· · | —·— ——— —·· · —··· ——— ·— ·—· —··</strong><sup class="footnote-reference" id="fr-2-1"><a href="#fn-2">2</a></sup></p>
+<p>You can find the source code + hardware files at <a rel="noopener nofollow noreferrer external" target="_blank" href="https://github.com/will-hart/morse-kodeboard">https://github.com/will-hart/morse-kodeboard</a>,
+written in rust for the Rapsberry Pi Pico.</p>
+<h2 id="initial-build">Initial build</h2>
+<p>As this project was a bit of a meme, I didn’t really want to over-engineer it.
+I’ve already made quite a few USB-HID interfaces using rust firmware, and I have
+a few RaspberryPi Picos sitting around. So the logical choice was to throw together
+some <a rel="noopener nofollow noreferrer external" target="_blank" href="https://embassy.dev/">embassy</a> firmware and use a third-party morse code
+library to convert the button presses to keyboard inputs. I started by building
+a simple breadboard circuit and had a working keyboard up and running in a
+couple of evenings.</p>
+<p>As usual I had some issues with getting USB descriptors sorted, which
+in this case turned out to be because I had a few loops without any “idle”
+mechanism, which presumably meant they were hogging 100% of the
+microcontrollers clock cycles and didn’t respond to USB messages in time (or
+ever). This was a fairly easy fix with embassy as I was able to throttle the
+loops using a <code>Ticker</code>.</p>
+<pre class="giallo" style="color: #D8DEE9; background-color: #2E3440;"><code data-lang="rust"><span class="giallo-l"><span style="color: #616E88;">// set up a ticker somewhere at the top of a task</span></span>
+<span class="giallo-l"><span style="color: #81A1C1;">let mut</span><span> ticker</span><span style="color: #81A1C1;"> =</span><span style="color: #8FBCBB;"> Ticker</span><span style="color: #81A1C1;">::</span><span style="color: #88C0D0;">every</span><span style="color: #ECEFF4;">(</span><span>Duration</span><span style="color: #81A1C1;">::</span><span style="color: #88C0D0;">from_millis</span><span style="color: #ECEFF4;">(</span><span style="color: #B48EAD;">1</span><span style="color: #ECEFF4;">));</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #616E88;">// do something</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #616E88;">// wait for the next tick</span></span>
+<span class="giallo-l"><span>ticker</span><span style="color: #81A1C1;">.</span><span style="color: #88C0D0;">next</span><span style="color: #ECEFF4;">()</span><span style="color: #81A1C1;">.await</span><span style="color: #ECEFF4;">;</span></span></code></pre><h2 id="morse-code-decoding">Morse Code Decoding</h2>
+<p>The next challenge was decoding the button presses into characters. I initially
+found a few libraries on crates.io and ran with those, and a couple of these
+even supported <code>no-std</code>. Unfortunately I found that these libraries didn’t quite
+work in my use case. I wanted the reader to continuously check if a valid character
+had been received, but most libraries were designed as “one-shot”, where they’re
+passed a string of dots and dashes and immediately return a result. This made it
+difficult to “stream” data from the button input. For example, if I wanted to
+type <code>s</code> (···), then when I polled the decoder in a loop, I’d get <code>e e e</code> (· · ·).</p>
+<p>So instead I decided to implement my own decoder, which can be found
+<a rel="noopener nofollow noreferrer external" target="_blank" href="https://github.com/will-hart/morse-kodeboard/blob/main/src/decoder.rs">on the GitHub</a>.</p>
+<p>Its a fairly basic bit of code that has a “dit time” specified, is fed high and
+low edges of a button and converts that into pulse durations and gaps. It then
+stores these as <em>dits</em>, <em>dahs</em> and <em>breaks</em> (i.e. long pauses) in a ring buffer.
+When polled, the buffer is matched against a set of acceptable characters using
+and if a match is found it resets the ring buffer and returns the character.</p>
+<p>For example here is the pattern for the first few characters:</p>
+<pre class="giallo" style="color: #D8DEE9; background-color: #2E3440;"><code data-lang="rust"><span class="giallo-l"><span style="color: #81A1C1;">if let</span><span style="color: #8FBCBB;"> Some</span><span style="color: #ECEFF4;">(</span><span>c</span><span style="color: #ECEFF4;">)</span><span style="color: #81A1C1;"> = match self.</span><span>value_buffer </span><span style="color: #ECEFF4;">{</span></span>
+<span class="giallo-l"><span style="color: #ECEFF4;">            [</span><span style="color: #8FBCBB;">Dit</span><span style="color: #ECEFF4;">,</span><span style="color: #8FBCBB;"> Dah</span><span style="color: #ECEFF4;">,</span><span style="color: #8FBCBB;"> Break</span><span style="color: #ECEFF4;">,</span><span style="color: #8FBCBB;"> Empty</span><span style="color: #ECEFF4;">,</span><span style="color: #8FBCBB;"> Empty</span><span style="color: #ECEFF4;">,</span><span style="color: #8FBCBB;"> Empty</span><span style="color: #ECEFF4;">]</span><span style="color: #81A1C1;"> =&gt;</span><span style="color: #8FBCBB;"> Some</span><span style="color: #ECEFF4;">(&#39;</span><span style="color: #A3BE8C;">a</span><span style="color: #ECEFF4;">&#39;),</span></span>
+<span class="giallo-l"><span style="color: #ECEFF4;">            [</span><span style="color: #8FBCBB;">Dah</span><span style="color: #ECEFF4;">,</span><span style="color: #8FBCBB;"> Dit</span><span style="color: #ECEFF4;">,</span><span style="color: #8FBCBB;"> Dit</span><span style="color: #ECEFF4;">,</span><span style="color: #8FBCBB;"> Dit</span><span style="color: #ECEFF4;">,</span><span style="color: #8FBCBB;"> Break</span><span style="color: #ECEFF4;">,</span><span style="color: #8FBCBB;"> Empty</span><span style="color: #ECEFF4;">]</span><span style="color: #81A1C1;"> =&gt;</span><span style="color: #8FBCBB;"> Some</span><span style="color: #ECEFF4;">(&#39;</span><span style="color: #A3BE8C;">b</span><span style="color: #ECEFF4;">&#39;),</span></span>
+<span class="giallo-l"><span style="color: #ECEFF4;">            [</span><span style="color: #8FBCBB;">Dah</span><span style="color: #ECEFF4;">,</span><span style="color: #8FBCBB;"> Dit</span><span style="color: #ECEFF4;">,</span><span style="color: #8FBCBB;"> Dah</span><span style="color: #ECEFF4;">,</span><span style="color: #8FBCBB;"> Dit</span><span style="color: #ECEFF4;">,</span><span style="color: #8FBCBB;"> Break</span><span style="color: #ECEFF4;">,</span><span style="color: #8FBCBB;"> Empty</span><span style="color: #ECEFF4;">]</span><span style="color: #81A1C1;"> =&gt;</span><span style="color: #8FBCBB;"> Some</span><span style="color: #ECEFF4;">(&#39;</span><span style="color: #A3BE8C;">c</span><span style="color: #ECEFF4;">&#39;),</span></span>
+<span class="giallo-l"><span style="color: #616E88;">            ///...</span></span>
+<span class="giallo-l"><span style="color: #ECEFF4;">} {</span></span>
+<span class="giallo-l"><span style="color: #616E88;">  // reset the ring buffer</span></span>
+<span class="giallo-l"><span style="color: #616E88;">  // handle a character</span></span>
+<span class="giallo-l"><span style="color: #ECEFF4;">}</span></span></code></pre>
+<p>Using this approach made decoding a lot simpler. A task could be set up to watch
+the morse code button, feed the inputs to the decoder and do the USB keyboard
+stuff when a character match was found via another task. Message channels were
+used for communicating between tasks.</p>
+<h2 id="more-keys">More keys?</h2>
+<p>At this point I realised a few fundamental issues with the one button approach.
+For starters, without a space bar it is very hard to write more than one very long
+word. So adding a space key was the first bit of scope creep. Secondly, without
+a shift key, it was very hard to add punctuation. This might have been OK in the
+days when morse code was in regular use. Sadly in this more refined modern age
+(i.e. the age of being corrected on the internet)  I’d love to be able to type
+<em>most</em> things without being told off for poor spelling.</p>
+<p>So the scope was crept again and a Shift key was added. Just like that, a one
+key keyboard had been “upgraded” into a three key keyboard<sup class="footnote-reference" id="fr-3-1"><a href="#fn-3">3</a></sup> - a “morse” key,
+a shift key and a space key. This in turn meant the firmware now had a lot of
+different tasks spawned:</p>
+<ol>
+<li>A <code>usb_loop</code> that manages the underlying USB interface</li>
+<li>A <code>usb_hid_loop</code> that manages writing to the USB HID interface</li>
+<li>A <code>usb_request_handler</code> that manages incoming requests from the host PC on
+the USB HID interface</li>
+<li>A <code>monitor_space_key</code> task that watches the space button and generates ’ ’
+characters for the USB HID loop to send</li>
+<li>A <code>generate_morse_code_characters</code> task, that watches the <code>shift</code> and <code>morse</code>
+keys and generates the appropriate morse code characters for the <code>usb_hid_loop</code>
+to send.</li>
+</ol>
+<p>The whole thing is tied together with a series of bounded embassy <code>Channel</code>s.</p>
+<p>Here is a video of the firmware running on a breadboard device with a debugger
+attached:</p>
+<video controls muted loop preload="metadata" width="640" height="480" style="margin: -2rem auto 3rem auto;">
+  <source src="morse_code_example.webm" type="video/webm">
+  Your browser does not support the video tag.
+</video>
+<h2 id="building-the-hardware">Building the hardware</h2>
+<p>As much as this was a meme project, I felt like adding some hardware would be
+nice. Greed may have played a part as well because I saw this device absolutely
+flying off the shelves. I figured as this was a keyboard (and I have some
+hardware lying around) that using hot-swappable mechanical switches would be a
+good first step<sup class="footnote-reference" id="fr-4-1"><a href="#fn-4">4</a></sup>.</p>
+<p>From here making a PCB in Kicad was pretty straightforward, its a connector,
+three mechanical switches (using hot-swappable sockets) and a few 0603 pull-up
+resistors. It took maybe an hour, then I sent of the gerbers off to my Chinese
+fab of choice. A week later I clutched a Morse Kodeboard PCB in my hand, and all
+for less than a tenner.</p>
+<p>Soldering was very straightforward (for a couple of resistors I don’t even
+bother with my reflow setup) and took maybe 20 minutes by hand. I have to admit
+to doing a pretty poor job of the connectors<sup class="footnote-reference" id="fr-5-1"><a href="#fn-5">5</a></sup> and I didn’t have any
+right-angled JST connectors which made the whole thing fit together awkwardly.</p>
+<p>The resulting Frankenstein looks like this:</p>
+<p><img src="https://willhart.io/post/morse-kodeboard/morse_kodeboard_pcb.jpg" alt="The Morse Kodeboard PCB" /></p>
+<h2 id="typing-performance">Typing performance</h2>
+<p>OK, I know what you’re really here to see is how fast you can type on a Morse
+Kodeboard. To keep this comparison fair, I think some benchmarking is in
+order. There are lots of random typing speed tests on the internet, so let’s try
+to see how fast I can type on the Kodeboard vs a regular keyboard.</p>
+<p>First the control, typing on my Keychron K8:</p>
+<p><img src="https://willhart.io/post/morse-kodeboard/keyboard_typing_test.png" alt="Typing test results from a normal keyboard - 107 words per minute, 97% accuracy" /></p>
+<p>Hmmmm I seem to be slowing down in my old age. My kids do tell me I hit the
+delete key most of the time so possibly I normally type twice as fast with half
+the accuracy and because of the pressure I was being careful. Actually, that
+makes me think - I don’t actually have a delete key on the Kodeboard!</p>
+<p>Well, we’re in too deep now to go back, so I’ll just have to be perfect.</p>
+<p>And the Kodeboard results are in:</p>
+<p><img src="https://willhart.io/post/morse-kodeboard/kodeboard_typing_test.png" alt="Typing test results from Morse Kodeboard - 5 words per minute, 93% accuracy" /></p>
+<p>The Kodeboard is about 20x slower, but around the same accuracy if you squint.
+So I guess if you count the additional swag you gain from rolling up and typing
+in morse code, we will call this competition a tie (or should I say a <code>— ·· ·</code>)?</p>
+<h2 id="what-next">What next?</h2>
+<p>I’m not sure there should be anything next to be honest!</p>
+<p>I guess one thing that could really jazz this up would be an enclosure. Mulling
+it over, I have a few options here<sup class="footnote-reference" id="fr-6-1"><a href="#fn-6">6</a></sup></p>
+<ol>
+<li>Butcher an electronics project box (maybe a laser cut top),</li>
+<li>Print or laser cut a fully custom enclosure,</li>
+<li>Look at a more traditional morse code key, of which it seems there are a wide
+<a rel="noopener nofollow noreferrer external" target="_blank" href="https://hamuniverse.com/n2eycodekeys.html">variety of types</a></li>
+</ol>
+<p>I could see some other features being added like:</p>
+<ol>
+<li>A rotary encoder to set the duration of a <code>dit</code> (i.e. how fast you have to tap)</li>
+<li>A delete button</li>
+<li>Some LEDs indicating i.e. when “shift” is down (actually its more like Capslock)</li>
+</ol>
+<p>A this point though I think I’ve made my point, whatever that is. I think this
+one may just end up in a project box next to my desk, so I’ll call it a day.</p>
+<h2 id="notes">Notes</h2>
+<section class="footnotes">
+<ol class="footnotes-list">
+<li id="fn-1">
+<p>“Running” may be a bit of a stretch in describing my pace after the 36km marker. <a href="#fr-1-1">↩</a></p>
+</li>
+<li id="fn-2">
+<p>Morse Kodeboard, as you may have guessed. <a href="#fr-2-1">↩</a></p>
+</li>
+<li id="fn-3">
+<p>Spoiler, its probably going to need more than three keys. <a href="#fr-3-1">↩</a></p>
+</li>
+<li id="fn-4">
+<p>Eventually it would be nice perhaps to build a more old-fashioned morse-code style interface, but for now this is still a “keyboard” in the modern sense. <a href="#fr-4-1">↩</a></p>
+</li>
+<li id="fn-5">
+<p>The offending soldering work is blurred for your safety. <a href="#fr-5-1">↩</a></p>
+</li>
+<li id="fn-6">
+<p>The best option was suggested by a friend - a belt mounted Morse Keyboard with one of those a retractable USB cables. That way you’re always prepared whenever you find a computer without a keyboard you can just zip out your USB cable and hook in! <a href="#fr-6-1">↩</a></p>
+</li>
+</ol>
+</section>
+</article>
+
+<div class="container col">
+  <h2>Comments</h2>
+  <blockquote>Comments are powered by github and <a href="https://giscus.app">giscus</a></blockquote>
+  <script src="https://giscus.app/client.js"
+        data-repo="will-hart/will-hart.github.io"
+        data-repo-id="MDEwOlJlcG9zaXRvcnkzMjQ2NjY3Mzg="
+        data-category="General"
+        data-category-id="DIC_kwDOE1oFcs4CtiK6"
+        data-mapping="og:title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+  </script>
+</div>
+
+
+        <footer id="footer">
+            <div class="container col">
+                This website was hand-made using Zola and Tera. All text and
+                images are available under CC0 1.0 Universal and code under MIT
+                unless otherwise specified. See
+                <a
+                    href="https://github.com/will-hart/willhart.io/blob/main/LICENSE.md"
+                    >LICENSE.md</a
+                >
+                for more.
+            </div>
+        </footer>
+    </body>
+</html>

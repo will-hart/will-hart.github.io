@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+        <title>Recreating the blog in NextJS | willhart.io</title>
+
+        <link
+            rel="icon"
+            type="image/x-icon"
+            href="/icons/icon_light_32x32.png"
+        />
+
+        
+<meta name="description" content="Its that time again when I rewrite my blog, but this time its statically generated using NextJS. Posted on https://willhart.io" />
+<meta property="og:description" content="Its that time again when I rewrite my blog, but this time its statically generated using NextJS" />
+<meta property="og:title" content="Recreating the blog in NextJS" />
+<meta property="og:url" content="https://willhart.io/post/recreating-the-blog-in-nextjs/">
+<meta property="og:type" content="article" />
+<meta property="og:locale" content="en_AU" />
+
+
+        <link
+            rel="stylesheet"
+            href="https://willhart.io/global.css?h=f83cd20cd0df26d72c2b"
+        />
+
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Sono:wght@200..800&display=swap"
+            rel="stylesheet"
+        />
+
+        
+
+        <!-- Cloudflare Web Analytics -->
+        <script
+            defer
+            src="https://static.cloudflareinsights.com/beacon.min.js"
+            data-cf-beacon='{"token": "310f93cab66a42c5a328f246cc053025"}'
+        ></script>
+        <!-- End Cloudflare Web Analytics -->
+
+        <!-- Light/Dark theme toggling -->
+        <script>
+            const storageKey = "websiteTheme";
+
+            // apply theme once we have a DOM
+            document.addEventListener("DOMContentLoaded", () => {
+                applyTheme();
+            });
+
+            // a function that toggles between light and dark theme
+            const toggleTheme = () => {
+                localStorage.setItem(
+                    storageKey,
+                    localStorage.getItem(storageKey) === "d" ? "l" : "d",
+                );
+                applyTheme();
+            };
+
+            // a function that actually applies the theme
+            const applyTheme = () => {
+                const useDarkTheme = localStorage.getItem(storageKey) === "d";
+                document.getElementsByTagName("html")[0].className =
+                    useDarkTheme ? "dark" : "";
+                document.getElementById("theme-toggle").textContent =
+                    useDarkTheme ? "🔆" : "🌑";
+            };
+        </script>
+
+        <script type="speculationrules">
+            {
+                "prerender": [{ "where": { "selector_matches": "a" } }]
+            }
+        </script>
+    </head>
+
+    <body>
+        <nav id="header">
+            <a href="/" aria-label="Website Logo and Link to Home Page">
+                <div id="logo">&nbsp;</div>
+            </a>
+            <span>
+                <button
+                    type="button"
+                    id="theme-toggle"
+                    aria-label="Toggle Theme"
+                    onClick="toggleTheme()"
+                >
+                    🌑
+                </button>
+                <a class="header-item" href="/post">POSTS</a>
+                <a class="header-item" href="/tag">TAGS</a>
+                <span class="header-item hide-when-slim">|</span>
+                <a class="header-item hide-when-slim" href="/tag/projects"
+                    >PROJECTS</a
+                >
+                <a class="header-item hide-when-slim" href="/tag/gamedev"
+                    >GAMEDEV</a
+                >
+                <a class="header-item hide-when-slim" href="/tag/electronics"
+                    >ELECTRONICS</a
+                >
+            </span>
+        </nav>
+
+        
+
+<div class="container col mb mt">
+  <h1>Recreating the blog in NextJS</h1>
+  <div class="col txtsm">
+    <span>Posted by Will Hart on 2020-12-28</span>
+    <div>
+      <span>See also:</span>
+      
+      <a class="txtsm mr" href="https://willhart.io/tag/random/">#random</a>
+      
+      <a class="txtsm mr" href="https://willhart.io/tag/projects/">#projects</a>
+      
+    </div>
+  </div>
+</div>
+
+
+
+<article class="container col mblg"><p>Well this <a href="/post/switched-to-ghost">isn’t the first post of this kind</a>,
+(note from 2025 Will: I’m about three more rewrites in by now!) but once
+again its that time of year when I look at the blog and decide its time to
+migrate to a different blog host. The current Ghost blog has been fine but costs
+$5/month to host. Backups and updates are pretty annoying and the whole thing is
+a very manual process.</p>
+<blockquote>
+<p>Also I’ve currently forgotten my admin password for Ghost :| As the server
+didn’t have an email configuration, I can’t reset the password and so I can’t
+post anything new even if I had the inclination!</p>
+</blockquote>
+<p>I’ve been using <a rel="noopener nofollow noreferrer external" target="_blank" href="https://nextjs.org/">NextJS</a> a lot recently (for work and side
+projects) and really like the file based routing and ability to choose between
+static, server or client rendered pages. Furthermore automated deploy pipelines
+like those supported by NextJS really make life easy. Deployment is just a matter of <code>git push</code>.</p>
+<p>Spurred by these advantages I decided to open source the blog and make a
+statically generated site using NextJS. The main way this works is by keeping an
+array of post URLs, then loading in markdown files based on these URLs to
+display. Markdown files use YAML frontmatter to store configuration (author,
+date, titles, summaries and so on).</p>
+<p>Static generation is enabled in NextJS by specifying the URLs to generate (if
+the URLs contain dynamic segments like slugs or IDs) and also specifying a
+function that generates the props on the server. For the blog post pages this
+looks like this:</p>
+<pre class="giallo" style="color: #D8DEE9; background-color: #2E3440;"><code data-lang="typescript"><span class="giallo-l"><span style="color: #616E88;">/**</span></span>
+<span class="giallo-l"><span style="color: #616E88;"> * Get a list of post slugs to statically generate. Here </span></span>
+<span class="giallo-l"><span style="color: #616E88;"> * pageData contains all the URL slugs. Its hard coded which</span></span>
+<span class="giallo-l"><span style="color: #616E88;"> * isn&#39;t ideal, but its not a big burden to keep the list </span></span>
+<span class="giallo-l"><span style="color: #616E88;"> * up to date. It&#39;s also easy to filter once the corresponding</span></span>
+<span class="giallo-l"><span style="color: #616E88;"> * posts are loaded in - for instance to only return posts with</span></span>
+<span class="giallo-l"><span style="color: #616E88;"> * a particular tag. As its statically generated, at build time,</span></span>
+<span class="giallo-l"><span style="color: #616E88;"> * performance isn&#39;t all that important.</span></span>
+<span class="giallo-l"><span style="color: #616E88;"> */</span></span>
+<span class="giallo-l"><span style="color: #81A1C1;">export const</span><span style="color: #88C0D0;"> getStaticPaths</span><span style="color: #81A1C1;">:</span><span style="color: #8FBCBB;"> GetStaticPaths</span><span style="color: #81A1C1;"> = async</span><span style="color: #ECEFF4;"> ()</span><span style="color: #81A1C1;"> =&gt;</span></span>
+<span class="giallo-l"><span style="color: #8FBCBB;">  Promise</span><span style="color: #ECEFF4;">.</span><span style="color: #88C0D0;">resolve</span><span>(</span><span style="color: #ECEFF4;">{</span></span>
+<span class="giallo-l"><span>    paths</span><span style="color: #ECEFF4;">:</span><span> pageData</span><span style="color: #ECEFF4;">.</span><span style="color: #88C0D0;">map</span><span>(</span><span style="color: #ECEFF4;">(</span><span>slug</span><span style="color: #ECEFF4;">)</span><span style="color: #81A1C1;"> =&gt;</span><span> (</span><span style="color: #ECEFF4;">{</span><span> params</span><span style="color: #ECEFF4;">: {</span><span> slug</span><span style="color: #ECEFF4;"> } }</span><span>))</span><span style="color: #ECEFF4;">,</span></span>
+<span class="giallo-l"><span>    fallback</span><span style="color: #ECEFF4;">:</span><span style="color: #81A1C1;"> false</span><span style="color: #ECEFF4;">,</span></span>
+<span class="giallo-l"><span style="color: #ECEFF4;">  }</span><span>)</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #616E88;">/**</span></span>
+<span class="giallo-l"><span style="color: #616E88;"> * This loads the data for each post - it reads the post slug from the</span></span>
+<span class="giallo-l"><span style="color: #616E88;"> * parameters and uses the postReader helper to load in the file from</span></span>
+<span class="giallo-l"><span style="color: #616E88;"> * disk. The gray-matter YAML parser extracts the front matter and </span></span>
+<span class="giallo-l"><span style="color: #616E88;"> * a react-markdown component renders the markdown to file.</span></span>
+<span class="giallo-l"><span style="color: #616E88;"> * </span></span>
+<span class="giallo-l"><span style="color: #616E88;"> * Each blog post is statically generated and preloaded when it enters</span></span>
+<span class="giallo-l"><span style="color: #616E88;"> * the viewport.</span></span>
+<span class="giallo-l"><span style="color: #616E88;"> */</span></span>
+<span class="giallo-l"><span style="color: #81A1C1;">export const</span><span style="color: #88C0D0;"> getStaticProps</span><span style="color: #81A1C1;">:</span><span style="color: #8FBCBB;"> GetStaticProps</span><span style="color: #81A1C1;"> = async</span><span style="color: #ECEFF4;"> (</span><span>context</span><span style="color: #ECEFF4;">)</span><span style="color: #81A1C1;"> =&gt;</span><span style="color: #ECEFF4;"> {</span></span>
+<span class="giallo-l"><span style="color: #81A1C1;">  const</span><span> slug</span><span style="color: #81A1C1;"> =</span><span> context</span><span style="color: #ECEFF4;">.</span><span>params</span><span style="color: #ECEFF4;">.</span><span>slug</span><span style="color: #ECEFF4;">.</span><span style="color: #88C0D0;">toString</span><span>()</span></span>
+<span class="giallo-l"><span style="color: #81A1C1;">  const</span><span> post</span><span style="color: #81A1C1;"> = await</span><span style="color: #88C0D0;"> postReader</span><span>(slug)</span></span>
+<span class="giallo-l"><span style="color: #81A1C1;">  return</span><span style="color: #ECEFF4;"> {</span><span> props</span><span style="color: #ECEFF4;">: {</span><span style="color: #81A1C1;"> ...</span><span>post</span><span style="color: #ECEFF4;"> } }</span></span>
+<span class="giallo-l"><span style="color: #ECEFF4;">}</span></span></code></pre>
+<p>The home page, category/tags pages and individual post pages are all statically
+generated at build time. On the down side, I had to write my own blog template
+and migrate all the posts by hand :(</p>
+<blockquote>
+<p>The repo is at
+<a rel="noopener nofollow noreferrer external" target="_blank" href="https://github.com/will-hart/willhart.io">https://github.com/will-hart/willhart.io</a>.
+I don’t really think it will spur me to write more posts, but at least when I do
+decide to write something it’s as easy as writing a Markdown document and
+committing to git.</p>
+</blockquote>
+</article>
+
+<div class="container col">
+  <h2>Comments</h2>
+  <blockquote>Comments are powered by github and <a href="https://giscus.app">giscus</a></blockquote>
+  <script src="https://giscus.app/client.js"
+        data-repo="will-hart/will-hart.github.io"
+        data-repo-id="MDEwOlJlcG9zaXRvcnkzMjQ2NjY3Mzg="
+        data-category="General"
+        data-category-id="DIC_kwDOE1oFcs4CtiK6"
+        data-mapping="og:title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+  </script>
+</div>
+
+
+        <footer id="footer">
+            <div class="container col">
+                This website was hand-made using Zola and Tera. All text and
+                images are available under CC0 1.0 Universal and code under MIT
+                unless otherwise specified. See
+                <a
+                    href="https://github.com/will-hart/willhart.io/blob/main/LICENSE.md"
+                    >LICENSE.md</a
+                >
+                for more.
+            </div>
+        </footer>
+    </body>
+</html>

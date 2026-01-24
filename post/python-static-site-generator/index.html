@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+        <title>Python static site generator | willhart.io</title>
+
+        <link
+            rel="icon"
+            type="image/x-icon"
+            href="/icons/icon_light_32x32.png"
+        />
+
+        
+<meta name="description" content="The source code for my Python static site generator. Posted on https://willhart.io" />
+<meta property="og:description" content="The source code for my Python static site generator" />
+<meta property="og:title" content="Python static site generator" />
+<meta property="og:url" content="https://willhart.io/post/python-static-site-generator/">
+<meta property="og:type" content="article" />
+<meta property="og:locale" content="en_AU" />
+
+
+        <link
+            rel="stylesheet"
+            href="https://willhart.io/global.css?h=f83cd20cd0df26d72c2b"
+        />
+
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Sono:wght@200..800&display=swap"
+            rel="stylesheet"
+        />
+
+        
+
+        <!-- Cloudflare Web Analytics -->
+        <script
+            defer
+            src="https://static.cloudflareinsights.com/beacon.min.js"
+            data-cf-beacon='{"token": "310f93cab66a42c5a328f246cc053025"}'
+        ></script>
+        <!-- End Cloudflare Web Analytics -->
+
+        <!-- Light/Dark theme toggling -->
+        <script>
+            const storageKey = "websiteTheme";
+
+            // apply theme once we have a DOM
+            document.addEventListener("DOMContentLoaded", () => {
+                applyTheme();
+            });
+
+            // a function that toggles between light and dark theme
+            const toggleTheme = () => {
+                localStorage.setItem(
+                    storageKey,
+                    localStorage.getItem(storageKey) === "d" ? "l" : "d",
+                );
+                applyTheme();
+            };
+
+            // a function that actually applies the theme
+            const applyTheme = () => {
+                const useDarkTheme = localStorage.getItem(storageKey) === "d";
+                document.getElementsByTagName("html")[0].className =
+                    useDarkTheme ? "dark" : "";
+                document.getElementById("theme-toggle").textContent =
+                    useDarkTheme ? "🔆" : "🌑";
+            };
+        </script>
+
+        <script type="speculationrules">
+            {
+                "prerender": [{ "where": { "selector_matches": "a" } }]
+            }
+        </script>
+    </head>
+
+    <body>
+        <nav id="header">
+            <a href="/" aria-label="Website Logo and Link to Home Page">
+                <div id="logo">&nbsp;</div>
+            </a>
+            <span>
+                <button
+                    type="button"
+                    id="theme-toggle"
+                    aria-label="Toggle Theme"
+                    onClick="toggleTheme()"
+                >
+                    🌑
+                </button>
+                <a class="header-item" href="/post">POSTS</a>
+                <a class="header-item" href="/tag">TAGS</a>
+                <span class="header-item hide-when-slim">|</span>
+                <a class="header-item hide-when-slim" href="/tag/projects"
+                    >PROJECTS</a
+                >
+                <a class="header-item hide-when-slim" href="/tag/gamedev"
+                    >GAMEDEV</a
+                >
+                <a class="header-item hide-when-slim" href="/tag/electronics"
+                    >ELECTRONICS</a
+                >
+            </span>
+        </nav>
+
+        
+
+<div class="container col mb mt">
+  <h1>Python static site generator</h1>
+  <div class="col txtsm">
+    <span>Posted by Will Hart on 2015-04-26</span>
+    <div>
+      <span>See also:</span>
+      
+      <a class="txtsm mr" href="https://willhart.io/tag/code/">#code</a>
+      
+      <a class="txtsm mr" href="https://willhart.io/tag/random/">#random</a>
+      
+      <a class="txtsm mr" href="https://willhart.io/tag/projects/">#projects</a>
+      
+    </div>
+  </div>
+</div>
+
+
+
+<article class="container col mblg"><h2 id="about">About</h2>
+<p>The following code is described in <a href="/post/a-simple-static-site-generator-in-python">this blog
+post</a>. It is available under the MIT
+license. You can also see the code <a rel="noopener nofollow noreferrer external" target="_blank" href="https://gist.github.com/will-hart/9609188">as a
+gist</a>.</p>
+<h2 id="the-code">The Code</h2>
+<pre class="giallo" style="color: #D8DEE9; background-color: #2E3440;"><code data-lang="python"><span class="giallo-l"><span style="color: #ECEFF4;">&quot;&quot;&quot;</span></span>
+<span class="giallo-l"><span style="color: #A3BE8C;">Free to use under the MIT license</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #A3BE8C;">Builds a static site from a list of Markdown source files. The source</span></span>
+<span class="giallo-l"><span style="color: #A3BE8C;">files should have the same directory structure as the desired output.</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #A3BE8C;">Files are rendered using Markdown2 and can declare metadata variables:</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #A3BE8C;">    ---</span></span>
+<span class="giallo-l"><span style="color: #A3BE8C;">    template: index.html</span></span>
+<span class="giallo-l"><span style="color: #A3BE8C;">    title: My Title</span></span>
+<span class="giallo-l"><span style="color: #A3BE8C;">    ---</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #A3BE8C;">    # your makdown doc from here on</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #A3BE8C;">Site templates are stored in the `templates` folder and should be Jinja2</span></span>
+<span class="giallo-l"><span style="color: #A3BE8C;">templates. Apart from the `template` meta variable in markdown documents, </span></span>
+<span class="giallo-l"><span style="color: #A3BE8C;">any variables supplied in the Markdown meta will be available in the </span></span>
+<span class="giallo-l"><span style="color: #A3BE8C;">template under the same name. The variable `title` given above can therefore</span></span>
+<span class="giallo-l"><span style="color: #A3BE8C;">be accessed.</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #A3BE8C;">The static site will be exported to the `build` directory</span></span>
+<span class="giallo-l"><span style="color: #ECEFF4;">&quot;&quot;&quot;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #81A1C1;">from</span><span> jinja2</span><span style="color: #81A1C1;"> import</span><span> Environment</span><span style="color: #ECEFF4;">,</span><span> FileSystemLoader</span><span style="color: #ECEFF4;">,</span><span> TemplateNotFound</span></span>
+<span class="giallo-l"><span style="color: #81A1C1;">import</span><span> markdown2</span></span>
+<span class="giallo-l"><span style="color: #81A1C1;">import</span><span> os</span></span>
+<span class="giallo-l"><span style="color: #81A1C1;">import</span><span> shutil</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #616E88;"># include additional markdown 2 extras here (e.g. tables, footnotes etc)</span></span>
+<span class="giallo-l"><span>MARKDOWN_EXTRAS</span><span style="color: #81A1C1;"> =</span><span style="color: #ECEFF4;"> [&#39;</span><span style="color: #A3BE8C;">metadata</span><span style="color: #ECEFF4;">&#39;]</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #616E88;"># folders that should be copied from your `src` directory to the `build` directory</span></span>
+<span class="giallo-l"><span>STATIC_DIRS</span><span style="color: #81A1C1;"> =</span><span style="color: #ECEFF4;"> [&#39;</span><span style="color: #A3BE8C;">images</span><span style="color: #ECEFF4;">&#39;]</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #81A1C1;">def</span><span style="color: #88C0D0;"> files_with_extension</span><span style="color: #ECEFF4;">(</span><span>dir</span><span style="color: #ECEFF4;">,</span><span> ext</span><span style="color: #ECEFF4;">):</span></span>
+<span class="giallo-l"><span style="color: #ECEFF4;">    &quot;&quot;&quot;</span></span>
+<span class="giallo-l"><span style="color: #A3BE8C;">    Gets all files in the given directory with the given extension</span></span>
+<span class="giallo-l"><span style="color: #ECEFF4;">    &quot;&quot;&quot;</span></span>
+<span class="giallo-l"><span style="color: #81A1C1;">    return</span><span style="color: #ECEFF4;"> [</span><span>x</span><span style="color: #81A1C1;"> for</span><span> x</span><span style="color: #81A1C1;"> in</span><span> os</span><span style="color: #ECEFF4;">.</span><span style="color: #88C0D0;">listdir</span><span style="color: #ECEFF4;">(</span><span style="color: #88C0D0;">dir</span><span style="color: #ECEFF4;">)</span><span style="color: #81A1C1;"> if</span><span> x</span><span style="color: #ECEFF4;">.</span><span style="color: #88C0D0;">endswith</span><span style="color: #ECEFF4;">(</span><span>ext</span><span style="color: #ECEFF4;">)]</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #81A1C1;">def</span><span style="color: #88C0D0;"> copy_directory</span><span style="color: #ECEFF4;">(</span><span>src</span><span style="color: #ECEFF4;">,</span><span> dst</span><span style="color: #ECEFF4;">):</span></span>
+<span class="giallo-l"><span style="color: #ECEFF4;">    &quot;&quot;&quot;</span></span>
+<span class="giallo-l"><span style="color: #A3BE8C;">    Copies all the contents from the source directory to the output directory</span></span>
+<span class="giallo-l"><span style="color: #ECEFF4;">    &quot;&quot;&quot;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #88C0D0;">    print</span><span style="color: #ECEFF4;"> &quot;</span><span style="color: #A3BE8C;">Copying </span><span style="color: #EBCB8B;">{0}</span><span style="color: #A3BE8C;"> to </span><span style="color: #EBCB8B;">{1}</span><span style="color: #ECEFF4;">&quot;.</span><span style="color: #88C0D0;">format</span><span style="color: #ECEFF4;">(</span><span>src</span><span style="color: #ECEFF4;">,</span><span> dst</span><span style="color: #ECEFF4;">)</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #81A1C1;">    try</span><span style="color: #ECEFF4;">:</span></span>
+<span class="giallo-l"><span>        shutil</span><span style="color: #ECEFF4;">.</span><span style="color: #88C0D0;">copytree</span><span style="color: #ECEFF4;">(</span><span>src</span><span style="color: #ECEFF4;">,</span><span> dst</span><span style="color: #ECEFF4;">)</span></span>
+<span class="giallo-l"><span style="color: #81A1C1;">    except</span><span style="color: #8FBCBB;"> OSError</span><span style="color: #81A1C1;"> as</span><span> e</span><span style="color: #ECEFF4;">:</span></span>
+<span class="giallo-l"><span style="color: #88C0D0;">        print</span><span style="color: #ECEFF4;"> &quot;</span><span style="color: #A3BE8C;">  &gt; There was an error copying the files from </span><span style="color: #EBCB8B;">{0}</span><span style="color: #A3BE8C;"> to </span><span style="color: #EBCB8B;">{1}</span><span style="color: #ECEFF4;">&quot;.</span><span style="color: #88C0D0;">format</span><span style="color: #ECEFF4;">(</span><span>src</span><span style="color: #ECEFF4;">,</span><span> dst</span><span style="color: #ECEFF4;">)</span></span>
+<span class="giallo-l"><span style="color: #88C0D0;">        print</span><span style="color: #ECEFF4;"> &quot;</span><span style="color: #A3BE8C;">  &gt; </span><span style="color: #EBCB8B;">{0}</span><span style="color: #ECEFF4;">&quot;.</span><span style="color: #88C0D0;">format</span><span style="color: #ECEFF4;">(</span><span>e</span><span style="color: #ECEFF4;">)</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #81A1C1;">def</span><span style="color: #88C0D0;"> get_templates</span><span style="color: #ECEFF4;">(</span><span>path</span><span style="color: #ECEFF4;">):</span></span>
+<span class="giallo-l"><span style="color: #ECEFF4;">    &quot;&quot;&quot;</span></span>
+<span class="giallo-l"><span style="color: #A3BE8C;">    Compiles all the templates in the template directory and</span></span>
+<span class="giallo-l"><span style="color: #A3BE8C;">    returns a dictionary of Jinja2 `Template` objects with the</span></span>
+<span class="giallo-l"><span style="color: #A3BE8C;">    file names as the keys</span></span>
+<span class="giallo-l"><span style="color: #ECEFF4;">    &quot;&quot;&quot;</span></span>
+<span class="giallo-l"><span style="color: #81A1C1;">    return</span><span style="color: #88C0D0;"> Environment</span><span style="color: #ECEFF4;">(</span><span>loader</span><span style="color: #81A1C1;">=</span><span style="color: #88C0D0;">FileSystemLoader</span><span style="color: #ECEFF4;">(</span><span>path</span><span style="color: #ECEFF4;">))</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #81A1C1;">def</span><span style="color: #88C0D0;"> build_directory</span><span style="color: #ECEFF4;">(</span><span>templates</span><span style="color: #ECEFF4;">,</span><span> input_path</span><span style="color: #ECEFF4;">):</span></span>
+<span class="giallo-l"><span style="color: #ECEFF4;">    &quot;&quot;&quot;</span></span>
+<span class="giallo-l"><span style="color: #A3BE8C;">    Takes all the *.md files in the given directory, builds them into</span></span>
+<span class="giallo-l"><span style="color: #A3BE8C;">    HTML and renders them using the Jinja templates. The rendered markdown</span></span>
+<span class="giallo-l"><span style="color: #A3BE8C;">    is available in the Jinja templates as the `content` variable.</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #A3BE8C;">    ::warning:: There can only be one `src` folder in the path, as the script</span></span>
+<span class="giallo-l"><span style="color: #A3BE8C;">    directly replaces `src` with `build` once to find the output path</span></span>
+<span class="giallo-l"><span style="color: #ECEFF4;">    &quot;&quot;&quot;</span></span>
+<span class="giallo-l"><span style="color: #88C0D0;">    print</span><span style="color: #ECEFF4;"> &quot;</span><span style="color: #A3BE8C;">Looking for Markdown files in </span><span style="color: #EBCB8B;">{0}</span><span style="color: #ECEFF4;">&quot;.</span><span style="color: #88C0D0;">format</span><span style="color: #ECEFF4;">(</span><span>input_path</span><span style="color: #ECEFF4;">)</span></span>
+<span class="giallo-l"><span>    files</span><span style="color: #81A1C1;"> =</span><span style="color: #88C0D0;"> files_with_extension</span><span style="color: #ECEFF4;">(</span><span>input_path</span><span style="color: #ECEFF4;">, &quot;</span><span style="color: #A3BE8C;">.md</span><span style="color: #ECEFF4;">&quot;)</span></span>
+<span class="giallo-l"><span>    op_dir</span><span style="color: #81A1C1;"> =</span><span> input_path</span><span style="color: #ECEFF4;">.</span><span style="color: #88C0D0;">replace</span><span style="color: #ECEFF4;">(&quot;</span><span style="color: #A3BE8C;">src</span><span style="color: #ECEFF4;">&quot;,&quot;</span><span style="color: #A3BE8C;">build</span><span style="color: #ECEFF4;">&quot;,</span><span style="color: #B48EAD;"> 1</span><span style="color: #ECEFF4;">)</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #81A1C1;">    if not</span><span> os</span><span style="color: #ECEFF4;">.</span><span>path</span><span style="color: #ECEFF4;">.</span><span style="color: #88C0D0;">isdir</span><span style="color: #ECEFF4;">(</span><span>op_dir</span><span style="color: #ECEFF4;">):</span></span>
+<span class="giallo-l"><span>        os</span><span style="color: #ECEFF4;">.</span><span style="color: #88C0D0;">mkdir</span><span style="color: #ECEFF4;">(</span><span>op_dir</span><span style="color: #ECEFF4;">)</span></span>
+<span class="giallo-l"><span>        os</span><span style="color: #ECEFF4;">.</span><span style="color: #88C0D0;">chmod</span><span style="color: #ECEFF4;">(</span><span>op_dir</span><span style="color: #ECEFF4;">,</span><span style="color: #81A1C1;"> 0o</span><span style="color: #B48EAD;">777</span><span style="color: #ECEFF4;">)</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #81A1C1;">    for</span><span> f</span><span style="color: #81A1C1;"> in</span><span> files</span><span style="color: #ECEFF4;">:</span></span>
+<span class="giallo-l"><span style="color: #88C0D0;">        print</span><span style="color: #ECEFF4;"> &quot;</span><span style="color: #A3BE8C;">Converting </span><span style="color: #EBCB8B;">{0}</span><span style="color: #ECEFF4;">&quot;.</span><span style="color: #88C0D0;">format</span><span style="color: #ECEFF4;">(</span><span>f</span><span style="color: #ECEFF4;">)</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>        ip_path</span><span style="color: #81A1C1;"> =</span><span> os</span><span style="color: #ECEFF4;">.</span><span>path</span><span style="color: #ECEFF4;">.</span><span style="color: #88C0D0;">join</span><span style="color: #ECEFF4;">(</span><span>input_path</span><span style="color: #ECEFF4;">,</span><span> f</span><span style="color: #ECEFF4;">)</span></span>
+<span class="giallo-l"><span style="color: #81A1C1;">        with</span><span style="color: #88C0D0;"> open</span><span style="color: #ECEFF4;">(</span><span>ip_path</span><span style="color: #ECEFF4;">, &#39;</span><span style="color: #A3BE8C;">r</span><span style="color: #ECEFF4;">&#39;)</span><span style="color: #81A1C1;"> as</span><span> ip</span><span style="color: #ECEFF4;">:</span></span>
+<span class="giallo-l"><span>            raw_html</span><span style="color: #81A1C1;"> =</span><span> markdown2</span><span style="color: #ECEFF4;">.</span><span style="color: #88C0D0;">markdown</span><span style="color: #ECEFF4;">(</span><span>ip</span><span style="color: #ECEFF4;">.</span><span style="color: #88C0D0;">read</span><span style="color: #ECEFF4;">(),</span><span> extras</span><span style="color: #81A1C1;">=</span><span>MARKDOWN_EXTRAS</span><span style="color: #ECEFF4;">)</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #81A1C1;">        try</span><span style="color: #ECEFF4;">:</span></span>
+<span class="giallo-l"><span>            template</span><span style="color: #81A1C1;"> =</span><span> raw_html</span><span style="color: #ECEFF4;">.</span><span>metadata</span><span style="color: #ECEFF4;">[&#39;</span><span style="color: #A3BE8C;">template</span><span style="color: #ECEFF4;">&#39;]</span></span>
+<span class="giallo-l"><span style="color: #81A1C1;">        except</span><span style="color: #8FBCBB;"> KeyError</span><span style="color: #ECEFF4;">:</span></span>
+<span class="giallo-l"><span style="color: #88C0D0;">            print</span><span style="color: #ECEFF4;"> &quot;</span><span style="color: #A3BE8C;">WARNING: No template specified for </span><span style="color: #EBCB8B;">{0}</span><span style="color: #A3BE8C;">, using index.html</span><span style="color: #ECEFF4;">&quot;.</span><span style="color: #88C0D0;">format</span><span style="color: #ECEFF4;">(</span><span>f</span><span style="color: #ECEFF4;">)</span></span>
+<span class="giallo-l"><span>            template</span><span style="color: #81A1C1;"> =</span><span style="color: #ECEFF4;"> &quot;</span><span style="color: #A3BE8C;">index.html</span><span style="color: #ECEFF4;">&quot;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #81A1C1;">        try</span><span style="color: #ECEFF4;">:</span></span>
+<span class="giallo-l"><span>            tpl</span><span style="color: #81A1C1;"> =</span><span> templates</span><span style="color: #ECEFF4;">.</span><span style="color: #88C0D0;">get_template</span><span style="color: #ECEFF4;">(</span><span>template</span><span style="color: #ECEFF4;">)</span></span>
+<span class="giallo-l"><span style="color: #81A1C1;">        except</span><span> TemplateNotFound</span><span style="color: #ECEFF4;">:</span></span>
+<span class="giallo-l"><span style="color: #81A1C1;">            raise</span><span style="color: #8FBCBB;"> Exception</span><span style="color: #ECEFF4;">(&quot;</span><span style="color: #A3BE8C;">Unable to locate the template </span><span style="color: #EBCB8B;">{0}</span><span style="color: #A3BE8C;"> for file </span><span style="color: #EBCB8B;">{1}</span><span style="color: #A3BE8C;">. Aborting</span><span style="color: #ECEFF4;">&quot;.</span><span style="color: #88C0D0;">format</span><span style="color: #ECEFF4;">(</span><span>template</span><span style="color: #ECEFF4;">,</span><span> f</span><span style="color: #ECEFF4;">))</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>        context</span><span style="color: #81A1C1;"> =</span><span> raw_html</span><span style="color: #ECEFF4;">.</span><span>metadata</span></span>
+<span class="giallo-l"><span>        context</span><span style="color: #ECEFF4;">[&#39;</span><span style="color: #A3BE8C;">content</span><span style="color: #ECEFF4;">&#39;]</span><span style="color: #81A1C1;"> =</span><span> raw_html</span></span>
+<span class="giallo-l"><span>        result</span><span style="color: #81A1C1;"> =</span><span> tpl</span><span style="color: #ECEFF4;">.</span><span style="color: #88C0D0;">render</span><span style="color: #ECEFF4;">(</span><span>context</span><span style="color: #ECEFF4;">)</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>        op_path</span><span style="color: #81A1C1;"> =</span><span> os</span><span style="color: #ECEFF4;">.</span><span>path</span><span style="color: #ECEFF4;">.</span><span style="color: #88C0D0;">join</span><span style="color: #ECEFF4;">(</span><span>op_dir</span><span style="color: #ECEFF4;">,</span><span> f</span><span style="color: #ECEFF4;">.</span><span style="color: #88C0D0;">replace</span><span style="color: #ECEFF4;">(&quot;</span><span style="color: #A3BE8C;">.md</span><span style="color: #ECEFF4;">&quot;, &quot;</span><span style="color: #A3BE8C;">.html</span><span style="color: #ECEFF4;">&quot;))</span></span>
+<span class="giallo-l"><span style="color: #88C0D0;">        print</span><span style="color: #ECEFF4;"> &quot;</span><span style="color: #A3BE8C;">Writing to </span><span style="color: #EBCB8B;">{0}</span><span style="color: #ECEFF4;">&quot;.</span><span style="color: #88C0D0;">format</span><span style="color: #ECEFF4;">(</span><span>op_path</span><span style="color: #ECEFF4;">)</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #81A1C1;">        with</span><span style="color: #88C0D0;"> open</span><span style="color: #ECEFF4;">(</span><span>op_path</span><span style="color: #ECEFF4;">, &#39;</span><span style="color: #A3BE8C;">w+</span><span style="color: #ECEFF4;">&#39;)</span><span style="color: #81A1C1;"> as</span><span> op</span><span style="color: #ECEFF4;">:</span></span>
+<span class="giallo-l"><span>            op</span><span style="color: #ECEFF4;">.</span><span style="color: #88C0D0;">write</span><span style="color: #ECEFF4;">(</span><span>result</span><span style="color: #ECEFF4;">)</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #88C0D0;">        print</span><span style="color: #ECEFF4;"> &quot;</span><span style="color: #A3BE8C;">  &gt; Rendered files at </span><span style="color: #EBCB8B;">{0}</span><span style="color: #A3BE8C;"> to </span><span style="color: #EBCB8B;">{1}</span><span style="color: #ECEFF4;">&quot;.</span><span style="color: #88C0D0;">format</span><span style="color: #ECEFF4;">(</span><span>ip_path</span><span style="color: #ECEFF4;">,</span><span> op_path</span><span style="color: #ECEFF4;">)</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #88C0D0;">    print</span><span style="color: #ECEFF4;"> &quot;</span><span style="color: #A3BE8C;">Folder complete</span><span style="color: #ECEFF4;">&quot;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #81A1C1;">def</span><span style="color: #88C0D0;"> build_site</span><span style="color: #ECEFF4;">(</span><span>template_dir</span><span style="color: #ECEFF4;">,</span><span> ip_dir</span><span style="color: #ECEFF4;">,</span><span> clean</span><span style="color: #81A1C1;">=True</span><span style="color: #ECEFF4;">):</span></span>
+<span class="giallo-l"><span style="color: #ECEFF4;">    &quot;&quot;&quot;</span></span>
+<span class="giallo-l"><span style="color: #A3BE8C;">    Gets all the markdown files in the `src` directory, renders them using the template</span></span>
+<span class="giallo-l"><span style="color: #A3BE8C;">    given in metadata (or `index.html`) if no template given, and then throws them in the</span></span>
+<span class="giallo-l"><span style="color: #A3BE8C;">    same directory structure in the `build` folder.</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #A3BE8C;">    Additionally everything in the `templates/static` folder is copied to `build/static`</span></span>
+<span class="giallo-l"><span style="color: #ECEFF4;">    &quot;&quot;&quot;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #616E88;">    # delete the old build</span></span>
+<span class="giallo-l"><span style="color: #81A1C1;">    if</span><span> clean</span><span style="color: #ECEFF4;">:</span></span>
+<span class="giallo-l"><span>        op_dir</span><span style="color: #81A1C1;"> =</span><span> ip_dir</span><span style="color: #ECEFF4;">.</span><span style="color: #88C0D0;">replace</span><span style="color: #ECEFF4;">(&quot;</span><span style="color: #A3BE8C;">src</span><span style="color: #ECEFF4;">&quot;, &quot;</span><span style="color: #A3BE8C;">build</span><span style="color: #ECEFF4;">&quot;,</span><span style="color: #B48EAD;"> 1</span><span style="color: #ECEFF4;">)</span></span>
+<span class="giallo-l"><span style="color: #88C0D0;">        print</span><span style="color: #ECEFF4;"> &quot;</span><span style="color: #A3BE8C;">Cleaning out old files from </span><span style="color: #EBCB8B;">{0}</span><span style="color: #ECEFF4;">&quot;.</span><span style="color: #88C0D0;">format</span><span style="color: #ECEFF4;">(</span><span>op_dir</span><span style="color: #ECEFF4;">)</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #81A1C1;">        try</span><span style="color: #ECEFF4;">:</span></span>
+<span class="giallo-l"><span>            shutil</span><span style="color: #ECEFF4;">.</span><span style="color: #88C0D0;">rmtree</span><span style="color: #ECEFF4;">(</span><span>op_dir</span><span style="color: #ECEFF4;">)</span></span>
+<span class="giallo-l"><span style="color: #81A1C1;">        except</span><span style="color: #8FBCBB;"> Exception</span><span style="color: #81A1C1;"> as</span><span> e</span><span style="color: #ECEFF4;">:</span></span>
+<span class="giallo-l"><span style="color: #88C0D0;">            print</span><span style="color: #ECEFF4;"> &quot;</span><span style="color: #A3BE8C;">  &gt; ERROR - Unable to clean the old build directory</span><span style="color: #ECEFF4;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #88C0D0;">            print</span><span style="color: #ECEFF4;"> &quot;</span><span style="color: #A3BE8C;">  &gt; </span><span style="color: #EBCB8B;">{0}</span><span style="color: #ECEFF4;">&quot;.</span><span style="color: #88C0D0;">format</span><span style="color: #ECEFF4;">(</span><span>e</span><span style="color: #ECEFF4;">)</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #81A1C1;">        try</span><span style="color: #ECEFF4;">:</span></span>
+<span class="giallo-l"><span>            os</span><span style="color: #ECEFF4;">.</span><span style="color: #88C0D0;">mkdir</span><span style="color: #ECEFF4;">(</span><span>op_dir</span><span style="color: #ECEFF4;">)</span></span>
+<span class="giallo-l"><span>            os</span><span style="color: #ECEFF4;">.</span><span style="color: #88C0D0;">chmod</span><span style="color: #ECEFF4;">(</span><span>op_dir</span><span style="color: #ECEFF4;">,</span><span style="color: #81A1C1;"> 0o</span><span style="color: #B48EAD;">777</span><span style="color: #ECEFF4;">)</span></span>
+<span class="giallo-l"><span style="color: #88C0D0;">            print</span><span style="color: #ECEFF4;"> &quot;</span><span style="color: #A3BE8C;">Created output directory</span><span style="color: #ECEFF4;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #81A1C1;">        except</span><span style="color: #8FBCBB;"> Exception</span><span style="color: #81A1C1;"> as</span><span> e</span><span style="color: #ECEFF4;">:</span></span>
+<span class="giallo-l"><span style="color: #88C0D0;">            print</span><span style="color: #ECEFF4;"> &quot;</span><span style="color: #A3BE8C;">  &gt; ERROR - Unable to create a directory at </span><span style="color: #EBCB8B;">{0}</span><span style="color: #ECEFF4;">&quot;.</span><span style="color: #88C0D0;">format</span><span style="color: #ECEFF4;">(</span><span>op_dir</span><span style="color: #ECEFF4;">)</span></span>
+<span class="giallo-l"><span style="color: #88C0D0;">            print</span><span style="color: #ECEFF4;"> &quot;</span><span style="color: #A3BE8C;">  &gt; </span><span style="color: #EBCB8B;">{0}</span><span style="color: #ECEFF4;">&quot;.</span><span style="color: #88C0D0;">format</span><span style="color: #ECEFF4;">(</span><span>e</span><span style="color: #ECEFF4;">)</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #616E88;">    # copy the `templates/static` folder to `build/static`</span></span>
+<span class="giallo-l"><span>    src</span><span style="color: #81A1C1;"> =</span><span> os</span><span style="color: #ECEFF4;">.</span><span>path</span><span style="color: #ECEFF4;">.</span><span style="color: #88C0D0;">join</span><span style="color: #ECEFF4;">(</span><span>template_dir</span><span style="color: #ECEFF4;">, &quot;</span><span style="color: #A3BE8C;">static</span><span style="color: #ECEFF4;">&quot;)</span></span>
+<span class="giallo-l"><span>    dst</span><span style="color: #81A1C1;"> =</span><span> os</span><span style="color: #ECEFF4;">.</span><span>path</span><span style="color: #ECEFF4;">.</span><span style="color: #88C0D0;">join</span><span style="color: #ECEFF4;">(</span><span>ip_dir</span><span style="color: #ECEFF4;">.</span><span style="color: #88C0D0;">replace</span><span style="color: #ECEFF4;">(&quot;</span><span style="color: #A3BE8C;">src</span><span style="color: #ECEFF4;">&quot;, &quot;</span><span style="color: #A3BE8C;">build</span><span style="color: #ECEFF4;">&quot;,</span><span style="color: #B48EAD;"> 1</span><span style="color: #ECEFF4;">), &quot;</span><span style="color: #A3BE8C;">static</span><span style="color: #ECEFF4;">&quot;)</span></span>
+<span class="giallo-l"><span style="color: #88C0D0;">    copy_directory</span><span style="color: #ECEFF4;">(</span><span>src</span><span style="color: #ECEFF4;">,</span><span> dst</span><span style="color: #ECEFF4;">)</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #616E88;">    # copy all the static files</span></span>
+<span class="giallo-l"><span style="color: #81A1C1;">    for</span><span> sd</span><span style="color: #81A1C1;"> in</span><span> STATIC_DIRS</span><span style="color: #ECEFF4;">:</span></span>
+<span class="giallo-l"><span>        src</span><span style="color: #81A1C1;"> =</span><span> os</span><span style="color: #ECEFF4;">.</span><span>path</span><span style="color: #ECEFF4;">.</span><span style="color: #88C0D0;">join</span><span style="color: #ECEFF4;">(</span><span>ip_dir</span><span style="color: #ECEFF4;">,</span><span> sd</span><span style="color: #ECEFF4;">)</span></span>
+<span class="giallo-l"><span>        dst</span><span style="color: #81A1C1;"> =</span><span> os</span><span style="color: #ECEFF4;">.</span><span>path</span><span style="color: #ECEFF4;">.</span><span style="color: #88C0D0;">join</span><span style="color: #ECEFF4;">(</span><span>ip_dir</span><span style="color: #ECEFF4;">.</span><span style="color: #88C0D0;">replace</span><span style="color: #ECEFF4;">(&quot;</span><span style="color: #A3BE8C;">src</span><span style="color: #ECEFF4;">&quot;, &quot;</span><span style="color: #A3BE8C;">build</span><span style="color: #ECEFF4;">&quot;,</span><span style="color: #B48EAD;"> 1</span><span style="color: #ECEFF4;">),</span><span> sd</span><span style="color: #ECEFF4;">)</span></span>
+<span class="giallo-l"><span style="color: #88C0D0;">        copy_directory</span><span style="color: #ECEFF4;">(</span><span>src</span><span style="color: #ECEFF4;">,</span><span> dst</span><span style="color: #ECEFF4;">)</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #616E88;">    # load the templates</span></span>
+<span class="giallo-l"><span>    templates</span><span style="color: #81A1C1;"> =</span><span style="color: #88C0D0;"> get_templates</span><span style="color: #ECEFF4;">(</span><span>template_dir</span><span style="color: #ECEFF4;">)</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #616E88;">    # Do the root directory</span></span>
+<span class="giallo-l"><span style="color: #88C0D0;">    build_directory</span><span style="color: #ECEFF4;">(</span><span>templates</span><span style="color: #ECEFF4;">,</span><span> ip_dir</span><span style="color: #ECEFF4;">)</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #616E88;">    # get all the source directories</span></span>
+<span class="giallo-l"><span style="color: #81A1C1;">    for</span><span> path</span><span style="color: #ECEFF4;">,</span><span style="color: #88C0D0;"> dir</span><span style="color: #ECEFF4;">,</span><span> files</span><span style="color: #81A1C1;"> in</span><span> os</span><span style="color: #ECEFF4;">.</span><span style="color: #88C0D0;">walk</span><span style="color: #ECEFF4;">(</span><span>ip_dir</span><span style="color: #ECEFF4;">):</span></span>
+<span class="giallo-l"><span style="color: #81A1C1;">        for</span><span> d</span><span style="color: #81A1C1;"> in</span><span style="color: #88C0D0;"> dir</span><span style="color: #ECEFF4;">:</span></span>
+<span class="giallo-l"><span style="color: #88C0D0;">            build_directory</span><span style="color: #ECEFF4;">(</span><span>templates</span><span style="color: #ECEFF4;">,</span><span> os</span><span style="color: #ECEFF4;">.</span><span>path</span><span style="color: #ECEFF4;">.</span><span style="color: #88C0D0;">join</span><span style="color: #ECEFF4;">(</span><span>path</span><span style="color: #ECEFF4;">,</span><span> d</span><span style="color: #ECEFF4;">))</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #88C0D0;">    print</span><span style="color: #ECEFF4;"> &quot;</span><span style="color: #A3BE8C;">Site build complete</span><span style="color: #ECEFF4;">&quot;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #81A1C1;">if</span><span> __name__</span><span style="color: #81A1C1;"> ==</span><span style="color: #ECEFF4;"> &#39;</span><span style="color: #A3BE8C;">__main__</span><span style="color: #ECEFF4;">&#39;:</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #616E88;">    # get the input and template dir paths</span></span>
+<span class="giallo-l"><span style="color: #88C0D0;">    dir</span><span style="color: #81A1C1;"> =</span><span> os</span><span style="color: #ECEFF4;">.</span><span style="color: #88C0D0;">getcwd</span><span style="color: #ECEFF4;">()</span></span>
+<span class="giallo-l"><span>    template_dir</span><span style="color: #81A1C1;"> =</span><span> os</span><span style="color: #ECEFF4;">.</span><span>path</span><span style="color: #ECEFF4;">.</span><span style="color: #88C0D0;">join</span><span style="color: #ECEFF4;">(</span><span style="color: #88C0D0;">dir</span><span style="color: #ECEFF4;">, &quot;</span><span style="color: #A3BE8C;">templates</span><span style="color: #ECEFF4;">&quot;)</span></span>
+<span class="giallo-l"><span style="color: #88C0D0;">    input</span><span style="color: #81A1C1;"> =</span><span> os</span><span style="color: #ECEFF4;">.</span><span>path</span><span style="color: #ECEFF4;">.</span><span style="color: #88C0D0;">join</span><span style="color: #ECEFF4;">(</span><span style="color: #88C0D0;">dir</span><span style="color: #ECEFF4;">, &quot;</span><span style="color: #A3BE8C;">src</span><span style="color: #ECEFF4;">&quot;)</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #616E88;">    # build the site</span></span>
+<span class="giallo-l"><span style="color: #88C0D0;">    build_site</span><span style="color: #ECEFF4;">(</span><span>template_dir</span><span style="color: #ECEFF4;">,</span><span style="color: #88C0D0;"> input</span><span style="color: #ECEFF4;">)</span></span></code></pre></article>
+
+<div class="container col">
+  <h2>Comments</h2>
+  <blockquote>Comments are powered by github and <a href="https://giscus.app">giscus</a></blockquote>
+  <script src="https://giscus.app/client.js"
+        data-repo="will-hart/will-hart.github.io"
+        data-repo-id="MDEwOlJlcG9zaXRvcnkzMjQ2NjY3Mzg="
+        data-category="General"
+        data-category-id="DIC_kwDOE1oFcs4CtiK6"
+        data-mapping="og:title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+  </script>
+</div>
+
+
+        <footer id="footer">
+            <div class="container col">
+                This website was hand-made using Zola and Tera. All text and
+                images are available under CC0 1.0 Universal and code under MIT
+                unless otherwise specified. See
+                <a
+                    href="https://github.com/will-hart/willhart.io/blob/main/LICENSE.md"
+                    >LICENSE.md</a
+                >
+                for more.
+            </div>
+        </footer>
+    </body>
+</html>
